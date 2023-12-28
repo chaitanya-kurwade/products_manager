@@ -18,9 +18,12 @@ import { GraphQLModule } from '@nestjs/graphql';
         schema: UserSchema,
       },
     ]),
-    MongooseModule.forRoot(
-      'your-db-url',
-    ),
+    MongooseModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        uri: configService.get<string>('MONGO_DB_URL'),
+      }),
+    }),
     GraphQLModule.forRoot<ApolloFederationDriverConfig>({
       driver: ApolloFederationDriver,
       autoSchemaFile: {
