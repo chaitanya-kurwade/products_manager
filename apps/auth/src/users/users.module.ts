@@ -19,7 +19,7 @@ import { GraphQLModule } from '@nestjs/graphql';
       },
     ]),
     MongooseModule.forRoot(
-      'mongodb+srv://chaitanya:chaitanya9011@cluster0.e5w3wbo.mongodb.net/product_manager',
+      'your-db-url',
     ),
     GraphQLModule.forRoot<ApolloFederationDriverConfig>({
       driver: ApolloFederationDriver,
