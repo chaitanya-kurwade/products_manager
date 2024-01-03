@@ -6,23 +6,16 @@ import { JwtModule, JwtService } from '@nestjs/jwt';
 import { AuthResolver } from './auth.resolver';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { ConfigModule, ConfigService } from "@nestjs/config";
-
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
     UsersModule,
-     PassportModule.register({ defaultStrategy:'jwt'}),
+    PassportModule.register({ defaultStrategy: 'jwt' }),
     ConfigModule.forRoot({
-      isGlobal:true,
+      isGlobal: true,
       envFilePath: './apps/auth/.env',
     }),
-    // JwtModule.register({
-    //   secret: process.env.JWT_SECRET,//'chaitanya', //process.env.JWT_SECRET,
-    //   // secret:JWT_SECRET,
-    //   signOptions:{expiresIn:'3600s'}
-    // }),
-
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({

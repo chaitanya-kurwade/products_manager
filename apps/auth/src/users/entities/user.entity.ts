@@ -18,7 +18,7 @@ export class User {
   @IsStrongPassword()
   @Prop()
   @Field()
-  password: string;
+  password: string;  
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

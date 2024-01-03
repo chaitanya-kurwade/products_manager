@@ -27,6 +27,15 @@
       "compilerOptions": {
         "tsConfigPath": "apps/products/tsconfig.app.json"
       }
+    },
+    "category": {
+      "type": "application",
+      "root": "apps/category",
+      "entryFile": "main",
+      "sourceRoot": "apps/category/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/category/tsconfig.app.json"
+      }
     }
   }
 }

@@ -18,7 +18,7 @@ export class UsersService {
 
   async create(createUserInput: CreateUserInput) {
     const user = await this.userModel.create(createUserInput);
-    if (!user) {
+    if (user) {
       throw new BadRequestException('user not created');
     }
     return user;

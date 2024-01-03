@@ -1,23 +1,21 @@
 import { Module } from '@nestjs/common';
-import { UsersService } from './users.service';
-import { UsersResolver } from './users.resolver';
-import { User, UserSchema } from './entities/user.entity';
-import {
-  ApolloFederationDriver,
-  ApolloFederationDriverConfig,
-} from '@nestjs/apollo';
-import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
+import { CategoryService } from './category.service';
+import { CategoryResolver } from './category.resolver';
 import { MongooseModule } from '@nestjs/mongoose';
-import { GraphQLModule } from '@nestjs/graphql';
+import { Category, CategorySchema } from './entities/category.entity';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { GraphQLModule } from '@nestjs/graphql';
+import { ApolloFederationDriver, ApolloFederationDriverConfig } from '@nestjs/apollo';
+import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
+
 
 @Module({
-  imports: [
+  imports:[
     ConfigModule.forRoot({ isGlobal: true }),
     MongooseModule.forFeature([
       {
-        name: User.name,
-        schema: UserSchema,
+        name: Category.name,
+        schema: CategorySchema,
       },
     ]),
     MongooseModule.forRootAsync({
@@ -35,7 +33,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       playground: false,
     }),
   ],
-  providers: [UsersResolver, UsersService],
-  exports: [UsersResolver, UsersService],
+  exports:[CategoryResolver, CategoryService],
+  providers: [CategoryResolver, CategoryService],
 })
-export class UsersModule {}
+export class CategoryModule {}
