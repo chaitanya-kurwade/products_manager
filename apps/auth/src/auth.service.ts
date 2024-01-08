@@ -49,14 +49,14 @@ export class AuthService {
     }
   }
 
-  async signup(createUserInput: CreateUserInput) {
-    const user = await this.userService.getUserByEmailId(createUserInput.email);
+  async signup(signupUserInput: CreateUserInput) {
+    const user = await this.userService.getUserByEmailId(signupUserInput.email);
 
     if (user) {
       throw new BadRequestException('User already exists');
     }
     return this.userService.create({
-      ...createUserInput,
+      ...signupUserInput,
     });
   }
 
