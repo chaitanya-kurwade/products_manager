@@ -10,23 +10,23 @@ import { UseGuards } from '@nestjs/common';
 export class UsersResolver {
   constructor(private readonly usersService: UsersService) {}
 
-  @UseGuards(JwtAuthGuard)
-  @Mutation(() => User)
-  createUser(@Args('createUserInput') createUserInput: CreateUserInput) {
-    return this.usersService.create(createUserInput);
-  }
+  // @UseGuards(JwtAuthGuard)
+  // @Mutation(() => User)
+  // createUser(@Args('createUserInput') createUserInput: CreateUserInput) {
+  //   return this.usersService.create(createUserInput);
+  // }
   
-  @UseGuards(JwtAuthGuard)
-  @Query(() => [User], { name: 'users' })
-  findAll() {
-    return this.usersService.findAll();
-  }
+  // @UseGuards(JwtAuthGuard)
+  // @Query(() => [User], { name: 'users' })
+  // findAll() {
+  //   return this.usersService.findAll();
+  // }
 
-  @UseGuards(JwtAuthGuard)
-  @Query(() => User, { name: 'user' })
-  findOne(@Args('id') _id: string) {
-    return this.usersService.findOne(_id);
-  }
+  // @UseGuards(JwtAuthGuard)
+  // @Query(() => User, { name: 'user' })
+  // findOne(@Args('id') _id: string) {
+  //   return this.usersService.findOne(_id);
+  // }
 
   @UseGuards(JwtAuthGuard)
   @Mutation(() => User)
@@ -34,11 +34,11 @@ export class UsersResolver {
     return this.usersService.update(updateUserInput._id, updateUserInput);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Mutation(() => User)
-  removeUser(@Args('_id') _id: string) {
-    return this.usersService.remove(_id);
-  }
+  // @UseGuards(JwtAuthGuard)
+  // @Mutation(() => User)
+  // removeUser(@Args('_id') _id: string) {
+  //   return this.usersService.remove(_id);
+  // }
 
   @UseGuards(JwtAuthGuard)
   @Query(() => User, { name: 'userByEmail' })

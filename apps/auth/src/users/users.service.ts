@@ -18,10 +18,6 @@ export class UsersService {
   ) {}
 
   async create(createUserInput: CreateUserInput) {
-    // const user = await this.userModel.create(createUserInput);
-    console.log("user service");
-    // console.log(user);
-    
     if (!createUserInput.email) {
       throw new BadRequestException('user not created');
     }
@@ -49,16 +45,14 @@ export class UsersService {
   }
 
   async update(id: string, updateUserInput: UpdateUserInput) {
-    const password = await bcrypt.hash(updateUserInput.password, 10);
-    const user =  this.userModel.findByIdAndUpdate({
-      ...updateUserInput,
-      password,
-    });
-    if (!user) {
+    if (!updateUserInput.email) {
       throw new NotFoundException(`user not updated  with id: ${id}`);
     }
-    return user;
-  }
+    console.log(updateUserInput);
+    
+    return this.userModel.findByIdAndUpdate({
+      updateUserInput,
+    });  }
 
   remove(_id: string) {
     const user = this.userModel.findByIdAndDelete(_id);

@@ -34,8 +34,9 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials : email not found');
     } else {
       const isPasswordValid = await bcrypt.compare(password, user.password);
+      console.log(password+"   "+user.password);
+      
       console.log(isPasswordValid);
-
       if (!isPasswordValid) {
         throw new UnauthorizedException('Invalid credentials : wrong password');
       }
@@ -54,11 +55,8 @@ export class AuthService {
     if (user) {
       throw new BadRequestException('User already exists');
     }
-
-    const password = await bcrypt.hash(createUserInput.password, 10);
     return this.userService.create({
       ...createUserInput,
-      password,
     });
   }
 
