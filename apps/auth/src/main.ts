@@ -1,16 +1,23 @@
 import { NestFactory } from '@nestjs/core';
 import { AuthModule } from './auth.module';
 import { ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AuthModule);
+  const configService = app.get(ConfigService);
   app.enableCors();
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
     }),
   );
-  await app.listen(3000); // Update this in env
-  console.log('auth started on 3000');
+  await app.listen(+configService.getOrThrow('APP_PORT'), () => {
+    console.log(
+      `Server started on http://localhost:${+configService.getOrThrow(
+        'APP_PORT',
+      )}`,
+    );
+  });
 }
 bootstrap();
