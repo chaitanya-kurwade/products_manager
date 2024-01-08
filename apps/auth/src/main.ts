@@ -8,9 +8,9 @@ async function bootstrap() {
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
-  }))
-  await app.listen(3000);
+    }),
+  );
+  await app.listen(3000); // Update this in env
   console.log('auth started on 3000');
-  
 }
 bootstrap();
