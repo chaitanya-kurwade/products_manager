@@ -46,12 +46,12 @@ export class AuthService {
     }
   }
 
-  async signup(createUserInput: CreateUserInput) {
-    const user = await this.userService.getUserByEmailId(createUserInput.email);
+  async signup(signupUserInput: CreateUserInput) {
+    const user = await this.userService.getUserByEmailId(signupUserInput.email);
     if (user) {
       throw new BadRequestException('User already exists');
     }
-    const password = await bcrypt.hash(createUserInput.password, 10);
+    const password = await bcrypt.hash(signupUserInput.password, 10);
     return this.userService.create({
       ...createUserInput,
       password,
