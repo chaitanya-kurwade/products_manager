@@ -16,4 +16,7 @@ export class CreateImageUploadInput {
 
   @Field()
   encoding: string;
+
+  @Field(()=>String)
+  imageUri: string;
 }

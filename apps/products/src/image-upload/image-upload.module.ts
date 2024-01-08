@@ -7,7 +7,6 @@ import { ImageUpload, ImageUploadSchema } from './entities/image-upload.entity';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloFederationDriver, ApolloFederationDriverConfig } from '@nestjs/apollo';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
-import { join } from 'path';
 
 @Module({
   imports:[
@@ -25,14 +24,12 @@ import { join } from 'path';
       driver: ApolloFederationDriver,
       autoSchemaFile: {
         federation: 2,
-        // path:join(process.cwd(), 'src/schema.gql'),
       },
       plugins: [ApolloServerPluginLandingPageLocalDefault()],
       playground: false,
     }),
   ],
   providers: [ImageUploadResolver, ImageUploadService],
+  exports: [ImageUploadResolver, ImageUploadService]
 })
-export class ImageUploadModule {
-  
-}
+export class ImageUploadModule { }

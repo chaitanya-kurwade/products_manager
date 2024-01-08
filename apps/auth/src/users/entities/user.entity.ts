@@ -10,6 +10,14 @@ export class User {
   @Field()
   _id: string;
 
+  @Prop()
+  @Field()
+  firstName: string;
+
+  @Prop()
+  @Field()
+  lastName: string;
+
   @IsEmail()
   @Prop()
   @Field()

@@ -17,7 +17,7 @@ export class Category {
 
   @Prop({type:JSON})
   @Field(() => GraphQLJSON, { description: 'sub-category name' })
-  attributes: JSON;
+  attributesJson: JSON;
   
 }
 

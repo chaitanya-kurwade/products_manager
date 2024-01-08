@@ -1,46 +1,66 @@
-import { Resolver, Mutation, Args } from '@nestjs/graphql';
+import { Resolver, Mutation, Args, Context } from '@nestjs/graphql';
 import { ImageUploadService } from './image-upload.service';
 import { ImageUpload } from './entities/image-upload.entity';
 import * as GraphQLUpload from 'graphql-upload/GraphQLUpload.js';
 import * as Upload from 'graphql-upload/Upload.js';
-import { createReadStream, createWriteStream, existsSync, mkdirSync } from 'fs';
-import { join } from 'path';
-import { FileUpload } from 'graphql-upload-ts';
+import { createWriteStream } from 'fs';
+import { CreateImageUploadInput } from './dto/create-image-upload.input';
+import * as fs from 'fs';
 
 @Resolver(() => ImageUpload)
 export class ImageUploadResolver {
   constructor(private readonly imageUploadService: ImageUploadService) {}
 
-  @Mutation(() => ImageUpload)
-  async uploadFiles(
+  // @Mutation(() => String)
+  // async getImage(@Args('filename') filename: string, @Context('res') res: Response): Promise<string> {
+
+  //   const imagePath =  await this.imageUploadService.getImageUrl(filename);
+  //   const stream = fs.createReadStream(imagePath);
+
+  //   return new Promise((resolve, reject) => {
+  //     stream.on('error', (err) => {
+  //       console.error('Error reading file stream:', err);
+  //       reject('Internal Server Error');
+  //     });
+
+  //     // res.headers('Content-Type', 'image/jpeg');
+  //     // res.headers('Content-Disposition', `inline; filename=${filename}`);
+
+  //     stream.on('end', () => {
+  //       resolve('Image sent successfully');
+  //     });
+  //   });
+
+  // }
+
+  @Mutation(() => [ImageUpload])
+  async uploadImages(
     @Args({ name: 'files', type: () => [GraphQLUpload] }) files: Upload[],
     @Args({ name: 'createFileInDirectory', type: () => Boolean })
     createFileInDirectory: boolean,
-  ): Promise<ImageUpload[]> {
+  ): Promise<CreateImageUploadInput[]> {
     const uploads: any[] = [];
-    console.log('UPLOAD_IMAGE_CALLED', {
-      files,
-      createFileInDirectory,
-    });
+    // console.log('UPLOAD_IMAGE_CALLED', {
+    //   files,
+    //   createFileInDirectory,
+    // });
 
     if (createFileInDirectory) {
       for (const file of files) {
-        // const { createReadStream, filename, mimetype } = await file;
         const {
           file: { filename, mimetype, encoding, createReadStream },
-          } = file;
-        console.log(file);
+        } = file;
         const stream = createReadStream();
-        // const path = join(__dirname, '/uploads');
         const path = `./uploads/${filename}`;
         await new Promise<void>((resolve, reject) =>
           stream
             .pipe(createWriteStream(path))
             .on('finish', () => {
-              console.log('IMAGE_CREATED_IN_DIRECTORY'), resolve();
+              console.log('IMAGE_CREATED_IN_DIRECTORY_resolve', file),
+                resolve();
             })
             .on('error', () => {
-              console.log('IMAGE_CREATED_IN_DIRECTORY'), reject;
+              console.log('IMAGE_NOT_CREATED_IN_DIRECTORY_reject'), reject;
             }),
         );
         uploads.push({ filename, mimetype, encoding: 'UTF-8' });
@@ -64,72 +84,8 @@ export class ImageUploadResolver {
       }
     }
     // save to database
-    console.log('Uploads');
-    console.log(uploads);
-    
-    await this.imageUploadService.processUploadedFiles(uploads);
-
-    // Fetch
-    const savedImages = await this.imageUploadService.getSavedImages();
-    return savedImages;
+    const uploadedImages =
+      await this.imageUploadService.processUploadedFiles(uploads);
+    return uploadedImages;
   }
-  ////////////////////////////////
-
-  // @Mutation(() => Boolean, { name: 'uploadImage' })
-  // async uploadImage(
-  //   @Args({ name: 'image', type: () => GraphQLUpload }) image: FileUpload,
-  //   @Args({ name: 'createFileInDirectory', type: () => Boolean }) createFileInDirectory: boolean,
-  // ): Promise<boolean> {
-  //   return new Promise(async (resolve, reject) => {
-  //     try {
-  //       // const { createReadStream, filename } = await image;
-
-  //       if (createFileInDirectory) {
-  //         // const dirPath = join(__dirname, '/uploads');
-
-  //         // if (!existsSync(dirPath)) {
-  //         //   mkdirSync(dirPath, { recursive: true });
-  //         // }
-
-  //         // createReadStream()
-  //         //   .pipe(createWriteStream(`${dirPath}/${filename}`))
-  //         //   .on('finish', () => {
-  //         //     console.log('IMAGE_CREATED_IN_DIRECTORY');
-  //         //     resolve(true);
-  //         //   })
-  //         //   .on('error', (error) => {
-  //         //     console.log('IMAGE_UPLOAD_ERROR', error);
-  //         //     reject(false);
-  //         //   });
-         
-  //         const { filename, createReadStream } = await image;
-  //         console.log(image);
-  //         return new Promise((resolve, reject) =>
-  //           createReadStream()
-  //             .pipe(createWriteStream(`./public/${filename}`))
-  //             .on('finish', () => resolve())
-  //             .on('error', () => reject(false)),
-  //         )
-    
-  //       } 
-  //       // else {
-  //         // createReadStream()
-  //         //   .on('data', (data) => {
-  //         //     console.log('DATA_FROM_STREAM', data);
-  //         //   })
-  //         //   .on('end', () => {
-  //         //     console.log('END_OF_STREAM');
-  //         //     resolve(true);
-  //         //   })
-  //         //   .on('error', (error) => {
-  //         //     console.log('IMAGE_UPLOAD_ERROR', error);
-  //         //     reject(false);
-  //         //   });
-  //       // }
-  //     } catch (error) {
-  //       console.error('Error processing file:', error);
-  //       reject(false);
-  //     }
-  //   });
-  // }
 }

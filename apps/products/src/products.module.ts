@@ -15,6 +15,7 @@ import { join } from 'path';
 @Module({
   imports: [
     CategoryModule,
+    ImageUploadModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: './apps/products/.env',
@@ -35,14 +36,12 @@ import { join } from 'path';
       driver: ApolloFederationDriver,
       autoSchemaFile: {
         federation: 2,
-        // path:join(process.cwd(), 'src/schema.gql'),
       },
       plugins: [ApolloServerPluginLandingPageLocalDefault()],
       playground: false,
     }),
-    ImageUploadModule,
   ],
-  exports: [],
+  exports: [ProductsResolver, ProductsService],
   providers: [ProductsResolver, ProductsService],
 })
 export class ProductsModule {}

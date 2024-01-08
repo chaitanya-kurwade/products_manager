@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -8,13 +9,19 @@ import { UpdateProductInput } from './dto/update-product.input';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Product, ProductDocument } from './entities/product.entity';
+import { ImageUpload } from './image-upload/entities/image-upload.entity';
 import { createWriteStream } from 'fs';
+import { CreateImageUploadInput } from './image-upload/dto/create-image-upload.input';
+import { ImageUploadService } from './image-upload/image-upload.service';
+import { join } from 'path';
+
 
 @Injectable()
 export class ProductsService {
   constructor(
     @InjectModel(Product.name)
     private readonly productModel: Model<ProductDocument>,
+    // @Inject() private readonly imageUploadService: ImageUploadService
   ) {}
 
   async create(createProductInput: CreateProductInput) {
@@ -60,55 +67,42 @@ export class ProductsService {
     return product;
   }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  async uploadImage({ stream, filename, mimetype }): Promise<{ filename: string; url: string; mimetype: string }> {
-    const storedFilename = `${Date.now()}-${filename}`;
-    const storedPath = `./uploads/${storedFilename}`;
-
-    return new Promise((resolve, reject) =>
-      stream
-        .pipe(createWriteStream(storedPath))
-        .on('finish', () =>
-          resolve({
-            filename: storedFilename,
-            url: `http://localhost:3001/uploads/${storedFilename}`, // adjust accordingly
-            mimetype,
+  async createProductWithImage(
+    createProductInput: CreateProductInput,
+    files: any[],
+  ) {
+    const images: any[] = [];
+    for (const file of files) {
+      const {
+        file: { filename, mimetype, encoding, createReadStream, imageUri},
+      } = file;
+      const stream = createReadStream();
+      const path = `./uploads/${filename}`;
+      await new Promise<void>((resolve, reject) =>
+        stream
+          .pipe(createWriteStream(path))
+          .on('finish', () => {
+            console.log('IMAGE_CREATED_IN_DIRECTORY_resolve', file), resolve();
+          })
+          .on('error', () => {
+            console.log('IMAGE_NOT_CREATED_IN_DIRECTORY_reject'), reject;
           }),
-        )
-        .on('error', reject),
-    );
+      );
+      images.push({
+        filename,
+        mimetype,
+        encoding: 'UTF-8',
+        title: filename,
+        description: filename + ' is the file from image upload service',
+        imageUri: join(__dirname, '..', '..', '..','uploads',`${filename}`),
+      });
+    }
+
+    console.log(images);
+    // const imagesToStore = await this.imageUploadService.processUploadedFiles(images);
+    const product = await this.productModel.create(createProductInput);
+    product.productImages = images;
+    const productNew = this.productModel.create(product);
+    return productNew;
   }
-
-  // processUploadedFiles(files: any[]): void {
-  //   // You can implement logic to save the file details to a database or perform other actions.
-  //   console.log('Processing uploaded files:', files);
-  // }
-
-  // @Mutation('uploadFiles')
-  // async uploadFiles(@Args({ name: 'files', type: () => [GraphQLUpload] }) files: FileUpload[]): Promise<any[]> {
-  //   const uploads: any[] = [];
-
-  //   for (const file of files) {
-  //     const { createReadStream, filename, mimetype } = await file;
-  //     const stream = createReadStream();
-  //     const path = `./uploads/${filename}`;
-
-  //     await new Promise((resolve, reject) =>
-  //       stream
-  //         .pipe(createWriteStream(path))
-  //         .on('finish', () => resolve())
-  //         .on('error', reject),
-  //     );
-
-  //     uploads.push({ filename, mimetype, encoding: 'UTF-8' });
-  //   }
-
-  //   // You can now save 'uploads' to a database or perform other actions as needed.
-  //   this.uploadService.processUploadedFiles(uploads);
-
-  //   return uploads;
-  // }
-
-
 }

@@ -1,11 +1,12 @@
 import { ObjectType, Field } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Upload } from 'graphql-upload-ts';
 import { Document } from 'mongoose';
 
 @Schema()
 @ObjectType()
 export class ImageUpload {
-  @Field({ description: 'Example field (placeholder)' })
+  @Field({ description: 'image id' })
   _id: string;
 
   @Prop()
@@ -27,6 +28,10 @@ export class ImageUpload {
   @Prop()
   @Field()
   encoding: string;
+
+  @Prop()
+  @Field(()=>String)
+  imageUri: string;
 }
 
 export type ImageUploadDocument = ImageUpload & Document;

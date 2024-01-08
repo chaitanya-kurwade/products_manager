@@ -1,9 +1,16 @@
 import { InputType, Int, Field } from '@nestjs/graphql';
-import { Category } from '../category/entities/category.entity';
 import { CreateCategoryInput } from '../category/dto/create-category.input';
+import { CreateImageUploadInput } from '../image-upload/dto/create-image-upload.input';
+import { ImageUpload } from '../image-upload/entities/image-upload.entity';
 
 @InputType()
 export class CreateProductInput {
+
+
+  // @Args({ name: 'files', type: () => [GraphQLUpload] }) files: Upload[],
+  // @Args({ name: 'createFileInDirectory', type: () => Boolean }) createFileInDirectory: boolean,
+
+  
   @Field()
   name: string;
 
@@ -13,8 +20,8 @@ export class CreateProductInput {
   @Field()
   price: number;
 
-  @Field(()=>[String])
-  productImages: string[];
+  @Field(()=>[CreateImageUploadInput])
+  productImages: ImageUpload[];
 
   @Field()
   description: string;

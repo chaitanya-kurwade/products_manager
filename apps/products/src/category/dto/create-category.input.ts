@@ -9,5 +9,5 @@ export class CreateCategoryInput {
   categoryName: string;
 
   @Field(() => GraphQLJSON, { description: 'sub-category name' })
-  attributes: JSON;
+  attributesJson: JSON;
 }

@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -9,6 +8,8 @@ import { UpdateUserInput } from './dto/update-user.input';
 import { User, UserDocument } from './entities/user.entity';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
+import * as bcrypt from 'bcrypt';
+
 
 @Injectable()
 export class UsersService {
@@ -17,11 +18,18 @@ export class UsersService {
   ) {}
 
   async create(createUserInput: CreateUserInput) {
-    const user = await this.userModel.create(createUserInput);
-    if (user) {
+    // const user = await this.userModel.create(createUserInput);
+    console.log("user service");
+    // console.log(user);
+    
+    if (!createUserInput.email) {
       throw new BadRequestException('user not created');
     }
-    return user;
+    const password = await bcrypt.hash(createUserInput.password, 10);
+    return this.userModel.create({
+      ...createUserInput,
+      password,
+    });
   }
 
   async findAll() {
@@ -40,8 +48,12 @@ export class UsersService {
     return getOneUser;
   }
 
-  update(id: string, updateUserInput: UpdateUserInput) {
-    const user = this.userModel.findByIdAndUpdate(id, updateUserInput);
+  async update(id: string, updateUserInput: UpdateUserInput) {
+    const password = await bcrypt.hash(updateUserInput.password, 10);
+    const user =  this.userModel.findByIdAndUpdate({
+      ...updateUserInput,
+      password,
+    });
     if (!user) {
       throw new NotFoundException(`user not updated  with id: ${id}`);
     }

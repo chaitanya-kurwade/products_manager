@@ -50,9 +50,11 @@ export class AuthService {
 
   async signup(createUserInput: CreateUserInput) {
     const user = await this.userService.getUserByEmailId(createUserInput.email);
+
     if (user) {
       throw new BadRequestException('User already exists');
     }
+
     const password = await bcrypt.hash(createUserInput.password, 10);
     return this.userService.create({
       ...createUserInput,
