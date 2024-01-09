@@ -67,5 +67,4 @@ export class AuthService {
     const user = await this.userService.getUserByEmailId(decoded.email);
     return user;
   }
-
 }
