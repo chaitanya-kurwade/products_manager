@@ -3,7 +3,6 @@ import { IsEmail, IsStrongPassword } from 'class-validator';
 
 @InputType()
 export class CreateUserInput {
-
   @Field()
   firstName: string;
 

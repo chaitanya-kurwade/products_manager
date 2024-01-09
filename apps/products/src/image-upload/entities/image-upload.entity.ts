@@ -1,6 +1,5 @@
 import { ObjectType, Field } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Upload } from 'graphql-upload-ts';
 import { Document } from 'mongoose';
 
 @Schema()
@@ -30,7 +29,7 @@ export class ImageUpload {
   encoding: string;
 
   @Prop()
-  @Field(()=>String)
+  @Field(() => String)
   imageUri: string;
 }
 

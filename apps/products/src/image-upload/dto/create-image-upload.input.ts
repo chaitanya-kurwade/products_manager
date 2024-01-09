@@ -1,4 +1,4 @@
-import { InputType, Int, Field } from '@nestjs/graphql';
+import { InputType, Field } from '@nestjs/graphql';
 
 @InputType()
 export class CreateImageUploadInput {
@@ -17,6 +17,6 @@ export class CreateImageUploadInput {
   @Field()
   encoding: string;
 
-  @Field(()=>String)
+  @Field(() => String)
   imageUri: string;
 }

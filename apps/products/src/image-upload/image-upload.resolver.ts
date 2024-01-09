@@ -1,11 +1,10 @@
-import { Resolver, Mutation, Args, Context } from '@nestjs/graphql';
+import { Resolver, Mutation, Args } from '@nestjs/graphql';
 import { ImageUploadService } from './image-upload.service';
 import { ImageUpload } from './entities/image-upload.entity';
 import * as GraphQLUpload from 'graphql-upload/GraphQLUpload.js';
 import * as Upload from 'graphql-upload/Upload.js';
 import { createWriteStream } from 'fs';
 import { CreateImageUploadInput } from './dto/create-image-upload.input';
-import * as fs from 'fs';
 
 @Resolver(() => ImageUpload)
 export class ImageUploadResolver {
@@ -48,7 +47,7 @@ export class ImageUploadResolver {
     if (createFileInDirectory) {
       for (const file of files) {
         const {
-          file: { filename, mimetype, encoding, createReadStream },
+          file: { filename, mimetype, createReadStream },
         } = file;
         const stream = createReadStream();
         const path = `./uploads/${filename}`;

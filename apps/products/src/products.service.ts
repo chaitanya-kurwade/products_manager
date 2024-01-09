@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -9,12 +8,8 @@ import { UpdateProductInput } from './dto/update-product.input';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Product, ProductDocument } from './entities/product.entity';
-import { ImageUpload } from './image-upload/entities/image-upload.entity';
 import { createWriteStream } from 'fs';
-import { CreateImageUploadInput } from './image-upload/dto/create-image-upload.input';
-import { ImageUploadService } from './image-upload/image-upload.service';
 import { join } from 'path';
-
 
 @Injectable()
 export class ProductsService {
@@ -74,7 +69,7 @@ export class ProductsService {
     const images: any[] = [];
     for (const file of files) {
       const {
-        file: { filename, mimetype, encoding, createReadStream, imageUri},
+        file: { filename, mimetype, createReadStream },
       } = file;
       const stream = createReadStream();
       const path = `./uploads/${filename}`;
@@ -94,7 +89,7 @@ export class ProductsService {
         encoding: 'UTF-8',
         title: filename,
         description: filename + ' is the file from image upload service',
-        imageUri: join(__dirname, '..', '..', '..','uploads',`${filename}`),
+        imageUri: join(__dirname, '..', '..', '..', 'uploads', `${filename}`),
       });
     }
 

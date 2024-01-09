@@ -1,25 +1,23 @@
-import { Resolver, Query, Mutation, Args, Int, Context } from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args, Int } from '@nestjs/graphql';
 import { ProductsService } from './products.service';
 import { Product } from './entities/product.entity';
 import { CreateProductInput } from './dto/create-product.input';
 import { UpdateProductInput } from './dto/update-product.input';
 import { ImageUploadService } from './image-upload/image-upload.service';
-import { ImageUpload } from './image-upload/entities/image-upload.entity';
 import * as GraphQLUpload from 'graphql-upload/GraphQLUpload.js';
-import * as Upload from 'graphql-upload/Upload.js';
-import { CreateImageUploadInput } from './image-upload/dto/create-image-upload.input';
-import { createWriteStream } from 'fs';
 import { FileUpload } from 'graphql-upload-ts';
 
 @Resolver(() => Product)
 export class ProductsResolver {
   constructor(
     private readonly productsService: ProductsService,
-    private readonly imageUploadService: ImageUploadService
+    private readonly imageUploadService: ImageUploadService,
   ) {}
 
   @Mutation(() => Product)
-  async createProduct( @Args('createProductInput') createProductInput: CreateProductInput ) {
+  async createProduct(
+    @Args('createProductInput') createProductInput: CreateProductInput,
+  ) {
     return this.productsService.create(createProductInput);
   }
 
@@ -47,7 +45,6 @@ export class ProductsResolver {
   removeProduct(@Args('id') _id: string) {
     return this.productsService.remove(_id);
   }
-
 
   // @Mutation(() => [ImageUpload])
   // async uploadImages(
@@ -101,12 +98,14 @@ export class ProductsResolver {
   //   return uploadedImages;
   // }
 
-
   @Mutation(() => Product)
-  async createProductWithImage( 
-    @Args('createProductInput') createProductInput: CreateProductInput, 
-    @Args({ name: 'images', type: () => [GraphQLUpload] }) images: FileUpload[]
+  async createProductWithImage(
+    @Args('createProductInput') createProductInput: CreateProductInput,
+    @Args({ name: 'images', type: () => [GraphQLUpload] }) images: FileUpload[],
   ) {
-    return this.productsService.createProductWithImage(createProductInput, images);
+    return this.productsService.createProductWithImage(
+      createProductInput,
+      images,
+    );
   }
 }
