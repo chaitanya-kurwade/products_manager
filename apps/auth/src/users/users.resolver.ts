@@ -15,11 +15,11 @@ export class UsersResolver {
   //   return this.usersService.create(createUserInput);
   // }
 
-  // @UseGuards(JwtAuthGuard)
-  // @Query(() => [User], { name: 'users' })
-  // findAll() {
-  //   return this.usersService.findAll();
-  // }
+  @UseGuards(JwtAuthGuard)
+  @Query(() => [User], { name: 'users' })
+  findAll() {
+    return this.usersService.findAll();
+  }
 
   // @UseGuards(JwtAuthGuard)
   // @Query(() => User, { name: 'user' })

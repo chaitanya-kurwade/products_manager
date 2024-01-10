@@ -25,6 +25,10 @@ export class User {
   @Prop()
   @Field()
   password: string;
+
+  @Prop()
+  @Field({ nullable: true })
+  hashedRefreshToken: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

@@ -16,4 +16,7 @@ export class CreateUserInput {
   @IsStrongPassword()
   @Field()
   password: string;
+
+  // @Field()
+  // hashedRefreshToken?: string;
 }

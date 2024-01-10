@@ -22,7 +22,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         signOptions: {
           expiresIn: `${configService.get('JWT_EXPIRATION')}s`, // in seconds
         },
-        // signOptions:{expiresIn:'3600s'}
       }),
     }),
   ],

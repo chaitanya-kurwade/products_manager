@@ -69,4 +69,15 @@ export class UsersService {
     }
     return userByEmailId;
   }
+
+  async updateRefreshTokenFromUser(email: string, hashedRefreshToken: string) {
+    const user = await this.getUserByEmailId(email);
+    if (user) {
+      return this.userModel.findOneAndUpdate(
+        { email },
+        { hashedRefreshToken },
+        { new: true },
+      );
+    }
+  }
 }
