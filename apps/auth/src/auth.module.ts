@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { UsersModule } from './users/users.module';
 import { JwtModule, JwtService } from '@nestjs/jwt';
@@ -23,7 +22,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         signOptions: {
           expiresIn: `${configService.get('JWT_EXPIRATION')}s`, // in seconds
         },
-        // signOptions:{expiresIn:'3600s'}
       }),
     }),
   ],

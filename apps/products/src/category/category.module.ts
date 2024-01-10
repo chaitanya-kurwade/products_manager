@@ -5,12 +5,14 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Category, CategorySchema } from './entities/category.entity';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { GraphQLModule } from '@nestjs/graphql';
-import { ApolloFederationDriver, ApolloFederationDriverConfig } from '@nestjs/apollo';
+import {
+  ApolloFederationDriver,
+  ApolloFederationDriverConfig,
+} from '@nestjs/apollo';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 
-
 @Module({
-  imports:[
+  imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     MongooseModule.forFeature([
       {
@@ -33,7 +35,7 @@ import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin
       playground: false,
     }),
   ],
-  exports:[CategoryResolver, CategoryService],
+  exports: [CategoryResolver, CategoryService],
   providers: [CategoryResolver, CategoryService],
 })
 export class CategoryModule {}

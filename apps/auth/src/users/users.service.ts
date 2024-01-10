@@ -10,7 +10,6 @@ import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import * as bcrypt from 'bcrypt';
 
-
 @Injectable()
 export class UsersService {
   constructor(
@@ -49,10 +48,11 @@ export class UsersService {
       throw new NotFoundException(`user not updated  with id: ${id}`);
     }
     console.log(updateUserInput);
-    
+
     return this.userModel.findByIdAndUpdate({
       updateUserInput,
-    });  }
+    });
+  }
 
   remove(_id: string) {
     const user = this.userModel.findByIdAndDelete(_id);
@@ -68,5 +68,16 @@ export class UsersService {
       throw new NotFoundException('User not found of this email: ' + email);
     }
     return userByEmailId;
+  }
+
+  async updateRefreshTokenFromUser(email: string, hashedRefreshToken: string) {
+    const user = await this.getUserByEmailId(email);
+    if (user) {
+      return this.userModel.findOneAndUpdate(
+        { email },
+        { hashedRefreshToken },
+        { new: true },
+      );
+    }
   }
 }

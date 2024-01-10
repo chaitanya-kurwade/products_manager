@@ -1,12 +1,10 @@
 import { ObjectType, Field } from '@nestjs/graphql';
-import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { IsEmail, IsStrongPassword } from 'class-validator';
-
 
 @ObjectType()
 @Schema()
 export class User {
-  
   @Field()
   _id: string;
 
@@ -26,7 +24,11 @@ export class User {
   @IsStrongPassword()
   @Prop()
   @Field()
-  password: string;  
+  password: string;
+
+  @Prop()
+  @Field({ nullable: true })
+  hashedRefreshToken: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

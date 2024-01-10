@@ -1,15 +1,18 @@
 import { Module } from '@nestjs/common';
 import { ImageUploadService } from './image-upload.service';
 import { ImageUploadResolver } from './image-upload.resolver';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ImageUpload, ImageUploadSchema } from './entities/image-upload.entity';
 import { GraphQLModule } from '@nestjs/graphql';
-import { ApolloFederationDriver, ApolloFederationDriverConfig } from '@nestjs/apollo';
+import {
+  ApolloFederationDriver,
+  ApolloFederationDriverConfig,
+} from '@nestjs/apollo';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 
 @Module({
-  imports:[
+  imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: './apps/products/.env',
@@ -30,6 +33,6 @@ import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin
     }),
   ],
   providers: [ImageUploadResolver, ImageUploadService],
-  exports: [ImageUploadResolver, ImageUploadService]
+  exports: [ImageUploadResolver, ImageUploadService],
 })
-export class ImageUploadModule { }
+export class ImageUploadModule {}

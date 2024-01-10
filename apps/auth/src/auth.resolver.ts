@@ -1,11 +1,10 @@
-import { Args, Mutation, Resolver } from '@nestjs/graphql';
+import { Args, Context, Mutation, Resolver } from '@nestjs/graphql';
 import { AuthService } from './auth.service';
 import { UserLoginInput } from './responses/user.login.input';
 import { LoginResponse } from './responses/user.login.response';
-import { NotFoundException, UseGuards } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { User } from './users/entities/user.entity';
 import { CreateUserInput } from './users/dto/create-user.input';
-import { JwtAuthGuard } from './guards/jwt.auth.guard';
 @Resolver()
 export class AuthResolver {
   constructor(private readonly authService: AuthService) {}
@@ -31,5 +30,16 @@ export class AuthResolver {
   signup(@Args('createUserInput') createUserInput: CreateUserInput) {
     const token = this.authService.signup(createUserInput);
     return token;
+  }
+
+  @Mutation(() => String)
+  async renewAccessToken(@Context() context: { req: Request }) {
+    const refreshToken =
+      context.req.headers['authorization']?.split(' ')[1] || null;
+    if (!refreshToken) {
+      throw new BadRequestException('token not found');
+    }
+    const access_token = await this.authService.renewAccessToken(refreshToken);
+    return access_token;
   }
 }
