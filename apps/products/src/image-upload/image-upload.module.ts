@@ -10,6 +10,8 @@ import {
   ApolloFederationDriverConfig,
 } from '@nestjs/apollo';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtAuthGuard } from 'common/library/guards/jwt.auth.guard';
 
 @Module({
   imports: [
@@ -32,7 +34,11 @@ import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin
       playground: false,
     }),
   ],
-  providers: [ImageUploadResolver, ImageUploadService],
+  providers: [
+    ImageUploadResolver,
+    ImageUploadService,
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+  ],
   exports: [ImageUploadResolver, ImageUploadService],
 })
 export class ImageUploadModule {}

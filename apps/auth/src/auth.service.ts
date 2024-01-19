@@ -57,7 +57,7 @@ export class AuthService {
       throw new BadRequestException('User already exists');
     }
     const createUserInput = { ...signupUserInput, hashedRefreshToken: '' };
-    return this.userService.create(createUserInput);
+    return this.userService.createUser(createUserInput);
   }
 
   async verify(token: string): Promise<User> {
@@ -96,7 +96,7 @@ export class AuthService {
     );
   }
 
-  async renewAccessToken(refresh_token: string) {
+  async refreshAccessToken(refresh_token: string) {
     const payload = this.jwtService.decode(refresh_token);
     const { email } = payload;
     const user = await this.userService.getUserByEmailId(email);

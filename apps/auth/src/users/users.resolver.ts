@@ -2,8 +2,7 @@ import { Resolver, Query, Mutation, Args } from '@nestjs/graphql';
 import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
 import { UpdateUserInput } from './dto/update-user.input';
-import { JwtAuthGuard } from '../guards/jwt.auth.guard';
-import { UseGuards } from '@nestjs/common';
+import { UserResponse } from './responses/user.response';
 
 @Resolver(() => User)
 export class UsersResolver {
@@ -15,8 +14,7 @@ export class UsersResolver {
   //   return this.usersService.create(createUserInput);
   // }
 
-  @UseGuards(JwtAuthGuard)
-  @Query(() => [User], { name: 'users' })
+  @Query(() => [UserResponse], { name: 'users' })
   findAll() {
     return this.usersService.findAll();
   }
@@ -27,8 +25,8 @@ export class UsersResolver {
   //   return this.usersService.findOne(_id);
   // }
 
-  @UseGuards(JwtAuthGuard)
-  @Mutation(() => User)
+  // @UseGuards(JwtAuthGuard)
+  @Mutation(() => UserResponse)
   updateUser(@Args('updateUserInput') updateUserInput: UpdateUserInput) {
     return this.usersService.update(updateUserInput._id, updateUserInput);
   }
@@ -39,8 +37,8 @@ export class UsersResolver {
   //   return this.usersService.remove(_id);
   // }
 
-  @UseGuards(JwtAuthGuard)
-  @Query(() => User, { name: 'userByEmail' })
+  // @UseGuards(JwtAuthGuard)
+  @Query(() => UserResponse, { name: 'userByEmail' })
   getUserByEmailId(@Args('email') email: string) {
     return this.usersService.getUserByEmailId(email);
   }

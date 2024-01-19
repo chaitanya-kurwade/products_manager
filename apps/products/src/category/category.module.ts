@@ -10,6 +10,8 @@ import {
   ApolloFederationDriverConfig,
 } from '@nestjs/apollo';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
+import { JwtAuthGuard } from 'common/library/guards/jwt.auth.guard';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -33,9 +35,14 @@ import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin
       },
       plugins: [ApolloServerPluginLandingPageLocalDefault()],
       playground: false,
+      // introspection: true,
     }),
   ],
   exports: [CategoryResolver, CategoryService],
-  providers: [CategoryResolver, CategoryService],
+  providers: [
+    CategoryResolver,
+    CategoryService,
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+  ],
 })
 export class CategoryModule {}

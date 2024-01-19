@@ -1,11 +1,10 @@
 import { Resolver, Mutation, Args } from '@nestjs/graphql';
 import { ImageUploadService } from './image-upload.service';
 import { ImageUpload } from './entities/image-upload.entity';
-import * as GraphQLUpload from 'graphql-upload/GraphQLUpload.js';
-import * as Upload from 'graphql-upload/Upload.js';
 import { createWriteStream } from 'fs';
 import { CreateImageUploadInput } from './dto/create-image-upload.input';
-
+import { GraphQLUpload, Upload } from 'graphql-upload-ts';
+// import * as fs from 'fs';
 @Resolver(() => ImageUpload)
 export class ImageUploadResolver {
   constructor(private readonly imageUploadService: ImageUploadService) {}
@@ -64,24 +63,25 @@ export class ImageUploadResolver {
         );
         uploads.push({ filename, mimetype, encoding: 'UTF-8' });
       }
-    } else {
-      for (const file of files) {
-        const { createReadStream } = await file;
-        const stream = createReadStream();
-        await new Promise<void>((resolve, reject) =>
-          stream
-            .on('data', (data: any) => {
-              console.log('DATA_FROM_STREAM', data);
-            })
-            .on('end', () => {
-              console.log('END_OF_STREAM'), resolve();
-            })
-            .on('error', (error: any) => {
-              console.log('IMAGE_UPLOAD_ERROR', error), reject();
-            }),
-        );
-      }
     }
+    // else {
+    //   for (const file of files) {
+    //     const { createReadStream } = file;
+    //     const stream = createReadStream();
+    //     await new Promise<void>((resolve, reject) =>
+    //       stream
+    //         .on('data', (data: any) => {
+    //           console.log('DATA_FROM_STREAM', data);
+    //         })
+    //         .on('end', () => {
+    //           console.log('END_OF_STREAM'), resolve();
+    //         })
+    //         .on('error', (error: any) => {
+    //           console.log('IMAGE_UPLOAD_ERROR', error), reject();
+    //         }),
+    //     );
+    //   }
+    // }
     // save to database
     const uploadedImages =
       await this.imageUploadService.processUploadedFiles(uploads);

@@ -2,14 +2,15 @@ import { Module } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UsersResolver } from './users.resolver';
 import { User, UserSchema } from './entities/user.entity';
-import {
-  ApolloFederationDriver,
-  ApolloFederationDriverConfig,
-} from '@nestjs/apollo';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 import { MongooseModule } from '@nestjs/mongoose';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import {
+  ApolloFederationDriver,
+  ApolloFederationDriverConfig,
+} from '@nestjs/apollo';
+import { JwtService } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     }),
     GraphQLModule.forRoot<ApolloFederationDriverConfig>({
       driver: ApolloFederationDriver,
+      introspection: true,
       autoSchemaFile: {
         federation: 2,
       },
@@ -35,7 +37,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       playground: false,
     }),
   ],
-  providers: [UsersResolver, UsersService],
+  providers: [UsersResolver, UsersService, JwtService, ConfigService],
   exports: [UsersResolver, UsersService],
 })
 export class UsersModule {}
