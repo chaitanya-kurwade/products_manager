@@ -6,12 +6,14 @@ import { GatewayService } from './gateway.service';
 import { ApolloGatewayDriver, ApolloGatewayDriverConfig } from '@nestjs/apollo';
 import { IntrospectAndCompose, RemoteGraphQLDataSource } from '@apollo/gateway';
 import { ConfigModule } from '@nestjs/config';
+import configuration from './config/configuration';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: './apps/gateway/.env',
+      load: [configuration],
     }),
     GraphQLModule.forRoot<ApolloGatewayDriverConfig>({
       driver: ApolloGatewayDriver,
@@ -21,20 +23,19 @@ import { ConfigModule } from '@nestjs/config';
         }),
         cache: 'bounded',
         playground: false,
-        // introspection: true,
         plugins: [ApolloServerPluginLandingPageLocalDefault()],
-        // context: authContext,
       },
+
       gateway: {
         supergraphSdl: new IntrospectAndCompose({
           subgraphs: [
             {
               name: 'auth',
-              url: 'http://localhost:3000/graphql',
+              url: `http://localhost:${configuration().auth.port}/graphql`,
             },
             {
               name: 'products',
-              url: 'http://localhost:3001/graphql',
+              url: `http://localhost:${configuration().products.port}/graphql`,
             },
           ],
         }),

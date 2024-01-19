@@ -13,7 +13,4 @@ export class UserResponse {
 
   @Field()
   lastName: string;
-
-  @Field({ nullable: true })
-  hashedRefreshToken: string;
 }
