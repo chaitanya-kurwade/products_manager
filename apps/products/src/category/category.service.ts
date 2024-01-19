@@ -32,7 +32,7 @@ export class CategoryService {
     return category;
   }
 
-  async findOne(_id: string) {
+  async findById(_id: string) {
     const category = await this.categoryModel.findById(_id);
     if (!category) {
       throw new NotFoundException('category not found, _id: ' + _id);
