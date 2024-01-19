@@ -3,14 +3,15 @@ import { AuthService } from './auth.service';
 import { UsersModule } from './users/users.module';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { AuthResolver } from './auth.resolver';
-import { PassportModule } from '@nestjs/passport';
-import { JwtStrategy } from './strategies/jwt.strategy';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { JwtStrategy } from 'common/library/strategies/jwt.strategy';
+import { JwtAuthGuard } from 'common/library/guards/jwt.auth.guard';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
     UsersModule,
-    PassportModule.register({ defaultStrategy: 'jwt' }),
+    // PassportModule.register({ defaultStrategy: 'jwt' }),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: './apps/auth/.env',
@@ -26,6 +27,12 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     }),
   ],
   controllers: [],
-  providers: [AuthService, AuthResolver, JwtService, JwtStrategy],
+  providers: [
+    AuthService,
+    AuthResolver,
+    JwtService,
+    JwtStrategy,
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+  ],
 })
 export class AuthModule {}

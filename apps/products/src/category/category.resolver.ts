@@ -3,6 +3,8 @@ import { CategoryService } from './category.service';
 import { Category } from './entities/category.entity';
 import { CreateCategoryInput } from './dto/create-category.input';
 import { UpdateCategoryInput } from './dto/update-category.input';
+// import { UseGuards } from '@nestjs/common';
+// import { JwtAuthGuard } from 'common/library';
 
 @Resolver(() => Category)
 export class CategoryResolver {
@@ -15,7 +17,8 @@ export class CategoryResolver {
     return this.categoryService.create(createCategoryInput);
   }
 
-  @Query(() => [Category], { name: 'category' })
+  // @UseGuards(JwtAuthGuard)
+  @Query(() => [Category], { name: 'categories' })
   findAll() {
     return this.categoryService.findAll();
   }

@@ -12,11 +12,11 @@ async function bootstrap() {
       transform: true,
     }),
   );
-  await app.listen(+configService.getOrThrow('APP_PORT'), () => {
+  await app.listen(+configService.getOrThrow('AUTH_APP_PORT'), () => {
     console.log(
       `Server started on http://localhost:${+configService.getOrThrow(
-        'APP_PORT',
-      )}`,
+        'AUTH_APP_PORT',
+      )}/graphql`,
     );
   });
 }

@@ -17,11 +17,18 @@ async function bootstrap() {
     '/graphql',
     graphqlUploadExpress({ maxFileSize: 1000000, maxFiles: 10 }),
   );
-  await app.listen(+configService.getOrThrow('APP_PORT'), () => {
+  // app.connectMicroservice({
+  //   transport: Transport.TCP,
+  //   options: {
+  //     host: 'localhost',
+  //     port: 4010,
+  //   },
+  // });
+  await app.listen(+configService.getOrThrow('PRODUCTS_APP_PORT'), () => {
     console.log(
       `Server started on http://localhost:${+configService.getOrThrow(
-        'APP_PORT',
-      )}`,
+        'PRODUCTS_APP_PORT',
+      )}/graphql`,
     );
   });
 }

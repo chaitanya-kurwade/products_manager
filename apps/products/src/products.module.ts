@@ -1,6 +1,4 @@
 import { Module } from '@nestjs/common';
-import { ProductsService } from './products.service';
-import { ProductsResolver } from './products.resolver';
 import { CategoryModule } from './category/category.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Product, ProductSchema } from './entities/product.entity';
@@ -12,6 +10,11 @@ import {
 } from '@nestjs/apollo';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 import { ImageUploadModule } from './image-upload/image-upload.module';
+import { JwtAuthGuard } from 'common/library/guards/jwt.auth.guard';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtStrategy } from 'common/library/strategies/jwt.strategy';
+import { ProductsResolver } from './products.resolver';
+import { ProductsService } from './products.service';
 
 @Module({
   imports: [
@@ -39,10 +42,16 @@ import { ImageUploadModule } from './image-upload/image-upload.module';
         federation: 2,
       },
       plugins: [ApolloServerPluginLandingPageLocalDefault()],
+      // introspection: true,
       playground: false,
     }),
   ],
   exports: [ProductsResolver, ProductsService],
-  providers: [ProductsResolver, ProductsService],
+  providers: [
+    ProductsResolver,
+    ProductsService,
+    JwtStrategy,
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+  ],
 })
 export class ProductsModule {}

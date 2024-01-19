@@ -16,7 +16,7 @@ export class UsersService {
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
   ) {}
 
-  async create(createUserInput: CreateUserInput) {
+  async createUser(createUserInput: CreateUserInput) {
     if (!createUserInput.email) {
       throw new BadRequestException('user not created');
     }
@@ -47,12 +47,27 @@ export class UsersService {
     if (!updateUserInput.email) {
       throw new NotFoundException(`user not updated  with id: ${id}`);
     }
-    console.log(updateUserInput);
 
     return this.userModel.findByIdAndUpdate({
       updateUserInput,
     });
   }
+
+  // async updateUserByEmail(email: string, updateUserInput: UpdateUserInput) {
+  //   if (!updateUserInput.email) {
+  //     throw new NotFoundException(`user not found with email: ${email}`);
+  //   }
+
+  //   // const user = this.getUserByEmailId(email);
+  //   return this.userModel.findByIdAndUpdate({
+  //     updateUserInput,
+  //   });
+  // }
+
+  // updatePassword(id: string, password: string) {
+  //   const user = this.findOne(id);
+  //   const updatePassword = bcrypt.compare();
+  // }
 
   remove(_id: string) {
     const user = this.userModel.findByIdAndDelete(_id);
