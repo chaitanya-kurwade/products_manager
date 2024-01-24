@@ -1,20 +1,16 @@
-import { Resolver, Mutation, Args, Query } from '@nestjs/graphql';
+import { Resolver, Query } from '@nestjs/graphql';
 import { ProductsService } from './products.service';
 import { Product } from './entities/product.entity';
-import { CreateProductInput } from './dto/create-product.input';
+// import { CreateProductInput } from './dto/create-product.input';
 // import { UpdateProductInput } from './dto/update-product.input';
-import { ImageUploadService } from './image-upload/image-upload.service';
 // import * as GraphQLUpload from 'graphql-upload/GraphQLUpload.js';
-import { FileUpload, GraphQLUpload } from 'graphql-upload-ts';
+// import { FileUpload, GraphQLUpload } from 'graphql-upload-ts';
 // import { MessagePattern } from '@nestjs/microservices';
 // import { GraphQLUpload, FileUpload } from 'graphql-upload';
 
 @Resolver(() => Product)
 export class ProductsResolver {
-  constructor(
-    private readonly productsService: ProductsService,
-    private readonly imageUploadService: ImageUploadService,
-  ) {}
+  constructor(private readonly productsService: ProductsService) {}
 
   // @Mutation(() => Product)
   // async createProduct(
@@ -47,67 +43,4 @@ export class ProductsResolver {
   // removeProduct(@Args('id') _id: string) {
   //   return this.productsService.remove(_id);
   // }
-
-  // @Mutation(() => [ImageUpload])
-  // async uploadImages(
-  //   @Args({ name: 'files', type: () => [GraphQLUpload] }) files: Upload[],
-  //   @Args({ name: 'createFileInDirectory', type: () => Boolean }) createFileInDirectory: boolean,
-  // ): Promise<CreateImageUploadInput[]> {
-  //   const uploads: any[] = [];
-  //   // console.log('UPLOAD_IMAGE_CALLED', {
-  //   //   files,
-  //   //   createFileInDirectory,
-  //   // });
-  //   if (createFileInDirectory) {
-  //     for (const file of files) {
-  //       const {
-  //         file: { filename, mimetype, encoding, createReadStream, imageUri },
-  //         } = file;
-  //       const stream = createReadStream();
-  //       const path = `./uploads/${filename}`;
-  //       await new Promise<void>((resolve, reject) =>
-  //         stream
-  //           .pipe(createWriteStream(path))
-  //           .on('finish', () => {
-  //             console.log('IMAGE_CREATED_IN_DIRECTORY_resolve', file), resolve();
-  //           })
-  //           .on('error', () => {
-  //             console.log('IMAGE_NOT_CREATED_IN_DIRECTORY_reject'), reject;
-  //           }),
-  //       );
-  //       uploads.push({ filename, mimetype, encoding: 'UTF-8', imageUri});
-  //     }
-  //   } else {
-  //     for (const file of files) {
-  //       const { createReadStream } = await file;
-  //       const stream = createReadStream();
-  //       await new Promise<void>((resolve, reject) =>
-  //         stream
-  //           .on('data', (data: any) => {
-  //             console.log('DATA_FROM_STREAM', data);
-  //           })
-  //           .on('end', () => {
-  //             console.log('END_OF_STREAM'), resolve();
-  //           })
-  //           .on('error', (error: any) => {
-  //             console.log('IMAGE_UPLOAD_ERROR', error), reject();
-  //           }),
-  //       );
-  //     }
-  //   }
-  //   // save to database
-  //   const uploadedImages = await this.imageUploadService.processUploadedFiles(uploads);
-  //   return uploadedImages;
-  // }
-
-  @Mutation(() => Product)
-  async createProductWithImage(
-    @Args('createProductInput') createProductInput: CreateProductInput,
-    @Args({ name: 'images', type: () => [GraphQLUpload] }) images: FileUpload[],
-  ) {
-    return this.productsService.createProductWithImage(
-      createProductInput,
-      images,
-    );
-  }
 }

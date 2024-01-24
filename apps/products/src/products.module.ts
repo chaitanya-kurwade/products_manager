@@ -9,17 +9,17 @@ import {
   ApolloFederationDriverConfig,
 } from '@nestjs/apollo';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
-import { ImageUploadModule } from './image-upload/image-upload.module';
 import { JwtAuthGuard } from 'common/library/guards/jwt.auth.guard';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtStrategy } from 'common/library/strategies/jwt.strategy';
 import { ProductsResolver } from './products.resolver';
 import { ProductsService } from './products.service';
+import { ProductsController } from './products.controller';
+import { MulterModule } from '@nestjs/platform-express';
 
 @Module({
   imports: [
     CategoryModule,
-    ImageUploadModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: './apps/products/.env',
@@ -42,11 +42,14 @@ import { ProductsService } from './products.service';
         federation: 2,
       },
       plugins: [ApolloServerPluginLandingPageLocalDefault()],
-      // introspection: true,
       playground: false,
+    }),
+    MulterModule.register({
+      dest: './uploads', // Specify the destination directory for uploaded files
     }),
   ],
   exports: [ProductsResolver, ProductsService],
+  controllers: [ProductsController],
   providers: [
     ProductsResolver,
     ProductsService,

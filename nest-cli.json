@@ -54,6 +54,15 @@
       "compilerOptions": {
         "tsConfigPath": "libs/library/tsconfig.lib.json"
       }
+    },
+    "uploadimage": {
+      "type": "application",
+      "root": "apps/uploadimage",
+      "entryFile": "main",
+      "sourceRoot": "apps/uploadimage/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/uploadimage/tsconfig.app.json"
+      }
     }
   }
 }

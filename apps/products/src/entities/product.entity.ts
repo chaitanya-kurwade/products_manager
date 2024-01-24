@@ -2,7 +2,6 @@ import { ObjectType, Field, GraphQLISODateTime } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Date, Document } from 'mongoose';
 import { Category } from '../category/entities/category.entity';
-import { ImageUpload } from '../image-upload/entities/image-upload.entity';
 
 @Schema({ timestamps: true })
 @ObjectType()
@@ -21,10 +20,6 @@ export class Product {
   @Prop()
   @Field()
   price: number;
-
-  @Prop()
-  @Field(() => [ImageUpload])
-  productImages: ImageUpload[];
 
   @Prop()
   @Field()

@@ -8,4 +8,8 @@ export default () => ({
     host: process.env.PRODUCTS_APP_PORT,
     port: parseInt(process.env.PRODUCTS_APP_PORT, 10),
   },
+  uploadimage: {
+    host: process.env.IMAGE_APP_PORT,
+    port: parseInt(process.env.IMAGE_APP_PORT, 10),
+  },
 });
