@@ -47,6 +47,10 @@ import configuration from './config/configuration';
                 'authorization',
                 context?.headers?.authorization,
               );
+              request.http.headers.set(
+                'apollo-require-preflight',
+                context?.headers?.apollo_require_preflight,
+              );
             },
           });
         },
