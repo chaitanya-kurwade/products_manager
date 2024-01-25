@@ -6,27 +6,27 @@ export class CreateProductInput {
   // @Args({ name: 'files', type: () => [GraphQLUpload] }) files: Upload[],
   // @Args({ name: 'createFileInDirectory', type: () => Boolean }) createFileInDirectory: boolean,
 
-  @Field()
+  @Field({ nullable: true })
   name: string;
 
-  @Field()
+  @Field({ nullable: true })
   sku: string;
 
-  @Field()
+  @Field({ nullable: true })
   price: number;
 
   // @Field(() => [CreateImageUploadInput])
   // productImages: ImageUpload[];
 
-  @Field()
+  @Field({ nullable: true })
   description: string;
 
   // @Field(() => Date)
   // timestamp: Date;
 
-  @Field()
+  @Field({ nullable: true })
   varientType: string;
 
-  @Field(() => CreateCategoryInput)
+  @Field(() => CreateCategoryInput, { nullable: true })
   category: CreateCategoryInput;
 }

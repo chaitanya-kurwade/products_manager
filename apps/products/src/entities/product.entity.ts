@@ -10,19 +10,19 @@ export class Product {
   _id: string;
 
   @Prop()
-  @Field()
+  @Field({ nullable: true })
   name: string;
 
   @Prop()
-  @Field()
+  @Field({ nullable: true })
   sku: string;
 
   @Prop()
-  @Field()
+  @Field({ nullable: true })
   price: number;
 
   @Prop()
-  @Field()
+  @Field({ nullable: true })
   description: string;
 
   // @Prop({ type: Date, required: true, default: new Date() })
@@ -34,11 +34,11 @@ export class Product {
   updatedAt: Date;
 
   @Prop()
-  @Field()
+  @Field({ nullable: true })
   varientType: string;
 
   @Prop()
-  @Field(() => Category)
+  @Field(() => Category, { nullable: true })
   category: Category;
 }
 
