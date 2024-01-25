@@ -10,7 +10,7 @@ export class Category {
   _id: string;
 
   @Prop()
-  @Field(() => String, { description: 'category name' })
+  @Field(() => String, { description: 'category name', nullable: true })
   categoryName: string;
 
   // @Prop({ type: JSON })
@@ -18,35 +18,35 @@ export class Category {
   // attributesJson: JSON;
 
   @Prop()
-  @Field(() => String, { description: 'attributes' })
+  @Field(() => String, { description: 'attributes', nullable: true })
   attributes: string;
 
   @Prop()
-  @Field(() => String, { description: 'description' })
+  @Field(() => String, { description: 'description', nullable: true })
   descreption: string;
 
   @Prop()
-  @Field(() => String, { description: 'icon' })
+  @Field(() => String, { description: 'icon', nullable: true })
   icon: string;
 
   @Prop()
-  @Field(() => String, { description: 'status' })
+  @Field(() => String, { description: 'status', nullable: true })
   status: string;
 
   @Prop()
-  @Field(() => String, { description: 'scope' })
+  @Field(() => String, { description: 'scope', nullable: true })
   scope: string;
 
   @Prop()
-  @Field(() => String, { description: 'scope' })
+  @Field(() => String, { description: 'scope', nullable: true })
   immediateParent: string;
 
   @Prop()
-  @Field(() => String, { description: 'ancestors' })
+  @Field(() => String, { description: 'ancestors', nullable: true })
   ancestors: string;
 
   @Prop()
-  @Field({ description: 'sortingOrder' })
+  @Field({ description: 'sortingOrder', nullable: true })
   sortingOrder: number;
 
   // @Prop({ type: Date, required: true, default: new Date() })

@@ -9,27 +9,27 @@ export class CreateCategoryInput {
   // @Field(() => GraphQLJSON, { description: 'sub-category name' })
   // attributesJson: JSON;
 
-  @Field(() => String, { description: 'attributes' })
+  @Field(() => String, { description: 'attributes', nullable: true })
   attributes: string;
 
-  @Field(() => String, { description: 'description' })
+  @Field(() => String, { description: 'description', nullable: true })
   descreption: string;
 
-  @Field(() => String, { description: 'icon' })
+  @Field(() => String, { description: 'icon', nullable: true })
   icon: string;
 
-  @Field(() => String, { description: 'status' })
+  @Field(() => String, { description: 'status', nullable: true })
   status: string;
 
-  @Field(() => String, { description: 'scope' })
+  @Field(() => String, { description: 'scope', nullable: true })
   scope: string;
 
-  @Field(() => String, { description: 'scope' })
+  @Field(() => String, { description: 'immediateParent', nullable: true })
   immediateParent: string;
 
-  @Field(() => String, { description: 'ancestors' })
+  @Field(() => String, { description: 'ancestors', nullable: true })
   ancestors: string;
 
-  @Field({ description: 'sortingOrder' })
+  @Field({ description: 'sortingOrder', nullable: true })
   sortingOrder: number;
 }
