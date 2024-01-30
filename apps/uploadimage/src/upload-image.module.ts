@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { UploadimageController } from './uploadimage.controller';
-import { UploadimageService } from './uploadimage.service';
+import { UploadimageController } from './upload-image.controller';
+import { UploadimageService } from './upload-image.service';
 import { ConfigModule } from '@nestjs/config';
 import { GraphQLModule } from '@nestjs/graphql';
 import {
@@ -8,6 +8,9 @@ import {
   ApolloFederationDriverConfig,
 } from '@nestjs/apollo';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
+import { MulterModule } from '@nestjs/platform-express';
+import { JwtAuthGuard, JwtStrategy } from 'common/library';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -24,8 +27,15 @@ import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin
       plugins: [ApolloServerPluginLandingPageLocalDefault()],
       playground: false,
     }),
+    MulterModule.register({
+      dest: './uploads', // Specify the destination directory for uploaded files
+    }),
   ],
   controllers: [UploadimageController],
-  providers: [UploadimageService],
+  providers: [
+    UploadimageService,
+    JwtStrategy,
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+  ],
 })
 export class UploadimageModule {}

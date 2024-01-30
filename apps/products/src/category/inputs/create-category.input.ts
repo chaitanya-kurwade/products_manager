@@ -1,4 +1,4 @@
-import { InputType, Field } from '@nestjs/graphql';
+import { InputType, Field, Int } from '@nestjs/graphql';
 // import GraphQLJSON from 'graphql-type-json';
 
 @InputType()
@@ -30,6 +30,6 @@ export class CreateCategoryInput {
   @Field(() => String, { description: 'ancestors', nullable: true })
   ancestors: string;
 
-  @Field({ description: 'sortingOrder', nullable: true })
+  @Field(() => Int, { description: 'sortingOrder', nullable: true })
   sortingOrder: number;
 }

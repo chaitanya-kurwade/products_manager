@@ -1,25 +1,24 @@
 import { Module } from '@nestjs/common';
-import { CategoryService } from './category.service';
-import { CategoryResolver } from './category.resolver';
-import { MongooseModule } from '@nestjs/mongoose';
-import { Category, CategorySchema } from './entities/category.entity';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { MongooseModule } from '@nestjs/mongoose';
 import { GraphQLModule } from '@nestjs/graphql';
+import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 import {
   ApolloFederationDriver,
   ApolloFederationDriverConfig,
 } from '@nestjs/apollo';
-import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
-import { JwtAuthGuard } from 'common/library/guards/jwt-auth.guard';
-import { APP_GUARD } from '@nestjs/core';
+
+import { SubProductService } from './sub-product.service';
+import { SubProductResolver } from './sub-product.resolver';
+import { SubProduct, SubProductSchema } from './entities/sub-product.entity';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     MongooseModule.forFeature([
       {
-        name: Category.name,
-        schema: CategorySchema,
+        name: SubProduct.name,
+        schema: SubProductSchema,
       },
     ]),
     MongooseModule.forRootAsync({
@@ -37,11 +36,6 @@ import { APP_GUARD } from '@nestjs/core';
       playground: false,
     }),
   ],
-  exports: [CategoryResolver, CategoryService],
-  providers: [
-    CategoryResolver,
-    CategoryService,
-    { provide: APP_GUARD, useClass: JwtAuthGuard },
-  ],
+  providers: [SubProductResolver, SubProductService],
 })
-export class CategoryModule {}
+export class SubProductModule {}

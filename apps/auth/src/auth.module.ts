@@ -4,8 +4,8 @@ import { UsersModule } from './users/users.module';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { AuthResolver } from './auth.resolver';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { JwtStrategy } from 'common/library/strategies/jwt.strategy';
-import { JwtAuthGuard } from 'common/library/guards/jwt.auth.guard';
+import { JwtStrategy } from 'common/library/strategies/jwt-strategy';
+import { JwtAuthGuard } from 'common/library/guards/jwt-auth.guard';
 import { APP_GUARD } from '@nestjs/core';
 
 @Module({

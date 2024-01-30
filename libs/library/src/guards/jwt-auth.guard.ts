@@ -25,22 +25,4 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     }
     return super.canActivate(context) as boolean;
   }
-
-  // canActivate(context: ExecutionContext): boolean {
-  //   const bypassJwt = this.reflector.getAllAndOverride<boolean>(
-  //     BYPASS_JWT_KEY,
-  //     [context.getHandler(), context.getClass()],
-  //   );
-
-  //   if (bypassJwt === true) {
-  //     return true;
-  //   }
-
-  //   const request = context.switchToHttp().getRequest();
-
-  //   if (request && request.headers && request.headers.authorization) {
-  //     return super.canActivate(context) as boolean;
-  //   }
-  //   return false;
-  // }
 }
