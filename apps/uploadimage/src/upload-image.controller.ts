@@ -7,17 +7,17 @@ import {
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
-import { ProductsService } from './products.service';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 import { join } from 'path';
 import { Public } from 'common/library';
 import { diskStorage } from 'multer';
 import fs from 'fs';
+import { UploadimageService } from './upload-image.service';
 
-@Controller('products')
-export class ProductsController {
-  constructor(private readonly productsService: ProductsService) {}
+@Controller('images')
+export class UploadimageController {
+  constructor(private readonly uploadimageService: UploadimageService) {}
 
   @Public()
   @Get(':imageName')
@@ -34,6 +34,7 @@ export class ProductsController {
         'uploads',
         `${fileName}`,
       );
+
       // const imageBuffer = await new Promise<Buffer>((resolve, reject) => {
       //   fs.readFile(filepath, (err, data) => {
       //     if (err) reject(err);
@@ -105,6 +106,8 @@ export class ProductsController {
     return fileNames;
   }
 }
+
+// ? //////////////////////////////////////////////////////////
 
 // @Post('upload')
 // @UseInterceptors(FilesInterceptor('files'))

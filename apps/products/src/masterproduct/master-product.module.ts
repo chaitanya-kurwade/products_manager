@@ -1,28 +1,28 @@
 import { Module } from '@nestjs/common';
-import { CategoryModule } from './category/category.module';
+import { MasterProductService } from './master-product.service';
+import { MasterProductResolver } from './master-product.resolver';
 import { MongooseModule } from '@nestjs/mongoose';
+import {
+  MasterProduct,
+  MasterProductSchema,
+} from './entities/master-product.entity';
+import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { GraphQLModule } from '@nestjs/graphql';
 import {
   ApolloFederationDriver,
   ApolloFederationDriverConfig,
 } from '@nestjs/apollo';
-import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
-import { JwtAuthGuard } from 'common/library/guards/jwt-auth.guard';
-import { APP_GUARD } from '@nestjs/core';
-import { JwtStrategy } from 'common/library/strategies/jwt-strategy';
-import { MasterProductModule } from './masterproduct/master-product.module';
-import { SubProductModule } from './subproduct/sub-product.module';
 
 @Module({
   imports: [
-    CategoryModule,
-    MasterProductModule,
-    SubProductModule,
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: './apps/products/.env',
-    }),
+    ConfigModule.forRoot({ isGlobal: true }),
+    MongooseModule.forFeature([
+      {
+        name: MasterProduct.name,
+        schema: MasterProductSchema,
+      },
+    ]),
     MongooseModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
@@ -38,7 +38,6 @@ import { SubProductModule } from './subproduct/sub-product.module';
       playground: false,
     }),
   ],
-
-  providers: [JwtStrategy, { provide: APP_GUARD, useClass: JwtAuthGuard }],
+  providers: [MasterProductResolver, MasterProductService],
 })
-export class ProductsModule {}
+export class MasterProductModule {}

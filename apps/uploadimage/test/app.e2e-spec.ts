@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
-import { UploadimageModule } from './../src/uploadimage.module';
+import { UploadimageModule } from '../src/upload-image.module';
 
 describe('UploadimageController (e2e)', () => {
   let app: INestApplication;
