@@ -2,9 +2,6 @@ import { InputType, Field, GraphQLISODateTime } from '@nestjs/graphql';
 
 @InputType()
 export class CreateMasterProductInput {
-  @Field()
-  _id: string;
-
   @Field({ nullable: true })
   masterProductName: string;
 

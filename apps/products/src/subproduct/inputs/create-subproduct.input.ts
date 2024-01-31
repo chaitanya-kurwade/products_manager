@@ -2,8 +2,8 @@ import { InputType, Field } from '@nestjs/graphql';
 
 @InputType()
 export class CreateSubProductInput {
-  @Field()
-  _id: string;
+  @Field({ nullable: true })
+  subProductName: string;
 
   @Field({ nullable: true })
   description: string;
