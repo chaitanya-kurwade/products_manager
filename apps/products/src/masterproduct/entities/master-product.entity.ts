@@ -1,6 +1,7 @@
 import { ObjectType, Field, GraphQLISODateTime } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
+import { Category } from '../../category/entities/category.entity';
 
 @Schema({ timestamps: true })
 @ObjectType()
@@ -37,12 +38,12 @@ export class MasterProduct {
   scope: string; //scope: [String], # [ 'Suppliers', 'Users', 'Admin' ]
 
   @Prop()
-  @Field({ nullable: true })
-  categories: string; //ObjectId,  # { ref: categories.yaml }
+  @Field(() => Category)
+  category: Category; //ObjectId,  # { ref: categories.yaml }
 
   @Prop()
   @Field({ nullable: true })
-  attriburtes: string; //json
+  attriburtes: string; //json[]
 
   @Prop()
   @Field({ nullable: true })
@@ -58,11 +59,11 @@ export class MasterProduct {
 
   // @Prop()
   @Field(() => GraphQLISODateTime, { nullable: true })
-  updatedAt: Date;
+  createdAt: Date;
 
   // @Prop()
   @Field(() => GraphQLISODateTime, { nullable: true })
-  createdAt: Date;
+  updatedAt: Date;
 
   @Prop()
   @Field({ nullable: true })

@@ -9,6 +9,9 @@ export class CreateSubProductInput {
   description: string;
 
   @Field({ nullable: true })
+  attributes: string;
+
+  @Field({ nullable: true })
   store: string; //[hierarchies], # ref: hierarchies.yaml
 
   @Field({ nullable: true })
@@ -30,7 +33,7 @@ export class CreateSubProductInput {
   barcode: string; //, # Barcode or QRCode
 
   @Field({ nullable: true })
-  prices: string; //[Price], # Ref prices.yaml
+  prices: number; //[Price], # Ref prices.yaml
 
   @Field({ nullable: true })
   isProductReturnAble: boolean; // bool

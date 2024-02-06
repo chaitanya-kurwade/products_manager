@@ -13,9 +13,11 @@ import {
   ApolloFederationDriver,
   ApolloFederationDriverConfig,
 } from '@nestjs/apollo';
+import { CategoryModule } from '../category/category.module';
 
 @Module({
   imports: [
+    CategoryModule,
     ConfigModule.forRoot({ isGlobal: true }),
     MongooseModule.forFeature([
       {

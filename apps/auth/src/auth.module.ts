@@ -11,7 +11,6 @@ import { APP_GUARD } from '@nestjs/core';
 @Module({
   imports: [
     UsersModule,
-    // PassportModule.register({ defaultStrategy: 'jwt' }),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: './apps/auth/.env',

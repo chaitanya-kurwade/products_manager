@@ -1,9 +1,9 @@
-import { ObjectType, Field } from '@nestjs/graphql';
+import { ObjectType, Field, GraphQLISODateTime } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { IsEmail, IsStrongPassword } from 'class-validator';
 
 @ObjectType()
-@Schema()
+@Schema({ timestamps: true })
 export class User {
   @Field()
   _id: string;
@@ -25,6 +25,14 @@ export class User {
   @Prop()
   @Field()
   password: string;
+
+  // @Prop({ type: Date, required: true, default: new Date() })
+  @Field(() => GraphQLISODateTime, { nullable: true })
+  createdAt: Date;
+
+  // @Prop({ type: Date, required: true, default: new Date() })
+  @Field(() => GraphQLISODateTime, { nullable: true })
+  updatedAt: Date;
 
   @Prop()
   @Field({ nullable: true })

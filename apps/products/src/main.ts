@@ -17,7 +17,7 @@ async function bootstrap() {
   app.useStaticAssets(path.join(__dirname, '../../../uploads'));
   await app.listen(+configService.getOrThrow('PRODUCTS_APP_PORT'), () => {
     console.log(
-      `Server started on http://localhost:${+configService.getOrThrow(
+      `ProductsModule started on http://localhost:${+configService.getOrThrow(
         'PRODUCTS_APP_PORT',
       )}/graphql`,
     );

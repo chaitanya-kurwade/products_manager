@@ -17,7 +17,7 @@ async function bootstrap() {
   await app.startAllMicroservices();
   await app.listen(+configService.getOrThrow('GATEWAY_APP_PORT'), () => {
     console.log(
-      `Server started on http://localhost:${+configService.getOrThrow(
+      `GatewayModule started on http://localhost:${+configService.getOrThrow(
         'GATEWAY_APP_PORT',
       )}/graphql`,
     );

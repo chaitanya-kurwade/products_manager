@@ -3,6 +3,7 @@ import { SubProduct } from './entities/sub-product.entity';
 import { SubProductService } from './sub-product.service';
 import { CreateSubProductInput } from './inputs/create-subproduct.input';
 import { UpdateSubProductInput } from './inputs/update-subproduct.input';
+import { PaginationInput } from 'common/library';
 
 @Resolver(() => SubProduct)
 export class SubProductResolver {
@@ -16,8 +17,16 @@ export class SubProductResolver {
   }
 
   @Query(() => [SubProduct], { name: 'getAllSubProducts' })
-  getAllSubProducts() {
-    return this.subProductService.getAllSubProducts();
+  getAllSubProducts(
+    @Args('paginationInput', { nullable: true })
+    paginationInput: PaginationInput,
+    @Args('searchFields', { type: () => [String], nullable: true })
+    searchFields: string[],
+  ) {
+    return this.subProductService.getAllSubProducts(
+      paginationInput,
+      searchFields ?? [],
+    );
   }
 
   @Query(() => SubProduct, { name: 'getOneSubProductById' })

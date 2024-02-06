@@ -1,8 +1,9 @@
-import { Resolver, Query, Mutation, Args, Int } from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args } from '@nestjs/graphql';
 import { MasterProduct } from './entities/master-product.entity';
 import { MasterProductService } from './master-product.service';
 import { CreateMasterProductInput } from './inputs/create-masterproduct.input';
 import { UpdateMasterProductInput } from './inputs/update-masterproduct.input';
+import { PaginationInput } from 'common/library';
 
 @Resolver(() => MasterProduct)
 export class MasterProductResolver {
@@ -19,8 +20,16 @@ export class MasterProductResolver {
   }
 
   @Query(() => [MasterProduct], { name: 'getAllMasterProduct' })
-  getAllMasterProducts() {
-    return this.masterProductService.getAllMasterProducts();
+  getAllMasterProducts(
+    @Args('paginationInput', { nullable: true })
+    paginationInput: PaginationInput,
+    @Args('searchFields', { type: () => [String], nullable: true })
+    searchFields?: string[],
+  ) {
+    return this.masterProductService.getAllMasterProducts(
+      paginationInput,
+      searchFields ?? [],
+    );
   }
 
   @Query(() => MasterProduct, { name: 'getMasterProduct' })
@@ -40,7 +49,7 @@ export class MasterProductResolver {
   }
 
   @Mutation(() => MasterProduct)
-  deleteMasterProductById(@Args('_id', { type: () => Int }) _id: string) {
+  deleteMasterProductById(@Args('_id', { type: () => String }) _id: string) {
     return this.masterProductService.deleteMasterProductById(_id);
   }
 }

@@ -3,6 +3,7 @@ import { CategoryService } from './category.service';
 import { Category } from './entities/category.entity';
 import { CreateCategoryInput } from './inputs/create-category.input';
 import { UpdateCategoryInput } from './inputs/update-category.input';
+import { PaginationInput } from 'common/library/pagination/inputs/pagination.input';
 
 @Resolver(() => Category)
 export class CategoryResolver {
@@ -16,13 +17,18 @@ export class CategoryResolver {
   }
 
   @Query(() => [Category], { name: 'categories' })
-  findAll() {
-    return this.categoryService.findAll();
+  getAllCategories(
+    @Args('paginationInput', { nullable: true })
+    paginationInput: PaginationInput,
+    @Args('searchFields', { type: () => [String], nullable: true })
+    searchFields?: string[],
+  ) {
+    return this.categoryService.findAll(paginationInput, searchFields ?? []);
   }
 
   @Query(() => Category, { name: 'category' })
-  findById(@Args('_id') _id: string) {
-    return this.categoryService.findById(_id);
+  getCategoryById(@Args('_id') _id: string) {
+    return this.categoryService.getCategoryById(_id);
   }
 
   @Mutation(() => Category)

@@ -10,7 +10,15 @@ export class SubProduct {
 
   @Prop()
   @Field({ nullable: true })
+  subProductName: string;
+
+  @Prop()
+  @Field({ nullable: true })
   description: string;
+
+  @Prop()
+  @Field({ nullable: true })
+  attributes: string;
 
   @Prop()
   @Field({ nullable: true })
@@ -42,7 +50,7 @@ export class SubProduct {
 
   @Prop()
   @Field({ nullable: true })
-  prices: string; //[Price], # Ref prices.yaml
+  prices: number; //[Price], # Ref prices.yaml
 
   @Prop()
   @Field({ nullable: true })
@@ -73,10 +81,10 @@ export class SubProduct {
   status: string; //, # PUBLISHED, ARCHIVED, DRAFT
 
   @Field(() => GraphQLISODateTime, { nullable: true })
-  updatedAt: Date;
+  createdAt: Date;
 
   @Field(() => GraphQLISODateTime, { nullable: true })
-  createdAt: Date;
+  updatedAt: Date;
 }
 
 export const SubProductSchema = SchemaFactory.createForClass(SubProduct);

@@ -6,9 +6,10 @@ import {
 import { CreateUserInput } from './inputs/create-user.input';
 import { UpdateUserInput } from './inputs/update-user.input';
 import { User, UserDocument } from './entities/user.entity';
-import { Model } from 'mongoose';
+import { Model, SortOrder } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import * as bcrypt from 'bcrypt';
+import { PaginationInput } from 'common/library';
 
 @Injectable()
 export class UsersService {
@@ -27,12 +28,69 @@ export class UsersService {
     });
   }
 
-  async findAll() {
-    const users = await this.userModel.find().exec();
-    if (!users && users.length == 0) {
-      throw new NotFoundException('users not found');
+  async getAllUsers(paginationInput: PaginationInput, searchFields?: string[]) {
+    const { page, limit, search, sortField, sortOrder } = paginationInput;
+    let query = this.userModel.find();
+    if (searchFields == null || !searchFields.length) {
+      console.log(query);
+      if (search) {
+        query = query.where('email').regex(new RegExp(search, 'i'));
+      }
+      if (!page && !limit && !sortField && !sortOrder) {
+        return query.sort({ createdAt: -1 }).exec();
+      }
+      if (sortField && !['ASC', 'DESC'].includes(sortOrder)) {
+        throw new BadRequestException(
+          'Invalid sortOrder. It must be either ASC or DESC.',
+        );
+      }
+      if (sortField && sortOrder) {
+        console.log(sortOrder, 'single', sortField);
+        const sortOptions: { [key: string]: SortOrder } = {};
+        sortOptions[sortField] = sortOrder.toLowerCase() as SortOrder;
+        query = query.sort(sortOptions);
+      }
+      const skip = (page - 1) * limit;
+      const users = await query.skip(skip).limit(limit).exec();
+      if (!users && users.length === 0) {
+        throw new NotFoundException('Users not found');
+      }
+      return users;
+    } else {
+      query = this.buildQuery(search, searchFields);
+      console.log(query);
+      if (!page && !limit) {
+        return query.sort({ createdAt: -1 }).exec();
+      }
+      if (sortField && !['ASC', 'DESC'].includes(sortOrder)) {
+        throw new BadRequestException(
+          'Invalid sortOrder. It must be either ASC or DESC.',
+        );
+      }
+      if (sortField && sortOrder) {
+        console.log(sortOrder, 'single', sortField);
+        const sortOptions: { [key: string]: SortOrder } = {};
+        sortOptions[sortField] = sortOrder.toLowerCase() as SortOrder;
+        query = query.sort(sortOptions);
+      }
+      const skip = (page - 1) * limit;
+      const users = await query.skip(skip).limit(limit).exec();
+      if (!users && users.length == 0) {
+        throw new NotFoundException('Users not found');
+      }
+      return users;
     }
-    return users;
+  }
+
+  private buildQuery(search: string, searchFields?: string[]): any {
+    let query = this.userModel.find();
+    if (search) {
+      const orConditions = searchFields.map((field) => ({
+        [field]: { $regex: new RegExp(search, 'i') },
+      }));
+      query = query.or(orConditions);
+    }
+    return query;
   }
 
   findOne(id: string) {
@@ -43,11 +101,10 @@ export class UsersService {
     return getOneUser;
   }
 
-  async update(id: string, updateUserInput: UpdateUserInput) {
+  async update(_id: string, updateUserInput: UpdateUserInput) {
     if (!updateUserInput.email) {
-      throw new NotFoundException(`user not updated  with id: ${id}`);
+      throw new NotFoundException(`user not updated  with id: ${_id}`);
     }
-
     return this.userModel.findByIdAndUpdate({
       updateUserInput,
     });
@@ -94,5 +151,16 @@ export class UsersService {
         { new: true },
       );
     }
+  }
+
+  async userLogout(email: string) {
+    const user = await this.getUserByEmailId(email);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    user.hashedRefreshToken = null;
+    await user.save();
+    const loginResponse = `you've been logged out successfully with ${email}`;
+    return loginResponse;
   }
 }

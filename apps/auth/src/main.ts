@@ -14,7 +14,7 @@ async function bootstrap() {
   );
   await app.listen(+configService.getOrThrow('AUTH_APP_PORT'), () => {
     console.log(
-      `Server started on http://localhost:${+configService.getOrThrow(
+      `AuthModule started on http://localhost:${+configService.getOrThrow(
         'AUTH_APP_PORT',
       )}/graphql`,
     );

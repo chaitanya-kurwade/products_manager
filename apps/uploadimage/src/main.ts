@@ -8,7 +8,7 @@ async function bootstrap() {
   app.enableCors();
   await app.listen(+configService.getOrThrow('IMAGE_APP_PORT'), () => {
     console.log(
-      `Server started on http://localhost:${+configService.getOrThrow(
+      `UploadimageModule started on http://localhost:${+configService.getOrThrow(
         'IMAGE_APP_PORT',
       )}/graphql`,
     );

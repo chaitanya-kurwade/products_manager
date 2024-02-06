@@ -2,7 +2,11 @@ import { Args, Context, Mutation, Resolver } from '@nestjs/graphql';
 import { AuthService } from './auth.service';
 import { UserLoginInput } from './users/inputs/user-login.input';
 import { LoginResponse } from './users/responses/user-login.response.entity';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  NotFoundException,
+  Request,
+} from '@nestjs/common';
 import { CreateUserInput } from './users/inputs/create-user.input';
 import { Public } from 'common/library/decorators/public.decorator';
 import { UserResponse } from './users/responses/user-response.entity';

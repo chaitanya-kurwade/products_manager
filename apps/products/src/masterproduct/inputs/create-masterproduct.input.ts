@@ -23,8 +23,8 @@ export class CreateMasterProductInput {
   @Field({ nullable: true })
   scope: string; //scope: [String], # [ 'Suppliers', 'Users', 'Admin' ]
 
-  @Field({ nullable: true })
-  categories: string; //ObjectId,  # { ref: categories.yaml }
+  @Field()
+  categoryId: string; //ObjectId,  # { ref: categories.yaml }
 
   @Field({ nullable: true })
   attriburtes: string; //json

@@ -34,9 +34,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials : email not found');
     } else {
       const isPasswordValid = await bcrypt.compare(password, user.password);
-
       console.log(password + '   ' + user.password);
-
       console.log(isPasswordValid);
       if (!isPasswordValid) {
         throw new UnauthorizedException('Invalid credentials : wrong password');
@@ -46,7 +44,6 @@ export class AuthService {
         user.email,
       );
       console.log(user);
-
       return { access_token, refresh_token };
     }
   }
@@ -85,6 +82,7 @@ export class AuthService {
     await this.storeRefreshToken(email, refresh_token);
     return { access_token, refresh_token };
   }
+
   async storeRefreshToken(email: string, refreshToken: string) {
     const saltRounds = 10;
     const salt = await bcrypt.genSalt(saltRounds);

@@ -13,4 +13,7 @@ export class UpdateUserInput {
 
   @Field()
   lastName: string;
+
+  @Field()
+  hashedRefreshToken: string;
 }
