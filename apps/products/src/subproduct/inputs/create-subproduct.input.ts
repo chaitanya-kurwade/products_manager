@@ -1,4 +1,6 @@
 import { InputType, Field } from '@nestjs/graphql';
+import { SubProductImageInput } from './sub-product-image.input';
+import { SubProductAttributesInput } from './sub-product-attributes.input';
 
 @InputType()
 export class CreateSubProductInput {
@@ -8,8 +10,11 @@ export class CreateSubProductInput {
   @Field({ nullable: true })
   description: string;
 
-  @Field({ nullable: true })
-  attributes: string;
+  @Field(() => [SubProductAttributesInput], {
+    nullable: true,
+    defaultValue: [],
+  })
+  attributes: SubProductAttributesInput[];
 
   @Field({ nullable: true })
   store: string; //[hierarchies], # ref: hierarchies.yaml
@@ -17,8 +22,8 @@ export class CreateSubProductInput {
   @Field({ nullable: true })
   icon: string;
 
-  @Field({ nullable: true })
-  customImages: string; //[String], # Image Portfolio
+  @Field(() => [SubProductImageInput], { nullable: true, defaultValue: [] })
+  customImages: SubProductImageInput[]; //json//[String], # Image Portfolio
 
   @Field({ nullable: true })
   sku: string;

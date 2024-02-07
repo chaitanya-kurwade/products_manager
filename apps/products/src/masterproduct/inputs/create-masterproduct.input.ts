@@ -1,4 +1,6 @@
 import { InputType, Field, GraphQLISODateTime } from '@nestjs/graphql';
+import { MasterProductAttributesInput } from './master-product-attributes.input';
+import { MasterProductImageInput } from './master-product-image.input';
 
 @InputType()
 export class CreateMasterProductInput {
@@ -11,8 +13,8 @@ export class CreateMasterProductInput {
   @Field({ nullable: true })
   icon: string;
 
-  @Field({ nullable: true })
-  images: string; //json
+  @Field(() => [MasterProductImageInput], { nullable: true, defaultValue: [] })
+  images: MasterProductImageInput[]; //json
 
   @Field({ nullable: true })
   sku: string;
@@ -23,11 +25,14 @@ export class CreateMasterProductInput {
   @Field({ nullable: true })
   scope: string; //scope: [String], # [ 'Suppliers', 'Users', 'Admin' ]
 
-  @Field()
+  @Field({ nullable: true })
   categoryId: string; //ObjectId,  # { ref: categories.yaml }
 
-  @Field({ nullable: true })
-  attriburtes: string; //json
+  @Field(() => [MasterProductAttributesInput], {
+    nullable: true,
+    defaultValue: [],
+  })
+  attriburtes: MasterProductAttributesInput[]; //json
 
   @Field({ nullable: true })
   tags: string; //string[]

@@ -1,6 +1,8 @@
 import { ObjectType, Field, GraphQLISODateTime } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
+import { SubProductImage } from './sub-product-image.entity';
+import { SubProductAttributes } from './sub-product-attributes.entity';
 
 @Schema({ timestamps: true })
 @ObjectType()
@@ -17,8 +19,8 @@ export class SubProduct {
   description: string;
 
   @Prop()
-  @Field({ nullable: true })
-  attributes: string;
+  @Field(() => [SubProductAttributes], { nullable: true, defaultValue: [] })
+  attriburtes: SubProductAttributes[];
 
   @Prop()
   @Field({ nullable: true })
@@ -29,8 +31,8 @@ export class SubProduct {
   icon: string;
 
   @Prop()
-  @Field({ nullable: true })
-  customImages: string; //[String], # Image Portfolio
+  @Field(() => [SubProductImage], { nullable: true, defaultValue: [] })
+  customImages: SubProductImage[]; //[String], # Image Portfolio
 
   @Prop()
   @Field({ nullable: true })

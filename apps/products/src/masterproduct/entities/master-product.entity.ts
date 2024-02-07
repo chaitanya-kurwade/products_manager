@@ -2,6 +2,8 @@ import { ObjectType, Field, GraphQLISODateTime } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 import { Category } from '../../category/entities/category.entity';
+import { MasterProductImage } from './master-product-image.entity';
+import { MasterProductAttributes } from './master-product-attributes.entity';
 
 @Schema({ timestamps: true })
 @ObjectType()
@@ -22,8 +24,8 @@ export class MasterProduct {
   icon: string;
 
   @Prop()
-  @Field({ nullable: true })
-  images: string; //json
+  @Field(() => [MasterProductImage], { nullable: true, defaultValue: [] })
+  images: MasterProductImage[]; //json
 
   @Prop()
   @Field({ nullable: true })
@@ -38,12 +40,12 @@ export class MasterProduct {
   scope: string; //scope: [String], # [ 'Suppliers', 'Users', 'Admin' ]
 
   @Prop()
-  @Field(() => Category)
+  @Field(() => Category, { nullable: true })
   category: Category; //ObjectId,  # { ref: categories.yaml }
 
   @Prop()
-  @Field({ nullable: true })
-  attriburtes: string; //json[]
+  @Field(() => [MasterProductAttributes], { nullable: true, defaultValue: [] })
+  attriburtes: MasterProductAttributes[]; //json[]
 
   @Prop()
   @Field({ nullable: true })
