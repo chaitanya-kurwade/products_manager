@@ -12,148 +12,148 @@ export class MasterProduct {
   _id: string;
 
   @Prop()
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   masterProductName: string;
 
   @Prop()
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   description: string;
 
   @Prop()
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   icon: string;
 
   @Prop()
-  @Field(() => [MasterProductImage], { nullable: true, defaultValue: [] })
+  @Field(() => [MasterProductImage], { nullable: false, defaultValue: [] })
   images: MasterProductImage[]; //json
 
   @Prop()
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   sku: string;
 
   @Prop()
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   status: string;
 
   @Prop()
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   scope: string; //scope: [String], # [ 'Suppliers', 'Users', 'Admin' ]
 
   @Prop()
-  @Field(() => Category, { nullable: true })
+  @Field(() => Category, { nullable: false })
   category: Category; //ObjectId,  # { ref: categories.yaml }
 
   @Prop()
-  @Field(() => [MasterProductAttributes], { nullable: true, defaultValue: [] })
+  @Field(() => [MasterProductAttributes], { nullable: false, defaultValue: [] })
   attriburtes: MasterProductAttributes[]; //json[]
 
   @Prop()
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   tags: string; //string[]
 
   @Prop()
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   metaTags: string; //string[] SEO
 
   @Prop()
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   sortingOrder: number;
 
   // @Prop()
-  @Field(() => GraphQLISODateTime, { nullable: true })
+  @Field(() => GraphQLISODateTime, { nullable: false })
   createdAt: Date;
 
   // @Prop()
-  @Field(() => GraphQLISODateTime, { nullable: true })
+  @Field(() => GraphQLISODateTime, { nullable: false })
   updatedAt: Date;
 
   @Prop()
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   specification: string; //[JSON],
 
   @Prop()
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   isProductReturnAble: boolean;
 
   @Prop()
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   returnPeriod: string; //# Number,
 
   @Prop()
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   warrantyPeriod: string; // #Number,
 
   @Prop()
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   isExpireAble: string; //Boolean, # To know the product can be expired
 
   @Prop()
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   expirationPeriod: string; //#Number, # Expiration date from mfg date
 
   @Prop()
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   isReviewEnabled: boolean; //boolean,
 
   @Prop()
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   Brand: string; //String,
 
   @Prop()
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   originCountry: string; //String,
 
   @Prop()
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   visibility: string; //JSON, # To show details location wise
 
   @Prop()
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   products: string; //[ObjectId], # related products
 
   ///////////////////////////////
   @Prop()
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   price: number;
 
   @Prop()
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   varientType: string;
 
   // @Prop()
-  // @Field(() => Category, { nullable: true })
+  // @Field(() => Category, { nullable: false })
   // category: Category;
 
   // @Prop()
-  // @Field({ nullable: true })
+  // @Field({ nullable: false })
   // name: string;
 
   // @Prop()
-  // @Field({ nullable: true })
+  // @Field({ nullable: false })
   // sku: string;
 
   // @Prop()
-  // @Field({ nullable: true })
+  // @Field({ nullable: false })
   // price: number;
 
   // @Prop()
-  // @Field({ nullable: true })
+  // @Field({ nullable: false })
   // description: string;
 
-  // // @Prop({ type: Date, required: true, default: new Date() })
-  // @Field(() => GraphQLISODateTime, { nullable: true })
+  // // @Prop({ type: Date, required: false, default: new Date() })
+  // @Field(() => GraphQLISODateTime, { nullable: false })
   // createdAt: Date;
 
-  // // @Prop({ type: Date, required: true, default: new Date() })
-  // @Field(() => GraphQLISODateTime, { nullable: true })
+  // // @Prop({ type: Date, required: false, default: new Date() })
+  // @Field(() => GraphQLISODateTime, { nullable: false })
   // updatedAt: Date;
 
   // @Prop()
-  // @Field({ nullable: true })
+  // @Field({ nullable: false })
   // varientType: string;
 
   // @Prop()
-  // @Field(() => Category, { nullable: true })
+  // @Field(() => Category, { nullable: false })
   // category: Category;
 }
 export const MasterProductSchema = SchemaFactory.createForClass(MasterProduct);

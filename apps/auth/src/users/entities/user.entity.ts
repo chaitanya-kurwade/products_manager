@@ -26,16 +26,16 @@ export class User {
   @Field()
   password: string;
 
-  // @Prop({ type: Date, required: true, default: new Date() })
-  @Field(() => GraphQLISODateTime, { nullable: true })
+  // @Prop({ type: Date, required: false, default: new Date() })
+  @Field(() => GraphQLISODateTime, { nullable: false })
   createdAt: Date;
 
-  // @Prop({ type: Date, required: true, default: new Date() })
-  @Field(() => GraphQLISODateTime, { nullable: true })
+  // @Prop({ type: Date, required: false, default: new Date() })
+  @Field(() => GraphQLISODateTime, { nullable: false })
   updatedAt: Date;
 
   @Prop()
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   hashedRefreshToken: string;
 }
 

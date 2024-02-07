@@ -15,10 +15,10 @@ export class UserResponse {
   lastName: string;
 
   // @Prop({ type: Date, required: true, default: new Date() })
-  @Field(() => GraphQLISODateTime, { nullable: true })
+  @Field(() => GraphQLISODateTime, { nullable: false })
   createdAt: Date;
 
   // @Prop({ type: Date, required: true, default: new Date() })
-  @Field(() => GraphQLISODateTime, { nullable: true })
+  @Field(() => GraphQLISODateTime, { nullable: false })
   updatedAt: Date;
 }

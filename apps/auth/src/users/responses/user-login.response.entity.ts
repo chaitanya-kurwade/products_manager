@@ -2,9 +2,9 @@ import { Field, ObjectType } from '@nestjs/graphql';
 
 @ObjectType()
 export class LoginResponse {
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   access_token: string;
 
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   refresh_token: string;
 }

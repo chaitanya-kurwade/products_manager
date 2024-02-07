@@ -19,14 +19,6 @@ export class CategoryService {
     private readonly categoryModel: Model<CategoryDocument>,
   ) {}
 
-  // async create(createCategoryInput: CreateCategoryInput) {
-  //   const category = await this.categoryModel.create(createCategoryInput);
-  //   if (!category && category.categoryName) {
-  //     throw new BadGatewayException('Category already exists');
-  //   }
-  //   return category;
-  // }
-
   async create(createCategoryInput: CreateCategoryInput) {
     const existingCategory = await this.categoryModel.findOne({
       categoryName: createCategoryInput.categoryName,

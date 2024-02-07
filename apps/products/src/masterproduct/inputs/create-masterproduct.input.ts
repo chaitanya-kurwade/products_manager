@@ -1,95 +1,95 @@
-import { InputType, Field, GraphQLISODateTime } from '@nestjs/graphql';
+import { InputType, Field } from '@nestjs/graphql';
 import { MasterProductAttributesInput } from './master-product-attributes.input';
 import { MasterProductImageInput } from './master-product-image.input';
 
 @InputType()
 export class CreateMasterProductInput {
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   masterProductName: string;
 
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   description: string;
 
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   icon: string;
 
-  @Field(() => [MasterProductImageInput], { nullable: true, defaultValue: [] })
+  @Field(() => [MasterProductImageInput], { nullable: false, defaultValue: [] })
   images: MasterProductImageInput[]; //json
 
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   sku: string;
 
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   status: string;
 
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   scope: string; //scope: [String], # [ 'Suppliers', 'Users', 'Admin' ]
 
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   categoryId: string; //ObjectId,  # { ref: categories.yaml }
 
   @Field(() => [MasterProductAttributesInput], {
-    nullable: true,
+    nullable: false,
     defaultValue: [],
   })
   attriburtes: MasterProductAttributesInput[]; //json
 
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   tags: string; //string[]
 
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   metaTags: string; //string[] SEO
 
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   sortingOrder: number;
 
-  @Field(() => GraphQLISODateTime, { nullable: true })
-  updatedAt: Date;
+  // @Field(() => GraphQLISODateTime, { nullable: false })
+  // createdAt: Date;
 
-  @Field(() => GraphQLISODateTime, { nullable: true })
-  createdAt: Date;
+  // @Field(() => GraphQLISODateTime, { nullable: false })
+  // updatedAt: Date;
 
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   specification: string; //[JSON],
 
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   isProductReturnAble: boolean;
 
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   returnPeriod: string; //# Number,
 
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   warrantyPeriod: string; // #Number,
 
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   isExpireAble: string; //Boolean, # To know the product can be expired
 
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   expirationPeriod: string; //#Number, # Expiration date from mfg date
 
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   isReviewEnabled: boolean; //boolean,
 
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   Brand: string; //String,
 
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   originCountry: string; //String,
 
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   visibility: string; //JSON, # To show details location wise
 
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   products: string; //[ObjectId], # related products
 
   ///////////////////////////////
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   price: number;
 
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   varientType: string;
 
-  // @Field(() => Category, { nullable: true })
+  // @Field(() => Category, { nullable: false })
   // category: Category;
 }
 /**

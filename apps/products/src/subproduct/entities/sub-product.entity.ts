@@ -11,81 +11,81 @@ export class SubProduct {
   _id: string;
 
   @Prop()
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   subProductName: string;
 
   @Prop()
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   description: string;
 
   @Prop()
-  @Field(() => [SubProductAttributes], { nullable: true, defaultValue: [] })
+  @Field(() => [SubProductAttributes], { nullable: false, defaultValue: [] })
   attriburtes: SubProductAttributes[];
 
   @Prop()
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   store: string; //[hierarchies], # ref: hierarchies.yaml
 
   @Prop()
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   icon: string;
 
   @Prop()
-  @Field(() => [SubProductImage], { nullable: true, defaultValue: [] })
+  @Field(() => [SubProductImage], { nullable: false, defaultValue: [] })
   customImages: SubProductImage[]; //[String], # Image Portfolio
 
   @Prop()
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   sku: string;
 
   @Prop()
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   scope: string; //[string], # ["Suppliers", "Users", "Admin"]
 
   @Prop()
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   masterProduct: string; //{ type: ObjectId, ref: "MasterProduct" },
 
   @Prop()
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   barcode: string; //, # Barcode or QRCode
 
   @Prop()
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   prices: number; //[Price], # Ref prices.yaml
 
   @Prop()
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   isProductReturnAble: boolean; // bool
 
   @Prop()
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   returnPeriod: number;
 
   @Prop()
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   warrantyPeriod: number;
 
   @Prop()
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   isExpireAble: boolean; //# To know the product can be expired
 
   @Prop()
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   expirationPeriod: number; //, # Expiration date from mfg date
 
   @Prop()
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   isReviewEnabled: boolean;
 
   @Prop()
-  @Field({ nullable: true })
+  @Field({ nullable: false })
   status: string; //, # PUBLISHED, ARCHIVED, DRAFT
 
-  @Field(() => GraphQLISODateTime, { nullable: true })
+  @Field(() => GraphQLISODateTime, { nullable: false })
   createdAt: Date;
 
-  @Field(() => GraphQLISODateTime, { nullable: true })
+  @Field(() => GraphQLISODateTime, { nullable: false })
   updatedAt: Date;
 }
 

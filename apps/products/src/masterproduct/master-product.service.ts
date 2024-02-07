@@ -1,4 +1,5 @@
 import {
+  BadGatewayException,
   BadRequestException,
   Injectable,
   NotFoundException,
@@ -22,20 +23,28 @@ export class MasterProductService {
     private readonly masterProductModel: Model<MasterProductDocument>,
     private readonly categoryService: CategoryService,
   ) {}
+
   async createMasterProduct(
     createMasterProductInput: CreateMasterProductInput,
   ) {
     const category = await this.categoryService.getCategoryById(
       createMasterProductInput.categoryId,
     );
-    const product = await this.masterProductModel.create({
-      ...createMasterProductInput,
-      category,
+    const existingProduct = await this.masterProductModel.findOne({
+      masterProductName: createMasterProductInput.masterProductName,
     });
-    if (!product) {
-      throw new BadRequestException('MasterProduct already exists');
+    if (existingProduct) {
+      throw new BadGatewayException('Master product already exists');
     }
-    return product;
+    try {
+      const product = await this.masterProductModel.create({
+        ...createMasterProductInput,
+        category,
+      });
+      return product;
+    } catch (error) {
+      throw new BadRequestException('MasterProduct not created');
+    }
   }
 
   async getAllMasterProducts(

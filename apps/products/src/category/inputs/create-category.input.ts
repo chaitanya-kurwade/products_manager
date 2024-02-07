@@ -1,10 +1,12 @@
 import { InputType, Field, Int } from '@nestjs/graphql';
 import { CategoryAttributesInput } from './category-attributes.input';
+import { MinLength } from 'class-validator';
 // import GraphQLJSON from 'graphql-type-json';
 
 @InputType()
 export class CreateCategoryInput {
-  @Field(() => String, { description: 'Category name' })
+  @Field(() => String, { description: 'Category name', nullable: false })
+  @MinLength(2, { message: 'Category name must be at least 2 characters long' })
   categoryName: string;
 
   // @Field(() => GraphQLJSON, { description: 'sub-category name' })
@@ -12,29 +14,42 @@ export class CreateCategoryInput {
 
   @Field(() => [CategoryAttributesInput], {
     description: 'attributes',
-    nullable: true,
+    nullable: false,
     defaultValue: [],
   })
   attributes: CategoryAttributesInput[];
 
-  @Field(() => String, { description: 'description', nullable: true })
+  @MinLength(2, {
+    message: 'Category description must be at least 2 characters long',
+  })
+  @Field(() => String, { description: 'description', nullable: false })
   descreption: string;
 
-  @Field(() => String, { description: 'icon', nullable: true })
+  @Field(() => String, { description: 'icon', nullable: false })
+  @MinLength(2, { message: 'Category icon must be at least 2 characters long' })
   icon: string;
 
-  @Field(() => String, { description: 'status', nullable: true })
+  @Field(() => String, { description: 'status', nullable: false })
+  @MinLength(2, {
+    message: 'Category status must be at least 2 characters long',
+  })
   status: string;
 
-  @Field(() => String, { description: 'scope', nullable: true })
+  @Field(() => String, { description: 'scope', nullable: false })
+  @MinLength(2, {
+    message: 'Category scope must be at least 2 characters long',
+  })
   scope: string;
 
-  @Field(() => String, { description: 'immediateParent', nullable: true })
-  immediateParent: string;
+  @Field(() => String, { description: 'immediateParentId', nullable: false })
+  immediateParentId: string;
 
-  @Field(() => String, { description: 'ancestors', nullable: true })
+  @MinLength(2, {
+    message: 'Category ancestors must be at least 2 characters long',
+  })
+  @Field(() => String, { description: 'ancestors', nullable: false })
   ancestors: string;
 
-  @Field(() => Int, { description: 'sortingOrder', nullable: true })
+  @Field(() => Int, { description: 'sortingOrder', nullable: false })
   sortingOrder: number;
 }
