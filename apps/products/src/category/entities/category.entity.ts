@@ -2,6 +2,7 @@ import { ObjectType, Field, GraphQLISODateTime } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 // import GraphQLJSON from 'graphql-type-json';
 import { Document } from 'mongoose';
+import { CategoryAttributes } from './category-attributes.entity';
 
 @ObjectType()
 @Schema({ timestamps: true })
@@ -18,8 +19,12 @@ export class Category {
   // attributesJson: JSON;
 
   @Prop()
-  @Field(() => String, { description: 'attributes', nullable: true })
-  attributes: string;
+  @Field(() => [CategoryAttributes], {
+    description: 'attributes',
+    nullable: true,
+    defaultValue: [],
+  })
+  attributes: CategoryAttributes[];
 
   @Prop()
   @Field(() => String, { description: 'description', nullable: true })

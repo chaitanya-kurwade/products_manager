@@ -1,4 +1,5 @@
 import { InputType, Field, Int } from '@nestjs/graphql';
+import { CategoryAttributesInput } from './category-attributes.input';
 // import GraphQLJSON from 'graphql-type-json';
 
 @InputType()
@@ -9,8 +10,12 @@ export class CreateCategoryInput {
   // @Field(() => GraphQLJSON, { description: 'sub-category name' })
   // attributesJson: JSON;
 
-  @Field(() => String, { description: 'attributes', nullable: true })
-  attributes: string;
+  @Field(() => [CategoryAttributesInput], {
+    description: 'attributes',
+    nullable: true,
+    defaultValue: [],
+  })
+  attributes: CategoryAttributesInput[];
 
   @Field(() => String, { description: 'description', nullable: true })
   descreption: string;

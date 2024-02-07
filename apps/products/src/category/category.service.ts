@@ -19,12 +19,27 @@ export class CategoryService {
     private readonly categoryModel: Model<CategoryDocument>,
   ) {}
 
+  // async create(createCategoryInput: CreateCategoryInput) {
+  //   const category = await this.categoryModel.create(createCategoryInput);
+  //   if (!category && category.categoryName) {
+  //     throw new BadGatewayException('Category already exists');
+  //   }
+  //   return category;
+  // }
+
   async create(createCategoryInput: CreateCategoryInput) {
-    const category = await this.categoryModel.create(createCategoryInput);
-    if (!category) {
+    const existingCategory = await this.categoryModel.findOne({
+      categoryName: createCategoryInput.categoryName,
+    });
+    if (existingCategory) {
       throw new BadGatewayException('Category already exists');
     }
-    return category;
+
+    const newCategory = await this.categoryModel.create(createCategoryInput);
+    if (!newCategory) {
+      throw new BadGatewayException('Category not created');
+    }
+    return newCategory;
   }
 
   async findAll(
