@@ -23,11 +23,11 @@ export class SubProduct {
   attriburtes: SubProductAttributes[];
 
   @Prop()
-  @Field({ nullable: false })
+  @Field({ nullable: true })
   store: string; //[hierarchies], # ref: hierarchies.yaml
 
   @Prop()
-  @Field({ nullable: false })
+  @Field({ nullable: true })
   icon: string;
 
   @Prop()
@@ -39,15 +39,15 @@ export class SubProduct {
   sku: string;
 
   @Prop()
-  @Field({ nullable: false })
+  @Field({ nullable: true })
   scope: string; //[string], # ["Suppliers", "Users", "Admin"]
 
   @Prop()
   @Field({ nullable: false })
-  masterProduct: string; //{ type: ObjectId, ref: "MasterProduct" },
+  masterProductId: string; //{ type: ObjectId, ref: "MasterProduct" },
 
   @Prop()
-  @Field({ nullable: false })
+  @Field({ nullable: true })
   barcode: string; //, # Barcode or QRCode
 
   @Prop()
@@ -55,83 +55,39 @@ export class SubProduct {
   prices: number; //[Price], # Ref prices.yaml
 
   @Prop()
-  @Field({ nullable: false })
+  @Field({ nullable: true })
   isProductReturnAble: boolean; // bool
 
   @Prop()
-  @Field({ nullable: false })
+  @Field({ nullable: true })
   returnPeriod: number;
 
   @Prop()
-  @Field({ nullable: false })
+  @Field({ nullable: true })
   warrantyPeriod: number;
 
   @Prop()
-  @Field({ nullable: false })
+  @Field({ nullable: true })
   isExpireAble: boolean; //# To know the product can be expired
 
   @Prop()
-  @Field({ nullable: false })
+  @Field({ nullable: true })
   expirationPeriod: number; //, # Expiration date from mfg date
 
   @Prop()
-  @Field({ nullable: false })
+  @Field({ nullable: true })
   isReviewEnabled: boolean;
 
   @Prop()
-  @Field({ nullable: false })
+  @Field({ nullable: true })
   status: string; //, # PUBLISHED, ARCHIVED, DRAFT
 
-  @Field(() => GraphQLISODateTime, { nullable: false })
+  @Field(() => GraphQLISODateTime, { nullable: true })
   createdAt: Date;
 
-  @Field(() => GraphQLISODateTime, { nullable: false })
+  @Field(() => GraphQLISODateTime, { nullable: true })
   updatedAt: Date;
 }
 
 export const SubProductSchema = SchemaFactory.createForClass(SubProduct);
 export type SubPorductDocument = SubProduct & Document;
-/*
-{
-  _id: string,
-  name: string,
-  description: string,
-  store: [hierarchies], # ref: hierarchies.yaml
-  icon: string,
-  customImages: [String], # Image Portfolio
-  sku: String,
-  scope: [string], # ["Suppliers", "Users", "Admin"]
-  MasterProduct: { type: ObjectId, ref: "MasterProduct" },
-  barcode: String, # Barcode or QRCode
-  prices: [Price], # Ref prices.yaml
-  isProductReturnAble: Boolean,
-  returnPeriod: Number,
-  warrantyPeriod: Number,
-  isExpireAble: Boolean, # To know the product can be expired
-  expirationPeriod: Number, # Expiration date from mfg date
-  isReviewEnabled: boolean,
-  // recentReviews: [
-  //     {
-  //       review_id: ObjectId,
-  //       orderId: ObjectId, #ref: OrderItems
-  //       customer: { CustomerId: ObjectId, name: String },
-  //       image: [String],
-  //       comment: String,
-  //       rating: Number,
-  //       createdAt: Date,
-  //       updatedAt: Date,
-  //       status: String, # PUBLISHED, ARCHIVED, DRAFT
-  //     },
-  //   ],
-  // manufacturer:
-  //   { manufacturerId: String, name: String, partNumber: String, icon: String },
-  // Brand: String,
-  // originCountry: String,
-  // visibility: JSON, # To show details location wise
-  // products: [ObjectId], # related products
-  status: string, # PUBLISHED, ARCHIVED, DRAFT
-  updatedAt: Date,
-  createdAt: Date,
-}
-
-*/

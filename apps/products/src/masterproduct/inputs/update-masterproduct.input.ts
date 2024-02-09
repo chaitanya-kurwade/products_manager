@@ -1,4 +1,4 @@
-import { CreateMasterProductInput } from './create-masterproduct.input';
+import { CreateMasterProductInput } from './create-master-product.input';
 import { InputType, Field, PartialType } from '@nestjs/graphql';
 
 @InputType()

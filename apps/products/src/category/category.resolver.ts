@@ -4,6 +4,7 @@ import { Category } from './entities/category.entity';
 import { CreateCategoryInput } from './inputs/create-category.input';
 import { UpdateCategoryInput } from './inputs/update-category.input';
 import { PaginationInput } from 'common/library/pagination/inputs/pagination.input';
+import { CategoryList } from './responses/category-lists-response.entity';
 
 @Resolver(() => Category)
 export class CategoryResolver {
@@ -16,14 +17,18 @@ export class CategoryResolver {
     return this.categoryService.create(createCategoryInput);
   }
 
-  @Query(() => [Category], { name: 'categories' })
-  getAllCategories(
+  @Query(() => CategoryList, { name: 'categories' })
+  async getAllCategories(
     @Args('paginationInput', { nullable: true })
     paginationInput: PaginationInput,
     @Args('searchFields', { type: () => [String], nullable: true })
     searchFields?: string[],
-  ) {
-    return this.categoryService.findAll(paginationInput, searchFields ?? []);
+  ): Promise<CategoryList> {
+    const categoryList = await this.categoryService.findAll(
+      paginationInput,
+      searchFields ?? [],
+    );
+    return categoryList;
   }
 
   @Query(() => Category, { name: 'category' })

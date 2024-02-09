@@ -16,10 +16,10 @@ export class CreateSubProductInput {
   })
   attributes: SubProductAttributesInput[];
 
-  @Field({ nullable: false })
+  @Field({ nullable: true })
   store: string; //[hierarchies], # ref: hierarchies.yaml
 
-  @Field({ nullable: false })
+  @Field({ nullable: true })
   icon: string;
 
   @Field(() => [SubProductImageInput], { nullable: false, defaultValue: [] })
@@ -28,42 +28,42 @@ export class CreateSubProductInput {
   @Field({ nullable: false })
   sku: string;
 
-  @Field({ nullable: false })
+  @Field({ nullable: true })
   scope: string; //[string], # ["Suppliers", "Users", "Admin"]
 
   @Field({ nullable: false })
-  masterProduct: string; //{ type: ObjectId, ref: "MasterProduct" },
+  masterProductId: string; //{ type: ObjectId, ref: "MasterProduct" },
 
-  @Field({ nullable: false })
+  @Field({ nullable: true })
   barcode: string; //, # Barcode or QRCode
 
   @Field({ nullable: false })
   prices: number; //[Price], # Ref prices.yaml
 
-  @Field({ nullable: false })
+  @Field({ nullable: true })
   isProductReturnAble: boolean; // bool
 
-  @Field({ nullable: false })
+  @Field({ nullable: true })
   returnPeriod: number;
 
-  @Field({ nullable: false })
+  @Field({ nullable: true })
   warrantyPeriod: number;
 
-  @Field({ nullable: false })
+  @Field({ nullable: true })
   isExpireAble: boolean; //# To know the product can be expired
 
-  @Field({ nullable: false })
+  @Field({ nullable: true })
   expirationPeriod: number; //, # Expiration date from mfg date
 
-  @Field({ nullable: false })
+  @Field({ nullable: true })
   isReviewEnabled: boolean;
 
-  @Field({ nullable: false })
+  @Field({ nullable: true })
   status: string; //, # PUBLISHED, ARCHIVED, DRAFT
 
-  // @Field(() => GraphQLISODateTime, { nullable: false })
+  // @Field(() => GraphQLISODateTime, { nullable: true })
   // updatedAt: Date;
 
-  // @Field(() => GraphQLISODateTime, { nullable: false })
+  // @Field(() => GraphQLISODateTime, { nullable: true })
   // createdAt: Date;
 }

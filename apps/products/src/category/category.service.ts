@@ -11,6 +11,7 @@ import { Category, CategoryDocument } from './entities/category.entity';
 import { CreateCategoryInput } from './inputs/create-category.input';
 import { UpdateCategoryInput } from './inputs/update-category.input';
 import { PaginationInput } from 'common/library/pagination/inputs/pagination.input';
+import { CategoryList } from './responses/category-lists-response.entity';
 
 @Injectable()
 export class CategoryService {
@@ -37,8 +38,10 @@ export class CategoryService {
   async findAll(
     paginationInput: PaginationInput,
     searchFields?: string[],
-  ): Promise<Category[]> {
+  ): Promise<CategoryList> {
     const { page, limit, search, sortField, sortOrder } = paginationInput;
+    // let allDocumentsCount = await this.categoryModel.countDocuments().exec();
+    // console.log(totalCount);
     let query = this.categoryModel.find();
     if (searchFields == null || !searchFields.length) {
       if (sortField && !['ASC', 'DESC'].includes(sortOrder)) {
@@ -55,34 +58,39 @@ export class CategoryService {
         );
       }
       if (sortField && sortOrder) {
-        console.log(sortOrder, 'single', sortField);
+        // console.log(sortOrder, 'single', sortField);
         const sortOptions: { [key: string]: SortOrder } = {};
         sortOptions[sortField] = sortOrder.toLowerCase() as SortOrder;
         query = query.sort(sortOptions);
       }
       if (!page && !limit && !sortField && !sortOrder) {
-        return query.sort({ createdAt: -1 }).exec();
+        const categories = await query.sort({ createdAt: -1 }).exec();
+        const totalCount = categories.length;
+        return { categories, totalCount };
       }
       const skip = (page - 1) * limit;
       const categories = await query.skip(skip).limit(limit).exec();
       if (!categories && categories.length === 0) {
         throw new NotFoundException('Categories not found');
       }
-      return categories;
+      const totalCount = categories.length;
+      return { categories, totalCount };
     } else {
       query = this.buildQuery(search, searchFields);
       // console.log(query);
       if (!page && !limit && !sortField && !sortOrder) {
-        return query.sort({ createdAt: -1 }).exec();
+        const categories = await query.sort({ createdAt: -1 }).exec();
+        const totalCount = categories.length;
+        return { categories, totalCount };
       }
       if (sortField && !['ASC', 'DESC'].includes(sortOrder)) {
-        console.log(sortOrder, 'sortOrder', sortField);
+        // console.log(sortOrder, 'sortOrder', sortField);
         throw new BadRequestException(
           'Invalid sortOrder. It must be either ASC or DESC.',
         );
       }
       if (sortField && sortOrder) {
-        console.log(sortOrder, 'all', sortField);
+        // console.log(sortOrder, 'all', sortField);
         const sortOptions: { [key: string]: SortOrder } = {};
         sortOptions[sortField] = sortOrder.toLowerCase() as SortOrder;
         query = query.sort(sortOptions);
@@ -92,7 +100,8 @@ export class CategoryService {
       if (!categories && categories.length == 0) {
         throw new NotFoundException('Categories not found');
       }
-      return categories;
+      const totalCount = categories.length;
+      return { categories, totalCount };
     }
   }
 

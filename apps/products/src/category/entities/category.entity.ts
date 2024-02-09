@@ -25,52 +25,52 @@ export class Category {
   attributes: CategoryAttributes[];
 
   @Prop()
-  @MinLength(2, {
-    message: 'Category description must be at least 2 characters long',
-  })
+  // @MinLength(2, {
+  //   message: 'Category description must be at least 2 characters long',
+  // })
   @Field(() => String, { description: 'description', nullable: false })
-  descreption: string;
+  description: string;
 
   @Prop()
-  @Field(() => String, { description: 'icon', nullable: false })
+  // @Field(() => String, { description: 'icon', nullable: false })
   @MinLength(2, { message: 'Category icon must be at least 2 characters long' })
   icon: string;
 
   @Prop()
   @Field(() => String, { description: 'status', nullable: false })
-  @MinLength(2, {
-    message: 'Category status must be at least 2 characters long',
-  })
+  // @MinLength(2, {
+  //   message: 'Category status must be at least 2 characters long',
+  // })
   status: string;
 
   @Prop()
-  @Field(() => String, { description: 'scope', nullable: false })
-  @MinLength(2, {
-    message: 'Category scope must be at least 2 characters long',
-  })
+  @Field(() => String, { description: 'scope', nullable: true })
+  // @MinLength(2, {
+  //   message: 'Category scope must be at least 2 characters long',
+  // })
   scope: string;
 
   @Prop()
-  @Field(() => String, { description: 'immediateParentId', nullable: false })
+  @Field(() => String, { description: 'immediateParentId', nullable: true })
   immediateParentId: string;
 
-  @MinLength(2, {
-    message: 'Category ancestors must be at least 2 characters long',
-  })
+  // @MinLength(2, {
+  //   message: 'Category ancestors must be at least 2 characters long',
+  // })
   @Prop()
-  @Field(() => String, { description: 'ancestors', nullable: false })
+  @Field(() => String, { description: 'ancestors', nullable: true })
   ancestors: string;
 
   @Prop()
-  @Field({ description: 'sortingOrder', nullable: false })
+  @Field({ description: 'sortingOrder', nullable: true })
   sortingOrder: number;
 
   // @Prop({ type: Date, required: false, default: new Date() })
-  @Field(() => GraphQLISODateTime, { nullable: false })
+  @Field(() => GraphQLISODateTime, { nullable: true })
   createdAt: Date;
 
   // @Prop({ type: Date, required: false, default: new Date() })
-  @Field(() => GraphQLISODateTime, { nullable: false })
+  @Field(() => GraphQLISODateTime, { nullable: true })
   updatedAt: Date;
 }
 
