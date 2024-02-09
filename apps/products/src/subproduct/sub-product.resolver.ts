@@ -23,15 +23,26 @@ export class SubProductResolver {
     @Args('searchFields', { type: () => [String], nullable: true })
     searchFields: string[],
   ) {
-    return this.subProductService.getAllSubProducts(
+    const subProducts = this.subProductService.getAllSubProducts(
       paginationInput,
       searchFields ?? [],
     );
+    return subProducts;
   }
 
   @Query(() => SubProduct, { name: 'getOneSubProductById' })
   getOneSubProductById(@Args('_id') _id: string) {
     return this.subProductService.getOneSubProductById(_id);
+  }
+
+  @Query(() => [SubProduct], { name: 'getSubProductByMasterProductId' })
+  getSubProductsByMasterProductId(
+    @Args('masterProductId') masterProductId: string,
+  ) {
+    console.log(masterProductId);
+    return this.subProductService.getSubProductsByMasterProductId(
+      masterProductId,
+    );
   }
 
   @Mutation(() => SubProduct)

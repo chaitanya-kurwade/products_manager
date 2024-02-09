@@ -9,6 +9,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { SubPorductDocument, SubProduct } from './entities/sub-product.entity';
 import { Model, SortOrder } from 'mongoose';
 import { PaginationInput } from 'common/library';
+import { SubProductList } from './responses/sub-products-list.response.entity';
 
 @Injectable()
 export class SubProductService {
@@ -27,33 +28,19 @@ export class SubProductService {
   async getAllSubProducts(
     paginationInput: PaginationInput,
     searchFields?: string[],
-  ) {
+  ): Promise<SubProductList> {
+    const { page, limit, search, sortField, sortOrder } = paginationInput;
+    // let allDocumentsCount = await this.subProductModel.countDocuments().exec();
+    // console.log(totalCount);
     let query = this.subProductModel.find();
-    const { page, limit, search, sortField, sortOrder, maxPrice, minPrice } =
-      paginationInput;
     if (searchFields == null || !searchFields.length) {
+      if (sortField && !['ASC', 'DESC'].includes(sortOrder)) {
+        throw new BadRequestException(
+          'Invalid sortOrder. It must be either ASC or DESC.',
+        );
+      }
       if (search) {
-        query = query.where('subProductName').regex(new RegExp(search, 'i'));
-      }
-      if (search && minPrice !== undefined && maxPrice !== undefined) {
-        query = query
-          .find({
-            $and: [
-              // { $text: { $search: search } },
-              { prices: { $gte: minPrice, $lte: maxPrice } },
-            ],
-          })
-          .where('subProductName')
-          .regex(new RegExp(search, 'i'))
-          .sort({ prices: 1 });
-      } else if (minPrice !== undefined && maxPrice !== undefined) {
-        query = query
-          .find({ prices: { $gte: minPrice, $lte: maxPrice } }) // Only price range filter
-          .sort({ prices: 1 }); // Sorting by price in ascending order
-      }
-
-      if (!page && !limit && !sortField && !sortOrder) {
-        return query.sort({ createdAt: -1 }).exec();
+        query = query.where('categoryName').regex(new RegExp(search, 'i'));
       }
       if (sortField && !['ASC', 'DESC'].includes(sortOrder)) {
         throw new BadRequestException(
@@ -61,54 +48,50 @@ export class SubProductService {
         );
       }
       if (sortField && sortOrder) {
-        console.log(sortOrder, 'single', sortField);
+        // console.log(sortOrder, 'single', sortField);
+        const sortOptions: { [key: string]: SortOrder } = {};
+        sortOptions[sortField] = sortOrder.toLowerCase() as SortOrder;
+        query = query.sort(sortOptions);
+      }
+      if (!page && !limit && !sortField && !sortOrder) {
+        const subProducts = await query.sort({ createdAt: -1 }).exec();
+        const totalCount = subProducts.length;
+        return { subProducts, totalCount };
+      }
+      const skip = (page - 1) * limit;
+      const subProducts = await query.skip(skip).limit(limit).exec();
+      if (!subProducts && subProducts.length === 0) {
+        throw new NotFoundException('subProducts not found');
+      }
+      const totalCount = subProducts.length;
+      return { subProducts, totalCount };
+    } else {
+      query = this.buildQuery(search, searchFields);
+      // console.log(query);
+      if (!page && !limit && !sortField && !sortOrder) {
+        const subProducts = await query.sort({ createdAt: -1 }).exec();
+        const totalCount = subProducts.length;
+        return { subProducts, totalCount };
+      }
+      if (sortField && !['ASC', 'DESC'].includes(sortOrder)) {
+        // console.log(sortOrder, 'sortOrder', sortField);
+        throw new BadRequestException(
+          'Invalid sortOrder. It must be either ASC or DESC.',
+        );
+      }
+      if (sortField && sortOrder) {
+        // console.log(sortOrder, 'all', sortField);
         const sortOptions: { [key: string]: SortOrder } = {};
         sortOptions[sortField] = sortOrder.toLowerCase() as SortOrder;
         query = query.sort(sortOptions);
       }
       const skip = (page - 1) * limit;
-      const products = await query.skip(skip).limit(limit).exec();
-      if (!products && products.length === 0) {
-        throw new NotFoundException('SubProduct not found');
+      const subProducts = await query.skip(skip).limit(limit).exec();
+      if (!subProducts && subProducts.length == 0) {
+        throw new NotFoundException('subProducts not found');
       }
-      return products;
-    } else {
-      {
-        query = this.buildQuery(search, searchFields);
-        console.log(query);
-        if (!page && !limit && !sortField && !sortOrder) {
-          return query.sort({ createdAt: -1 }).exec();
-        }
-        if (sortField && !['ASC', 'DESC'].includes(sortOrder)) {
-          throw new BadRequestException(
-            'Invalid sortOrder. It must be either ASC or DESC.',
-          );
-        }
-        if (search && minPrice !== undefined && maxPrice !== undefined) {
-          query = query.find({
-            $and: [
-              // { $text: { $search: search } },
-              { prices: { $gte: minPrice, $lte: maxPrice } },
-            ],
-          });
-        } else if (minPrice !== undefined && maxPrice !== undefined) {
-          query = query
-            .find({ prices: { $gte: minPrice, $lte: maxPrice } })
-            .sort({ prices: 1 });
-        }
-        if (sortField && sortOrder) {
-          console.log(sortOrder, 'single', sortField);
-          const sortOptions: { [key: string]: SortOrder } = {};
-          sortOptions[sortField] = sortOrder.toLowerCase() as SortOrder;
-          query = query.sort(sortOptions);
-        }
-        const skip = (page - 1) * limit;
-        const products = await query.skip(skip).limit(limit).exec();
-        if (!products && products.length == 0) {
-          throw new NotFoundException('SubProduct not found');
-        }
-        return products;
-      }
+      const totalCount = subProducts.length;
+      return { subProducts, totalCount };
     }
   }
 
@@ -129,6 +112,19 @@ export class SubProductService {
       throw new NotFoundException('SubProduct not available with _id: ' + _id);
     }
     return product;
+  }
+
+  async getSubProductsByMasterProductId(masterProductId: string) {
+    const subProductsList = await this.subProductModel
+      .find({ masterProductId })
+      .exec();
+    console.log(subProductsList);
+    if (!subProductsList || subProductsList.length === 0) {
+      throw new NotFoundException(
+        'SubProduct not available with ' + masterProductId + ' masterProductId',
+      );
+    }
+    return subProductsList;
   }
 
   async updateSubProductById(

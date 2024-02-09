@@ -7,7 +7,7 @@ import {
 import { Model, SortOrder } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 
-import { CreateMasterProductInput } from './inputs/create-masterproduct.input';
+import { CreateMasterProductInput } from './inputs/create-master-product.input';
 import { UpdateMasterProductInput } from './inputs/update-masterproduct.input';
 import {
   MasterProduct,
@@ -15,6 +15,7 @@ import {
 } from './entities/master-product.entity';
 import { PaginationInput } from 'common/library';
 import { CategoryService } from '../category/category.service';
+import { MasterProductList } from './responses/master-products-list.response.entity';
 
 @Injectable()
 export class MasterProductService {
@@ -50,16 +51,19 @@ export class MasterProductService {
   async getAllMasterProducts(
     paginationInput: PaginationInput,
     searchFields?: string[],
-  ) {
+  ): Promise<MasterProductList> {
     const { page, limit, search, sortField, sortOrder } = paginationInput;
+    // let allDocumentsCount = await this.masterProductModel.countDocuments().exec();
+    // console.log(totalCount);
     let query = this.masterProductModel.find();
     if (searchFields == null || !searchFields.length) {
-      // console.log(query);
-      if (search) {
-        query = query.where('masterProductName').regex(new RegExp(search, 'i'));
+      if (sortField && !['ASC', 'DESC'].includes(sortOrder)) {
+        throw new BadRequestException(
+          'Invalid sortOrder. It must be either ASC or DESC.',
+        );
       }
-      if (!page && !limit && !sortField && !sortOrder) {
-        return query.sort({ createdAt: -1 }).exec();
+      if (search) {
+        query = query.where('categoryName').regex(new RegExp(search, 'i'));
       }
       if (sortField && !['ASC', 'DESC'].includes(sortOrder)) {
         throw new BadRequestException(
@@ -67,40 +71,50 @@ export class MasterProductService {
         );
       }
       if (sortField && sortOrder) {
-        console.log(sortOrder, 'single', sortField);
+        // console.log(sortOrder, 'single', sortField);
         const sortOptions: { [key: string]: SortOrder } = {};
         sortOptions[sortField] = sortOrder.toLowerCase() as SortOrder;
         query = query.sort(sortOptions);
       }
-      const skip = (page - 1) * limit;
-      const products = await query.skip(skip).limit(limit).exec();
-      if (!products && products.length === 0) {
-        throw new NotFoundException('MasterProducts not found');
+      if (!page && !limit && !sortField && !sortOrder) {
+        const masterProducts = await query.sort({ createdAt: -1 }).exec();
+        const totalCount = masterProducts.length;
+        return { masterProducts, totalCount };
       }
-      return products;
+      const skip = (page - 1) * limit;
+      const masterProducts = await query.skip(skip).limit(limit).exec();
+      if (!masterProducts && masterProducts.length === 0) {
+        throw new NotFoundException('masterProducts not found');
+      }
+      const totalCount = masterProducts.length;
+      return { masterProducts, totalCount };
     } else {
       query = this.buildQuery(search, searchFields);
       // console.log(query);
       if (!page && !limit && !sortField && !sortOrder) {
-        return query.sort({ createdAt: -1 }).exec();
+        const masterProducts = await query.sort({ createdAt: -1 }).exec();
+        const totalCount = masterProducts.length;
+        return { masterProducts, totalCount };
       }
       if (sortField && !['ASC', 'DESC'].includes(sortOrder)) {
+        // console.log(sortOrder, 'sortOrder', sortField);
         throw new BadRequestException(
           'Invalid sortOrder. It must be either ASC or DESC.',
         );
       }
       if (sortField && sortOrder) {
-        console.log(sortOrder, 'all', sortField);
+        // console.log(sortOrder, 'all', sortField);
         const sortOptions: { [key: string]: SortOrder } = {};
         sortOptions[sortField] = sortOrder.toLowerCase() as SortOrder;
         query = query.sort(sortOptions);
       }
       const skip = (page - 1) * limit;
-      const products = await query.skip(skip).limit(limit).exec();
-      if (!products && products.length == 0) {
-        throw new NotFoundException('MasterProducts not found');
+      const masterProducts = await query.skip(skip).limit(limit).exec();
+      if (!masterProducts && masterProducts.length == 0) {
+        throw new NotFoundException('masterProducts not found');
       }
-      return products;
+      const totalCount = masterProducts.length;
+      return { masterProducts, totalCount };
     }
   }
 

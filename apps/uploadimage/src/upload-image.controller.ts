@@ -96,73 +96,13 @@ export class UploadimageController {
   async uploadFiles(@UploadedFiles() files: Express.Multer.File[]) {
     const fileNames: string[] = [];
     for (const file of files) {
-      const fileName = file.filename; // Access the path of each uploaded file
+      const fileName = file.filename; // Accessing the path of each uploaded file
       console.log(fileName);
       fileNames.push(`${fileName}`);
     }
     console.log(fileNames);
 
-    // Process the uploaded files here
+    // Processing the uploaded files here
     return fileNames;
   }
 }
-
-// ? //////////////////////////////////////////////////////////
-
-// @Post('upload')
-// @UseInterceptors(FilesInterceptor('files'))
-// async importExcelData(
-//   @UploadedFiles() files: Express.Multer.File[],
-// ): Promise<any[]> {
-//   const fileNames: string[] = [];
-//   for (const file of files) {
-//     const fileName = file.filename; // Access the path of each uploaded file
-//     console.log(fileName);
-//     fileName.push(fileName);
-//   }
-//   console.log(fileNames);
-
-//   return fileNames;
-// }
-
-/*
-  // @Get('view')
-  // async viewImage(
-  //   @Res() res: Response,
-  //   @Query('file') filename: string,
-  // ): Promise<void> {
-  //   try {
-  //     const image = await new Promise<Buffer>((resolve, reject) => {
-  //       fs.readFile(filepath, {}, (err, data) => {
-  //         if (err) reject(err);
-  //         else resolve(data);
-  //       });
-  //     });
-
-  //     // Set response headers for client download
-  //     res.setHeader('Content-Type', 'application/pdf');
-  //     res.setHeader('Content-Disposition', 'attachment; filename=example.pdf');
-  //     res.send(pdfBuffer);
-  //   } catch (e) {
-  //     res.status(404).send('File not found');
-  //   }
-  // }
-
-
-module
-MulterModule.register({
-  dest: './uploads/assessment', // Specify the destination directory for uploaded files
-}),
-
-controller
-@Post('uploadExcel')
-  @Roles(UserType.ADMIN)
-  @UseInterceptors(FileInterceptor('file')) // 'file' is the field name for the uploaded file
-  async importExcelData(@UploadedFile() file: Express.Multer.File): Promise<boolean> {
-    const filePath = file.path; // Access the path of the uploaded file
-    const jsonResult = await this.assessmentsService.importExcelData(filePath);
-    // eslint-disable-next-line security/detect-non-literal-fs-filename
-    fs.unlinkSync(file.path);
-    return jsonResult;
-  }
-*/

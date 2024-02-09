@@ -1,9 +1,10 @@
 import { Resolver, Query, Mutation, Args } from '@nestjs/graphql';
 import { MasterProduct } from './entities/master-product.entity';
 import { MasterProductService } from './master-product.service';
-import { CreateMasterProductInput } from './inputs/create-masterproduct.input';
+import { CreateMasterProductInput } from './inputs/create-master-product.input';
 import { UpdateMasterProductInput } from './inputs/update-masterproduct.input';
 import { PaginationInput } from 'common/library';
+import { MasterProductList } from './responses/master-products-list.response.entity';
 
 @Resolver(() => MasterProduct)
 export class MasterProductResolver {
@@ -19,17 +20,18 @@ export class MasterProductResolver {
     );
   }
 
-  @Query(() => [MasterProduct], { name: 'getAllMasterProduct' })
-  getAllMasterProducts(
+  @Query(() => MasterProductList, { name: 'getAllMasterProduct' })
+  async getAllMasterProducts(
     @Args('paginationInput', { nullable: true })
     paginationInput: PaginationInput,
     @Args('searchFields', { type: () => [String], nullable: true })
     searchFields?: string[],
-  ) {
-    return this.masterProductService.getAllMasterProducts(
+  ): Promise<MasterProductList> {
+    const products = await this.masterProductService.getAllMasterProducts(
       paginationInput,
       searchFields ?? [],
     );
+    return products;
   }
 
   @Query(() => MasterProduct, { name: 'getMasterProduct' })
