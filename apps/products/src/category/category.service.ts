@@ -12,7 +12,6 @@ import { CreateCategoryInput } from './inputs/create-category.input';
 import { UpdateCategoryInput } from './inputs/update-category.input';
 import { PaginationInput } from 'common/library/pagination/inputs/pagination.input';
 import { CategoryList } from './responses/category-lists-response.entity';
-
 @Injectable()
 export class CategoryService {
   constructor(
@@ -27,8 +26,52 @@ export class CategoryService {
     if (existingCategory) {
       throw new BadGatewayException('Category already exists');
     }
+    // const parentCategory = await this.categoryModel.findOne({
+    //   _id: createCategoryInput.immediateParentId,
+    // });
+    // const ancestors = parentCategory.ancestors;
+    // if (ancestors) {
+    //   if (
+    //     createCategoryInput.immediateParentId !== null &&
+    //     createCategoryInput.immediateParentId !== undefined &&
+    //     createCategoryInput.immediateParentId.length === 0
+    //   ) {
+    //     // if (!ancestors.includes(createCategoryInput.immediateParentId)) {
+    //     //   ancestors.unshift(createCategoryInput.immediateParentId);
+    //     // }
+    //     const ancestor = new CategoryAncestor();
+    //     if (!(ancestor.ancestorId === parentCategory._id)) {
+    //       ancestor.ancestorName = parentCategory.categoryName.toString();
+    //       ancestor.ancestorId = parentCategory._id.toString();
+    //       ancestors.unshift(ancestor);
+    //     }
+    //   }
+    // }
+    //////////////////////////
+    let ancestors = [];
+    if (createCategoryInput.immediateParentId) {
+      const parentCategory = await this.categoryModel.findById(
+        createCategoryInput.immediateParentId,
+      );
 
-    const newCategory = await this.categoryModel.create(createCategoryInput);
+      if (parentCategory) {
+        ancestors = parentCategory.ancestors || [];
+        const ancestorExists = ancestors.some((ancestor) =>
+          ancestor.id.equals(parentCategory._id),
+        );
+        if (!ancestorExists) {
+          ancestors.unshift({
+            id: parentCategory._id,
+            categoryName: parentCategory.categoryName,
+            sortingOrder: ancestors.length + 1,
+          });
+        }
+      }
+    }
+    const newCategory = await this.categoryModel.create({
+      ...createCategoryInput,
+      ancestors,
+    });
     if (!newCategory) {
       throw new BadGatewayException('Category not created');
     }
