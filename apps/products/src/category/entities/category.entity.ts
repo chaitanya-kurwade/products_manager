@@ -4,6 +4,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 import { CategoryAttributes } from './category-attributes.entity';
 import { MinLength } from 'class-validator';
+import { CategoryAncestor } from './category-ancestor.entity';
 
 @ObjectType()
 @Schema({ timestamps: true })
@@ -58,12 +59,8 @@ export class Category {
   //   message: 'Category ancestors must be at least 2 characters long',
   // })
   @Prop()
-  @Field(() => String, { description: 'ancestors', nullable: true })
-  ancestors: string;
-
-  @Prop()
-  @Field({ description: 'sortingOrder', nullable: true })
-  sortingOrder: number;
+  @Field(() => [CategoryAncestor], { description: 'ancestors', nullable: true })
+  ancestors: CategoryAncestor[];
 
   // @Prop({ type: Date, required: false, default: new Date() })
   @Field(() => GraphQLISODateTime, { nullable: true })

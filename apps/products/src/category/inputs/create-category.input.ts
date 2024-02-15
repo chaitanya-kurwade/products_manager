@@ -1,7 +1,7 @@
-import { InputType, Field, Int } from '@nestjs/graphql';
+import { InputType, Field } from '@nestjs/graphql';
 import { CategoryAttributesInput } from './category-attributes.input';
 import { MinLength } from 'class-validator';
-// import GraphQLJSON from 'graphql-type-json';
+/// import GraphQLJSON from 'graphql-type-json';
 
 @InputType()
 export class CreateCategoryInput {
@@ -47,9 +47,9 @@ export class CreateCategoryInput {
   // @MinLength(2, {
   //   message: 'Category ancestors must be at least 2 characters long',
   // })
-  @Field(() => String, { description: 'ancestors', nullable: true })
-  ancestors: string;
+  // @Field(() => [String], { description: 'ancestors', nullable: true })
+  // ancestors: CategoryAncestorInput[];
 
-  @Field(() => Int, { description: 'sortingOrder', nullable: true })
-  sortingOrder: number;
+  // @Field(() => Int, { description: 'sortingOrder', nullable: true })
+  // sortingOrder: number;
 }
