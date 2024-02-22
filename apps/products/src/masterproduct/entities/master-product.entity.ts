@@ -45,7 +45,7 @@ export class MasterProduct {
 
   @Prop()
   @Field(() => [MasterProductAttributes], { nullable: false, defaultValue: [] })
-  attriburtes: MasterProductAttributes[]; //json[]
+  attributes: MasterProductAttributes[]; //json[]
 
   @Prop()
   @Field({ nullable: true })

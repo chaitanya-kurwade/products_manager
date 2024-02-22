@@ -10,6 +10,8 @@ import { JwtService } from '@nestjs/jwt';
 import { CreateUserInput } from './users/inputs/create-user.input';
 import { User } from './users/entities/user.entity';
 import { ConfigService } from '@nestjs/config';
+import { EmailserviceService } from 'apps/emailservice/src/emailservice.service';
+import { LoginResponse } from './users/responses/user-login.response.entity';
 
 @Injectable()
 export class AuthService {
@@ -17,6 +19,7 @@ export class AuthService {
     private readonly userService: UsersService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly emailService: EmailserviceService,
   ) {}
 
   async validate(email: string, password: string) {
@@ -28,7 +31,7 @@ export class AuthService {
     return pass ? user : null;
   }
 
-  async login(email: string, password: string) {
+  async login(email: string, password: string): Promise<LoginResponse> {
     const user = await this.userService.getUserByEmailId(email);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials : email not found');
@@ -48,13 +51,17 @@ export class AuthService {
     }
   }
 
-  async signup(signupUserInput: CreateUserInput) {
+  async signup(signupUserInput: CreateUserInput): Promise<User> {
     const user = await this.userService.getUserByEmailId(signupUserInput.email);
     if (user) {
       throw new BadRequestException('User already exists');
     }
     const createUserInput = { ...signupUserInput, hashedRefreshToken: '' };
     return this.userService.createUser(createUserInput);
+  }
+
+  async getUserByAccessToken(access_token: string) {
+    return await this.verify(access_token);
   }
 
   async verify(token: string): Promise<User> {
@@ -70,7 +77,6 @@ export class AuthService {
     const access_token = this.jwtService.sign(payload, {
       secret: this.configService.get('JWT_SECRET'),
       expiresIn: `${this.configService.get('JWT_EXPIRATION')}s`,
-      // expiresIn: `10s`,
     });
     const refresh_token = this.jwtService.sign(
       { ...payload, access_token },
@@ -94,7 +100,7 @@ export class AuthService {
     );
   }
 
-  async refreshAccessToken(refresh_token: string) {
+  async refreshAccessToken(refresh_token: string): Promise<string> {
     const payload = this.jwtService.decode(refresh_token);
     const { email } = payload;
     const user = await this.userService.getUserByEmailId(email);
@@ -112,4 +118,21 @@ export class AuthService {
       return access_token;
     }
   }
+
+  // async forgetPassword(email: string) {
+  //   const user = await this.userService.getUserByEmailId(email);
+  //   if (!user) {
+  //     throw new NotFoundException(`user not found with ${email} email id`);
+  //   }
+  //   const userEmail = user.email;
+  //   const userId = user._id;
+  //   const payload = { email: userEmail, _id: userId };
+  //   const reset_token = this.jwtService.sign(payload, {
+  //     secret: this.configService.get('JWT_SECRET'),
+  //     expiresIn: `${this.configService.get('JWT_RESET_PASSWORD_EXPIRATION')}s`,
+  //     // expiresIn: `10s`,
+  //   });
+
+  //   this.emailService.sendEmailToClient(email, reset_token);
+  // }
 }

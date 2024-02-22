@@ -4,6 +4,7 @@ import { SubProductService } from './sub-product.service';
 import { CreateSubProductInput } from './inputs/create-subproduct.input';
 import { UpdateSubProductInput } from './inputs/update-subproduct.input';
 import { PaginationInput } from 'common/library';
+import { SubProductList } from './responses/sub-products-list.response.entity';
 
 @Resolver(() => SubProduct)
 export class SubProductResolver {
@@ -16,14 +17,14 @@ export class SubProductResolver {
     return this.subProductService.createSubProduct(createSubProductInput);
   }
 
-  @Query(() => [SubProduct], { name: 'getAllSubProducts' })
-  getAllSubProducts(
+  @Query(() => SubProductList, { name: 'getAllSubProducts' })
+  async getAllSubProducts(
     @Args('paginationInput', { nullable: true })
     paginationInput: PaginationInput,
     @Args('searchFields', { type: () => [String], nullable: true })
     searchFields: string[],
   ) {
-    const subProducts = this.subProductService.getAllSubProducts(
+    const subProducts = await this.subProductService.getAllSubProducts(
       paginationInput,
       searchFields ?? [],
     );

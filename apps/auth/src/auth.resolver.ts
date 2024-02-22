@@ -10,6 +10,7 @@ import {
 import { CreateUserInput } from './users/inputs/create-user.input';
 import { Public } from 'common/library/decorators/public.decorator';
 import { UserResponse } from './users/responses/user-response.entity';
+import { User } from './users/entities/user.entity';
 @Resolver()
 export class AuthResolver {
   constructor(private readonly authService: AuthService) {}
@@ -50,5 +51,16 @@ export class AuthResolver {
     const access_token =
       await this.authService.refreshAccessToken(refreshToken);
     return access_token;
+  }
+
+  @Mutation(() => UserResponse, { name: 'getUserByAccessToken' })
+  async getUserByAccessToken(
+    @Context() context: { req: Request },
+  ): Promise<User> {
+    const access_token =
+      context.req.headers['authorization']?.split(' ')[1] || null;
+
+    const user = await this.authService.getUserByAccessToken(access_token);
+    return user;
   }
 }

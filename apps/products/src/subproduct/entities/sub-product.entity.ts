@@ -3,6 +3,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 import { SubProductImage } from './sub-product-image.entity';
 import { SubProductAttributes } from './sub-product-attributes.entity';
+import GraphQLJSON from 'graphql-type-json';
 
 @Schema({ timestamps: true })
 @ObjectType()
@@ -20,7 +21,11 @@ export class SubProduct {
 
   @Prop()
   @Field(() => [SubProductAttributes], { nullable: false, defaultValue: [] })
-  attriburtes: SubProductAttributes[];
+  attributes: SubProductAttributes[];
+
+  @Prop({ type: JSON })
+  @Field(() => GraphQLJSON, { nullable: true })
+  subVariant: JSON;
 
   @Prop()
   @Field({ nullable: true })
