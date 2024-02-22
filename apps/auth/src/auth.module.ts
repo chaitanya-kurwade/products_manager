@@ -7,10 +7,12 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtStrategy } from 'common/library/strategies/jwt-strategy';
 import { JwtAuthGuard } from 'common/library/guards/jwt-auth.guard';
 import { APP_GUARD } from '@nestjs/core';
+import { EmailserviceModule } from 'apps/emailservice/src/emailservice.module';
 
 @Module({
   imports: [
     UsersModule,
+    EmailserviceModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: './apps/auth/.env',

@@ -10,11 +10,15 @@ import { Model, SortOrder } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import * as bcrypt from 'bcrypt';
 import { PaginationInput } from 'common/library';
+import { EmailserviceService } from 'apps/emailservice/src/emailservice.service';
+import crypto from 'crypto';
+import { SendEmail } from './entities/send-email.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
+    private readonly emailService: EmailserviceService,
   ) {}
 
   async createUser(createUserInput: CreateUserInput) {
@@ -110,22 +114,6 @@ export class UsersService {
     });
   }
 
-  // async updateUserByEmail(email: string, updateUserInput: UpdateUserInput) {
-  //   if (!updateUserInput.email) {
-  //     throw new NotFoundException(`user not found with email: ${email}`);
-  //   }
-
-  //   // const user = this.getUserByEmailId(email);
-  //   return this.userModel.findByIdAndUpdate({
-  //     updateUserInput,
-  //   });
-  // }
-
-  // updatePassword(id: string, password: string) {
-  //   const user = this.findOne(id);
-  //   const updatePassword = bcrypt.compare();
-  // }
-
   remove(_id: string) {
     const user = this.userModel.findByIdAndDelete(_id);
     if (!user) {
@@ -163,4 +151,48 @@ export class UsersService {
     const loginResponse = `you've been logged out successfully with ${email}`;
     return loginResponse;
   }
+
+  async forgetPassword(email: string): Promise<SendEmail> {
+    const user = await this.getUserByEmailId(email);
+
+    if (!user) {
+      throw new NotFoundException(
+        `user not found with ${email} email id, kindly put valid email id`,
+      );
+    }
+
+    const generateRandomHexString = (length: number): string =>
+      crypto.randomBytes(length / 2).toString('hex');
+
+    const isHexStringUnique = async (hexString: string): Promise<string> => {
+      const isUniqueHex = await this.emailService.checkHexIsUnique(hexString);
+      return isUniqueHex;
+    };
+
+    let hexString: string;
+    do {
+      hexString = generateRandomHexString(32);
+    } while (!isHexStringUnique(hexString));
+    console.log(hexString);
+    const now = new Date();
+    // Get the current time in UTC
+    const currentUTCTime = now.getTime() + now.getTimezoneOffset() * 60000;
+    // IST is UTC+5:30, so add 5 hours and 30 minutes in milliseconds
+    const istOffset = 5 * 60 * 60 * 1000 + 30 * 60 * 1000;
+    // Calculate the timestamp for the next hour in IST
+    const nextHourTimestamp = currentUTCTime + 60 * 60 * 1000 + istOffset;
+    // Create a new Date object for the next hour in IST
+    const validTillNextHour = new Date(nextHourTimestamp);
+    this.emailService.sendEmailToClient(email, hexString);
+    console.log({ email, hexString, validTillNextHour });
+
+    return { email, hexString, validTillNextHour };
+  }
+
+  // async receiveForgetPasswordToken(newPassword: string, reset_token: string) {
+  //   return await this.emailService.receiveForgetPasswordToken(
+  //     newPassword,
+  //     reset_token,
+  //   );
+  // }
 }

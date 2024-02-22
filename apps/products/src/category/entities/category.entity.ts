@@ -33,8 +33,8 @@ export class Category {
   description: string;
 
   @Prop()
-  // @Field(() => String, { description: 'icon', nullable: false })
-  @MinLength(2, { message: 'Category icon must be at least 2 characters long' })
+  @Field(() => String, { description: 'icon', nullable: false })
+  // @MinLength(2, { message: 'Category icon must be at least 2 characters long' })
   icon: string;
 
   @Prop()

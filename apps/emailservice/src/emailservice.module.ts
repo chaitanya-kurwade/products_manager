@@ -1,25 +1,26 @@
 import { Module } from '@nestjs/common';
-import { UsersService } from './users.service';
-import { UsersResolver } from './users.resolver';
-import { User, UserSchema } from './entities/user.entity';
-import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
-import { MongooseModule } from '@nestjs/mongoose';
+import { EmailserviceService } from './emailservice.service';
 import { GraphQLModule } from '@nestjs/graphql';
-import { ConfigModule, ConfigService } from '@nestjs/config';
 import {
   ApolloFederationDriver,
   ApolloFederationDriverConfig,
 } from '@nestjs/apollo';
-import { EmailserviceModule } from 'apps/emailservice/src/emailservice.module';
+import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
+import { MongooseModule } from '@nestjs/mongoose';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { SendEmail, SendEmailSchema } from './entity/sendemail.entity';
 
 @Module({
   imports: [
-    EmailserviceModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: './apps/emailservice/.env',
+    }),
     ConfigModule.forRoot({ isGlobal: true }),
     MongooseModule.forFeature([
       {
-        name: User.name,
-        schema: UserSchema,
+        name: SendEmail.name,
+        schema: SendEmailSchema,
       },
     ]),
     MongooseModule.forRootAsync({
@@ -38,7 +39,8 @@ import { EmailserviceModule } from 'apps/emailservice/src/emailservice.module';
       playground: false,
     }),
   ],
-  providers: [UsersResolver, UsersService],
-  exports: [UsersResolver, UsersService],
+  controllers: [],
+  exports: [EmailserviceService],
+  providers: [EmailserviceService],
 })
-export class UsersModule {}
+export class EmailserviceModule {}

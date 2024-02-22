@@ -98,6 +98,9 @@ dependencies:
   multer:
     specifier: 1.4.5-lts.1
     version: 1.4.5-lts.1
+  nodemailer:
+    specifier: ^6.9.9
+    version: 6.9.9
   passport-jwt:
     specifier: ^4.0.1
     version: 4.0.1

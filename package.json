@@ -51,6 +51,7 @@
     "joi": "^17.11.0",
     "mongoose": "^8.0.3",
     "multer": "1.4.5-lts.1",
+    "nodemailer": "^6.9.9",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
     "reflect-metadata": "^0.1.14",

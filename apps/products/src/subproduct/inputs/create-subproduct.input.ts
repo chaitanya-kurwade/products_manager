@@ -1,6 +1,7 @@
 import { InputType, Field } from '@nestjs/graphql';
 import { SubProductImageInput } from './sub-product-image.input';
 import { SubProductAttributesInput } from './sub-product-attributes.input';
+import GraphQLJSON from 'graphql-type-json';
 
 @InputType()
 export class CreateSubProductInput {
@@ -15,6 +16,9 @@ export class CreateSubProductInput {
     defaultValue: [],
   })
   attributes: SubProductAttributesInput[];
+
+  @Field(() => GraphQLJSON, { nullable: true })
+  subVariant: JSON;
 
   @Field({ nullable: true })
   store: string; //[hierarchies], # ref: hierarchies.yaml

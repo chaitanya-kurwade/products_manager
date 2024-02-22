@@ -87,6 +87,7 @@ export class CategoryService {
     // console.log(totalCount);
     let query = this.categoryModel.find();
     if (searchFields == null || !searchFields.length) {
+      // const totalCount = await query.countDocuments();
       if (sortField && !['ASC', 'DESC'].includes(sortOrder)) {
         throw new BadRequestException(
           'Invalid sortOrder. It must be either ASC or DESC.',
@@ -95,13 +96,7 @@ export class CategoryService {
       if (search) {
         query = query.where('categoryName').regex(new RegExp(search, 'i'));
       }
-      if (sortField && !['ASC', 'DESC'].includes(sortOrder)) {
-        throw new BadRequestException(
-          'Invalid sortOrder. It must be either ASC or DESC.',
-        );
-      }
       if (sortField && sortOrder) {
-        // console.log(sortOrder, 'single', sortField);
         const sortOptions: { [key: string]: SortOrder } = {};
         sortOptions[sortField] = sortOrder.toLowerCase() as SortOrder;
         query = query.sort(sortOptions);
@@ -116,48 +111,52 @@ export class CategoryService {
       if (!categories && categories.length === 0) {
         throw new NotFoundException('Categories not found');
       }
-      const totalCount = categories.length;
+      const totalCount = (await this.categoryModel.find()).length;
       return { categories, totalCount };
     } else {
-      query = this.buildQuery(search, searchFields);
-      // console.log(query);
-      if (!page && !limit && !sortField && !sortOrder) {
-        const categories = await query.sort({ createdAt: -1 }).exec();
-        const totalCount = categories.length;
-        return { categories, totalCount };
-      }
+      // query = this.buildQuery(search, searchFields);
+      let totalCount = (await this.categoryModel.find()).length;
       if (sortField && !['ASC', 'DESC'].includes(sortOrder)) {
-        // console.log(sortOrder, 'sortOrder', sortField);
         throw new BadRequestException(
           'Invalid sortOrder. It must be either ASC or DESC.',
         );
       }
+      if (search) {
+        const orConditions = searchFields.map((field) => ({
+          [field]: { $regex: new RegExp(search, 'i') },
+        }));
+        query = query.or(orConditions);
+      }
       if (sortField && sortOrder) {
-        // console.log(sortOrder, 'all', sortField);
         const sortOptions: { [key: string]: SortOrder } = {};
         sortOptions[sortField] = sortOrder.toLowerCase() as SortOrder;
         query = query.sort(sortOptions);
+      }
+      if (!page && !limit && !sortField && !sortOrder) {
+        const categories = await query.sort({ createdAt: -1 }).exec();
+        const totalCount = categories.length;
+        return { categories, totalCount };
       }
       const skip = (page - 1) * limit;
       const categories = await query.skip(skip).limit(limit).exec();
       if (!categories && categories.length == 0) {
         throw new NotFoundException('Categories not found');
       }
-      const totalCount = categories.length;
+      totalCount = categories.length;
       return { categories, totalCount };
     }
   }
 
-  private buildQuery(search: string, searchFields?: string[]): any {
-    let query = this.categoryModel.find();
-    if (search) {
-      const orConditions = searchFields.map((field) => ({
-        [field]: { $regex: new RegExp(search, 'i') },
-      }));
-      query = query.or(orConditions);
-    }
-    return query;
-  }
+  // private buildQuery(search: string, searchFields?: string[]): any {
+  //   let query = this.categoryModel.find();
+  //   if (search) {
+  //     const orConditions = searchFields.map((field) => ({
+  //       [field]: { $regex: new RegExp(search, 'i') },
+  //     }));
+  //     query = query.or(orConditions);
+  //   }
+  //   return query;
+  // }
 
   async getCategoryById(_id: string) {
     const category = await this.categoryModel.findById(_id);

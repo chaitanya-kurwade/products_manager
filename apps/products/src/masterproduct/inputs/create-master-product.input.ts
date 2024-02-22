@@ -32,7 +32,7 @@ export class CreateMasterProductInput {
     nullable: false,
     defaultValue: [],
   })
-  attriburtes: MasterProductAttributesInput[]; //json
+  attributes: MasterProductAttributesInput[]; //json
 
   @Field({ nullable: true })
   tags: string; //string[]

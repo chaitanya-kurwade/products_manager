@@ -63,7 +63,7 @@ export class MasterProductService {
         );
       }
       if (search) {
-        query = query.where('categoryName').regex(new RegExp(search, 'i'));
+        query = query.where('masterProductName').regex(new RegExp(search, 'i'));
       }
       if (sortField && !['ASC', 'DESC'].includes(sortOrder)) {
         throw new BadRequestException(

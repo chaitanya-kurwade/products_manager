@@ -63,6 +63,15 @@
       "compilerOptions": {
         "tsConfigPath": "apps/uploadimage/tsconfig.app.json"
       }
+    },
+    "emailservice": {
+      "type": "application",
+      "root": "apps/emailservice",
+      "entryFile": "main",
+      "sourceRoot": "apps/emailservice/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/emailservice/tsconfig.app.json"
+      }
     }
   }
 }
