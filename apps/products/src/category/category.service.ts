@@ -1,12 +1,11 @@
 import {
   BadGatewayException,
-  BadRequestException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, SortOrder } from 'mongoose';
+import { Model } from 'mongoose';
 import { Category, CategoryDocument } from './entities/category.entity';
 import { CreateCategoryInput } from './inputs/create-category.input';
 import { UpdateCategoryInput } from './inputs/update-category.input';
@@ -82,81 +81,38 @@ export class CategoryService {
     paginationInput: PaginationInput,
     searchFields?: string[],
   ): Promise<CategoryList> {
-    const { page, limit, search, sortField, sortOrder } = paginationInput;
-    // let allDocumentsCount = await this.categoryModel.countDocuments().exec();
-    // console.log(totalCount);
-    let query = this.categoryModel.find();
-    if (searchFields == null || !searchFields.length) {
-      // const totalCount = await query.countDocuments();
-      if (sortField && !['ASC', 'DESC'].includes(sortOrder)) {
-        throw new BadRequestException(
-          'Invalid sortOrder. It must be either ASC or DESC.',
-        );
-      }
-      if (search) {
-        query = query.where('categoryName').regex(new RegExp(search, 'i'));
-      }
-      if (sortField && sortOrder) {
-        const sortOptions: { [key: string]: SortOrder } = {};
-        sortOptions[sortField] = sortOrder.toLowerCase() as SortOrder;
-        query = query.sort(sortOptions);
-      }
-      if (!page && !limit && !sortField && !sortOrder) {
-        const categories = await query.sort({ createdAt: -1 }).exec();
-        const totalCount = categories.length;
-        return { categories, totalCount };
-      }
-      const skip = (page - 1) * limit;
-      const categories = await query.skip(skip).limit(limit).exec();
-      if (!categories && categories.length === 0) {
-        throw new NotFoundException('Categories not found');
-      }
-      const totalCount = (await this.categoryModel.find()).length;
-      return { categories, totalCount };
-    } else {
-      // query = this.buildQuery(search, searchFields);
-      let totalCount = (await this.categoryModel.find()).length;
-      if (sortField && !['ASC', 'DESC'].includes(sortOrder)) {
-        throw new BadRequestException(
-          'Invalid sortOrder. It must be either ASC or DESC.',
-        );
-      }
-      if (search) {
-        const orConditions = searchFields.map((field) => ({
-          [field]: { $regex: new RegExp(search, 'i') },
-        }));
-        query = query.or(orConditions);
-      }
-      if (sortField && sortOrder) {
-        const sortOptions: { [key: string]: SortOrder } = {};
-        sortOptions[sortField] = sortOrder.toLowerCase() as SortOrder;
-        query = query.sort(sortOptions);
-      }
-      if (!page && !limit && !sortField && !sortOrder) {
-        const categories = await query.sort({ createdAt: -1 }).exec();
-        const totalCount = categories.length;
-        return { categories, totalCount };
-      }
-      const skip = (page - 1) * limit;
-      const categories = await query.skip(skip).limit(limit).exec();
-      if (!categories && categories.length == 0) {
-        throw new NotFoundException('Categories not found');
-      }
-      totalCount = categories.length;
-      return { categories, totalCount };
-    }
-  }
+    const { page, limit, search, sortOrder } = paginationInput;
 
-  // private buildQuery(search: string, searchFields?: string[]): any {
-  //   let query = this.categoryModel.find();
-  //   if (search) {
-  //     const orConditions = searchFields.map((field) => ({
-  //       [field]: { $regex: new RegExp(search, 'i') },
-  //     }));
-  //     query = query.or(orConditions);
-  //   }
-  //   return query;
-  // }
+    let query = this.categoryModel.find();
+    let totalCountQuery = this.categoryModel.find();
+
+    // Apply search if search term is provided
+    if (search && searchFields.length > 0) {
+      const searchQuery = {};
+      searchFields.forEach((field) => {
+        searchQuery[field] = { $regex: search, $options: 'i' };
+      });
+      query = query.find({ $or: [searchQuery] });
+      totalCountQuery = totalCountQuery.find({ $or: [searchQuery] });
+    }
+
+    // Apply sorting
+    if (sortOrder) {
+      query = query.sort(sortOrder);
+    }
+
+    // Apply pagination
+    const skip = (page - 1) * limit;
+    query = query.skip(skip).limit(limit);
+
+    // Execute the query
+    const categories = await query.exec();
+
+    // Count total filtered documents
+    const totalCount = await totalCountQuery.countDocuments();
+
+    return { categories, totalCount };
+  }
 
   async getCategoryById(_id: string) {
     const category = await this.categoryModel.findById(_id);
