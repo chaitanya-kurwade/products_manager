@@ -87,13 +87,22 @@ export class CategoryService {
     let totalCountQuery = this.categoryModel.find();
 
     // Apply search if search term is provided
+    // if (search && searchFields.length >= 0) {
+    //   console.log(search);
+    //   const searchQuery = {};
+    //   searchFields.forEach((field) => {
+    //     searchQuery[field] = { $regex: search, $options: 'i' };
+    //   });
+    //   query = query.find({ $or: [searchQuery] });
+    //   totalCountQuery = totalCountQuery.find({ $or: [searchQuery] });
+    // }
     if (search && searchFields.length > 0) {
-      const searchQuery = {};
-      searchFields.forEach((field) => {
-        searchQuery[field] = { $regex: search, $options: 'i' };
-      });
-      query = query.find({ $or: [searchQuery] });
-      totalCountQuery = totalCountQuery.find({ $or: [searchQuery] });
+      const searchQueries = searchFields.map((field) => ({
+        [field]: { $regex: search, $options: 'i' },
+      }));
+      const $orCondition = { $or: searchQueries };
+      query = query.find($orCondition);
+      totalCountQuery = totalCountQuery.find($orCondition);
     }
 
     // Apply sorting
