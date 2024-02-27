@@ -31,14 +31,27 @@ export class AuthService {
     return pass ? user : null;
   }
 
+  async enterUsernameOrEmailOrPhoneNumber(
+    credential: string,
+    password: string,
+  ): Promise<LoginResponse> {
+    const user =
+      await this.userService.enterUsernameOrEmailOrPhoneNumber(credential);
+    console.log(user.email);
+    if (!user) {
+      throw new NotFoundException(
+        'user not found, please pass valid credentials',
+      );
+    }
+    return this.login(user.email, password);
+  }
+
   async login(email: string, password: string): Promise<LoginResponse> {
     const user = await this.userService.getUserByEmailId(email);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials : email not found');
     } else {
       const isPasswordValid = await bcrypt.compare(password, user.password);
-      console.log(password + '   ' + user.password);
-      console.log(isPasswordValid);
       if (!isPasswordValid) {
         throw new UnauthorizedException('Invalid credentials : wrong password');
       }
@@ -46,15 +59,22 @@ export class AuthService {
         user._id,
         user.email,
       );
-      console.log(user);
       return { access_token, refresh_token };
     }
   }
 
+  // async loginWithOtp(credential: string) {
+  //   const user = await this.userService.loginWithOtp(credential);
+
+  //   return this.login(user.email, user.password);
+  // }
+
   async signup(signupUserInput: CreateUserInput): Promise<User> {
     const user = await this.userService.getUserByEmailId(signupUserInput.email);
     if (user) {
-      throw new BadRequestException('User already exists');
+      throw new BadRequestException(
+        'User email id already exists, kindly login',
+      );
     }
     const createUserInput = { ...signupUserInput, hashedRefreshToken: '' };
     return this.userService.createUser(createUserInput);
@@ -135,4 +155,16 @@ export class AuthService {
 
   //   this.emailService.sendEmailToClient(email, reset_token);
   // }
+
+  async getOtpToLogin(credential: string, otp: number): Promise<LoginResponse> {
+    const user = await this.userService.getUserToVerifyOtp(credential);
+
+    if (user.otp === otp) {
+      const { access_token, refresh_token } = await this.createTokens(
+        user._id,
+        user.email,
+      );
+      return { access_token, refresh_token };
+    }
+  }
 }

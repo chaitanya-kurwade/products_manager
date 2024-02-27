@@ -13,17 +13,43 @@ import { PaginationInput } from 'common/library';
 import { EmailserviceService } from 'apps/emailservice/src/emailservice.service';
 import crypto from 'crypto';
 import { SendEmail } from './entities/send-email.entity';
+import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class UsersService {
+  private transporter: nodemailer.Transporter;
+
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
     private readonly emailService: EmailserviceService,
-  ) {}
+  ) {
+    this.transporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: 'chaitanyakurwade1234@gmail.com',
+        pass: 'uvtdgmeetvgituop',
+      },
+    });
+  }
 
   async createUser(createUserInput: CreateUserInput) {
     if (!createUserInput.email) {
       throw new BadRequestException('user not created');
+    }
+    const { email, username, phoneNumber } = createUserInput;
+    const user = await this.userModel.findOne({
+      $or: [
+        { email: email },
+        { phoneNumber: phoneNumber },
+        { username: username },
+      ],
+    });
+    if (user) {
+      throw new BadRequestException(
+        'user not created, please pass valid username or phone number',
+      );
     }
     const password = await bcrypt.hash(createUserInput.password, 10);
     return this.userModel.create({
@@ -195,4 +221,58 @@ export class UsersService {
   //     reset_token,
   //   );
   // }
+
+  async enterUsernameOrEmailOrPhoneNumber(credential: string): Promise<User> {
+    const user = await this.userModel.findOne({
+      $or: [
+        { email: credential },
+        { phoneNumber: credential },
+        { username: credential },
+      ],
+    });
+    if (!user) {
+      throw new NotFoundException(
+        'user not found, please pass valid credentials',
+      );
+    }
+    return user;
+  }
+
+  async sendOtp(credential: string): Promise<string> {
+    const otp = Math.floor(Math.random() * 900000) + 100000;
+
+    const email = await this.userModel.findOne({ email: credential });
+
+    if (email) {
+      const info = await this.transporter.sendMail({
+        from: 'Chaitanya <chaitanyakurwade1234@gmail.com>',
+        to: email,
+        html: `<b>Hello, ${email}!</b><p>This is a test email and here it is your otp: "${otp}".</p>`,
+      });
+      console.log('Message sent: %s', info.messageId);
+      await this.transporter.sendMail(info);
+      await this.userModel.findOneAndUpdate({ email: email, otp: otp });
+      return 'otp sent sucessfully';
+    }
+
+    const phoneNumber = await this.userModel.findOne({
+      phoneNumber: credential,
+    });
+
+    if (phoneNumber) {
+      console.log(phoneNumber);
+    }
+  }
+
+  async getUserToVerifyOtp(credential: string): Promise<User> {
+    const user = await this.userModel.findOne({
+      $or: [
+        { email: credential },
+        { phoneNumber: credential },
+        { username: credential },
+      ],
+    });
+
+    return user;
+  }
 }
