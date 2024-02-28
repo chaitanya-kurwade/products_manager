@@ -54,4 +54,20 @@ export class MasterProductResolver {
   deleteMasterProductById(@Args('_id', { type: () => String }) _id: string) {
     return this.masterProductService.deleteMasterProductById(_id);
   }
+
+  @Mutation(() => String)
+  deleteCategoryAndMasterProduct(
+    @Args('categoryId', { type: () => String }) categoryId: string,
+  ) {
+    return this.masterProductService.deleteCategoryAndMasterProduct(categoryId);
+  }
+
+  @Mutation(() => String)
+  deleteMasterProductAndItsSubProducts(
+    @Args('masterProductId', { type: () => String }) masterProductId: string,
+  ) {
+    return this.masterProductService.deleteMasterProductAndItsSubProducts(
+      masterProductId,
+    );
+  }
 }
