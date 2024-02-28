@@ -52,10 +52,17 @@ export class SubProductService {
       totalCountQuery = totalCountQuery.find($orCondition);
     }
 
+    let sortOptions = {};
     if (sortOrder) {
-      query = query.sort(sortOrder);
+      if (sortOrder.toUpperCase() === 'ASC') {
+        sortOptions = { createdAt: 1 };
+      } else if (sortOrder.toUpperCase() === 'DESC') {
+        sortOptions = { createdAt: -1 };
+      }
+    } else {
+      sortOptions = { createdAt: -1 };
     }
-
+    query = query.sort(sortOptions);
     const skip = (page - 1) * limit;
     query = query.skip(skip).limit(limit);
 
@@ -64,17 +71,6 @@ export class SubProductService {
     const totalCount = await totalCountQuery.countDocuments();
 
     return { subProducts, totalCount };
-  }
-
-  private buildQuery(search: string, searchFields?: string[]): any {
-    let query = this.subProductModel.find();
-    if (search) {
-      const orConditions = searchFields.map((field) => ({
-        [field]: { $regex: new RegExp(search, 'i') },
-      }));
-      query = query.or(orConditions);
-    }
-    return query;
   }
 
   async getOneSubProductById(_id: string) {

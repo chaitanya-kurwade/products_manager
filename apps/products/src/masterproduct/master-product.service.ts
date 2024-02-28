@@ -78,19 +78,22 @@ export class MasterProductService {
       totalCountQuery = totalCountQuery.find($orCondition);
     }
 
-    // Apply sorting
+    let sortOptions = {};
     if (sortOrder) {
-      query = query.sort(sortOrder);
+      if (sortOrder.toUpperCase() === 'ASC') {
+        sortOptions = { createdAt: 1 };
+      } else if (sortOrder.toUpperCase() === 'DESC') {
+        sortOptions = { createdAt: -1 };
+      }
+    } else {
+      sortOptions = { createdAt: -1 };
     }
-
-    // Apply pagination
+    query = query.sort(sortOptions);
     const skip = (page - 1) * limit;
     query = query.skip(skip).limit(limit);
 
-    // Execute the query
     const masterProducts = await query.exec();
 
-    // Count total filtered documents
     const totalCount = await totalCountQuery.countDocuments();
 
     return { masterProducts, totalCount };
