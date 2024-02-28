@@ -86,16 +86,6 @@ export class CategoryService {
     let query = this.categoryModel.find();
     let totalCountQuery = this.categoryModel.find();
 
-    // Apply search if search term is provided
-    // if (search && searchFields.length >= 0) {
-    //   console.log(search);
-    //   const searchQuery = {};
-    //   searchFields.forEach((field) => {
-    //     searchQuery[field] = { $regex: search, $options: 'i' };
-    //   });
-    //   query = query.find({ $or: [searchQuery] });
-    //   totalCountQuery = totalCountQuery.find({ $or: [searchQuery] });
-    // }
     if (search && searchFields.length > 0) {
       const searchQueries = searchFields.map((field) => ({
         [field]: { $regex: search, $options: 'i' },
@@ -105,19 +95,22 @@ export class CategoryService {
       totalCountQuery = totalCountQuery.find($orCondition);
     }
 
-    // Apply sorting
+    let sortOptions = {};
     if (sortOrder) {
-      query = query.sort(sortOrder);
+      if (sortOrder.toUpperCase() === 'ASC') {
+        sortOptions = { createdAt: 1 };
+      } else if (sortOrder.toUpperCase() === 'DESC') {
+        sortOptions = { createdAt: -1 };
+      }
+    } else {
+      sortOptions = { createdAt: -1 };
     }
-
-    // Apply pagination
+    query = query.sort(sortOptions);
     const skip = (page - 1) * limit;
     query = query.skip(skip).limit(limit);
 
-    // Execute the query
     const categories = await query.exec();
 
-    // Count total filtered documents
     const totalCount = await totalCountQuery.countDocuments();
 
     return { categories, totalCount };
