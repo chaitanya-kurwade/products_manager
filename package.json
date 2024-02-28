@@ -49,6 +49,7 @@
     "graphql-upload-ts": "^2.1.0",
     "http-proxy-middleware": "^2.0.6",
     "joi": "^17.11.0",
+    "mongodb": "^6.3.0",
     "mongoose": "^8.0.3",
     "multer": "1.4.5-lts.1",
     "nodemailer": "^6.9.9",
