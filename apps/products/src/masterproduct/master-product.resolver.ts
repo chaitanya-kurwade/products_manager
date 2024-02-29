@@ -50,13 +50,13 @@ export class MasterProductResolver {
     );
   }
 
-  @Mutation(() => MasterProduct)
-  deleteMasterProductById(@Args('_id', { type: () => String }) _id: string) {
-    return this.masterProductService.deleteMasterProductById(_id);
-  }
+  // @Mutation(() => MasterProduct)
+  // deleteMasterProductById(@Args('_id', { type: () => String }) _id: string) {
+  //   return this.masterProductService.deleteMasterProductById(_id);
+  // }
 
   @Mutation(() => String)
-  deleteCategoryAndMasterProduct(
+  deleteCategoryById(
     @Args('categoryId', { type: () => String }) categoryId: string,
   ) {
     return this.masterProductService.deleteCategoryAndMasterProduct(categoryId);
