@@ -23,10 +23,13 @@ export class SubProductResolver {
     paginationInput: PaginationInput,
     @Args('searchFields', { type: () => [String], nullable: true })
     searchFields: string[],
+    @Args('masterProductIds', { type: () => [String], nullable: true })
+    masterProductIds: string[],
   ) {
     const subProducts = await this.subProductService.getAllSubProducts(
       paginationInput,
       searchFields ?? [],
+      masterProductIds ?? [],
     );
     return subProducts;
   }
@@ -36,7 +39,7 @@ export class SubProductResolver {
     return this.subProductService.getOneSubProductById(_id);
   }
 
-  @Query(() => [SubProduct], { name: 'getSubProductByMasterProductId' })
+  @Mutation(() => [SubProduct], { name: 'getSubProductByMasterProductId' })
   getSubProductsByMasterProductId(
     @Args('masterProductId') masterProductId: string,
   ) {

@@ -26,10 +26,13 @@ export class MasterProductResolver {
     paginationInput: PaginationInput,
     @Args('searchFields', { type: () => [String], nullable: true })
     searchFields?: string[],
+    @Args('categoryIds', { type: () => [String], nullable: true })
+    categoryIds?: string[],
   ): Promise<MasterProductList> {
     const products = await this.masterProductService.getAllMasterProducts(
       paginationInput,
       searchFields ?? [],
+      categoryIds ?? [],
     );
     return products;
   }
@@ -63,7 +66,7 @@ export class MasterProductResolver {
   }
 
   @Mutation(() => String)
-  deleteMasterProductAndItsSubProducts(
+  deleteMasterProduct(
     @Args('masterProductId', { type: () => String }) masterProductId: string,
   ) {
     return this.masterProductService.deleteMasterProductAndItsSubProducts(

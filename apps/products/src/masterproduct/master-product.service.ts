@@ -46,7 +46,7 @@ export class MasterProductService {
     });
     if (existingSku) {
       throw new BadGatewayException(
-        'Master product already exists with this name:' + existingSku,
+        'Master product already exists with this sku:' + existingSku,
       );
     }
     try {
@@ -63,13 +63,27 @@ export class MasterProductService {
   async getAllMasterProducts(
     paginationInput: PaginationInput,
     searchFields?: string[],
+    categoryIds?: string[],
   ): Promise<MasterProductList> {
     const { page, limit, search, sortOrder } = paginationInput;
 
-    let query = this.masterProductModel.find();
-    let totalCountQuery = this.masterProductModel.find();
+    // query starts form here
+    let query = this.masterProductModel.find({ status: 'PUBLISHED' });
+    let totalCountQuery = this.masterProductModel.find({ status: 'PUBLISHED' });
 
-    if (search && searchFields.length > 0) {
+    // getMinMaxPrices
+    const getMinMaxPrices = await this.subProductService.getMinMaxPrices();
+    const minPrice = getMinMaxPrices.minPrice;
+    const maxPrice = getMinMaxPrices.maxPrice;
+
+    // categoryIds[] wise search
+    if (categoryIds && categoryIds.length !== 0) {
+      query = query.where('category._id').in(categoryIds);
+      totalCountQuery = totalCountQuery.where('category._id').in(categoryIds);
+    }
+
+    // search
+    if (search && searchFields && searchFields.length !== 0) {
       const searchQueries = searchFields.map((field) => ({
         [field]: { $regex: search, $options: 'i' },
       }));
@@ -78,6 +92,7 @@ export class MasterProductService {
       totalCountQuery = totalCountQuery.find($orCondition);
     }
 
+    // sort and default sort: DESC
     let sortOptions = {};
     if (sortOrder) {
       if (sortOrder.toUpperCase() === 'ASC') {
@@ -89,21 +104,29 @@ export class MasterProductService {
       sortOptions = { createdAt: -1 };
     }
     query = query.sort(sortOptions);
+
+    // pagination
     const skip = (page - 1) * limit;
     query = query.skip(skip).limit(limit);
 
     const masterProducts = await query.exec();
+    const totalCount = await totalCountQuery.countDocuments().exec();
 
-    const totalCount = await totalCountQuery.countDocuments();
-
-    return { masterProducts, totalCount };
+    return {
+      masterProducts,
+      totalCount,
+      minPrice: minPrice,
+      maxPrice: maxPrice,
+    };
   }
 
   async getOneMasterProductById(_id: string) {
-    const product = await this.masterProductModel.findById(_id);
-    if (!product) {
+    const product = await this.masterProductModel.findById({
+      _id,
+    });
+    if (!product || product.status !== 'PUBLISHED') {
       throw new NotFoundException(
-        'MasterProduct not available with Id: ' + _id,
+        'Product not available with _id: ' + _id + ', or it is not published',
       );
     }
     return product;
@@ -117,18 +140,22 @@ export class MasterProductService {
       _id,
       updateMasterProductInput,
     );
-    if (!product) {
+    if (!product || product.status !== 'PUBLISHED') {
       throw new BadRequestException('MasterProduct not updated, _id: ' + _id);
     }
     return product;
   }
 
   async deleteMasterProductById(_id: string) {
-    const product = await this.masterProductModel.findByIdAndDelete(_id);
+    const product = await this.masterProductModel.findById({
+      _id,
+      status: 'PUBLISHED',
+    });
     if (!product) {
       throw new NotFoundException('MasterProduct not deleted, _id: ' + _id);
     }
-    return product;
+    product.status = 'ARCHIVED';
+    return product.save();
   }
 
   async deleteMasterProductAndItsSubProducts(
@@ -151,6 +178,7 @@ export class MasterProductService {
     }
     const masterProduct = await this.masterProductModel.find({
       'category._id': categoryId,
+      status: 'PUBLISHED',
     });
     // console.log(masterProduct.map((product) => product._id));
     if (!masterProduct) {
