@@ -118,8 +118,10 @@ export class CategoryService {
 
   async getCategoryById(_id: string) {
     const category = await this.categoryModel.findById(_id);
-    if (!category) {
-      throw new NotFoundException('category not found with _id: ' + _id);
+    if (!category || category.status !== 'PUBLISHED') {
+      throw new NotFoundException(
+        'category not available with _id: ' + _id + ', or it is not published',
+      );
     }
     return category;
   }
@@ -129,17 +131,18 @@ export class CategoryService {
       _id,
       updateCategoryInput,
     );
-    if (!category) {
+    if (!category || category.status !== 'PUBLISHED') {
       throw new BadGatewayException('category not updated, _id: ' + _id);
     }
     return category;
   }
 
   async remove(_id: string) {
-    const category = await this.categoryModel.findByIdAndDelete(_id);
+    const category = await this.categoryModel.findById(_id);
     if (!category) {
       throw new NotFoundException('Catogory not deleted, _id: ' + _id);
     }
-    return category;
+    category.status = 'ARCHIVED';
+    return category.save();
   }
 }
