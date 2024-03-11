@@ -10,8 +10,8 @@ import { JwtService } from '@nestjs/jwt';
 import { CreateUserInput } from './users/inputs/create-user.input';
 import { User } from './users/entities/user.entity';
 import { ConfigService } from '@nestjs/config';
-import { EmailserviceService } from 'apps/emailservice/src/emailservice.service';
 import { LoginResponse } from './users/responses/user-login.response.entity';
+import { EmailserviceService } from 'apps/emailservice/src/emailservice.service';
 
 @Injectable()
 export class AuthService {
@@ -62,12 +62,6 @@ export class AuthService {
       return { access_token, refresh_token };
     }
   }
-
-  // async loginWithOtp(credential: string) {
-  //   const user = await this.userService.loginWithOtp(credential);
-
-  //   return this.login(user.email, user.password);
-  // }
 
   async signup(signupUserInput: CreateUserInput): Promise<User> {
     const user = await this.userService.getUserByEmailId(signupUserInput.email);
@@ -139,32 +133,76 @@ export class AuthService {
     }
   }
 
-  // async forgetPassword(email: string) {
-  //   const user = await this.userService.getUserByEmailId(email);
-  //   if (!user) {
-  //     throw new NotFoundException(`user not found with ${email} email id`);
-  //   }
-  //   const userEmail = user.email;
-  //   const userId = user._id;
-  //   const payload = { email: userEmail, _id: userId };
-  //   const reset_token = this.jwtService.sign(payload, {
-  //     secret: this.configService.get('JWT_SECRET'),
-  //     expiresIn: `${this.configService.get('JWT_RESET_PASSWORD_EXPIRATION')}s`,
-  //     // expiresIn: `10s`,
-  //   });
-
-  //   this.emailService.sendEmailToClient(email, reset_token);
-  // }
-
-  async getOtpToLogin(credential: string, otp: number): Promise<LoginResponse> {
-    const user = await this.userService.getUserToVerifyOtp(credential);
-
-    if (user.otp === otp) {
-      const { access_token, refresh_token } = await this.createTokens(
-        user._id,
-        user.email,
-      );
-      return { access_token, refresh_token };
+  // forget password
+  async forgetPassword(email: string) {
+    const user = await this.userService.getUserByEmailId(email);
+    if (!user) {
+      throw new NotFoundException(`user not found with ${email} email id`);
     }
+    const userEmail = user.email;
+    const userId = user._id;
+    const payload = { email: userEmail, _id: userId };
+    const reset_token = this.jwtService.sign(payload, {
+      secret: this.configService.get('JWT_SECRET'),
+      expiresIn: `${this.configService.get('JWT_RESET_PASSWORD_EXPIRATION')}s`,
+      // expiresIn: `10s`,
+    });
+
+    this.emailService.sendEmailToClient(email, reset_token);
+  }
+
+  // google login
+  async googleLogin(req: { user: any }) {
+    if (!req.user) {
+      throw new Error('User not found!!!');
+    }
+
+    const payload = {
+      email: req.user.email,
+      firstName: req.user.firstName,
+    };
+
+    const access_token = this.jwtService.sign(payload, {
+      secret: this.configService.get('JWT_SECRET'),
+      expiresIn: `${this.configService.get('JWT_EXPIRATION')}s`,
+    });
+    console.log('access_token', access_token, '\n\n');
+
+    const refresh_token = this.jwtService.sign(
+      { ...payload, access_token },
+      {
+        secret: this.configService.get('REFRESH_TOKEN_SECRET'),
+        expiresIn: `${this.configService.get('JWT_REFRESH_EXPIRATION')}d`,
+      },
+    );
+    console.log('refresh_token', refresh_token);
+    const user = await this.userService.createUserViaGoogle({
+      email: req.user.email,
+      firstName: req.user.firstName,
+      lastName: req.user.lastName,
+    });
+    await this.storeRefreshToken(user.email, refresh_token);
+    if (user) {
+      return { user, access_token, refresh_token };
+    } else {
+      throw new NotFoundException('somthing is not good');
+    }
+  }
+
+  // login with otp
+  async loginViaOtpAndPhoneOrEmail(phoneOrEmail: string) {
+    const user =
+      await this.userService.getUserByPhoneOrEmailOrUsername(phoneOrEmail);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return await this.userService.sendOtpToLogin(phoneOrEmail);
+  }
+
+  async validateOtp(otp: number) {
+    const user = await this.userService.validateOtp(otp);
+    const tokens = await this.createTokens(user._id, user.email);
+    console.log(user.email);
+    return tokens;
   }
 }

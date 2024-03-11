@@ -9,11 +9,12 @@ import { User, UserDocument } from './entities/user.entity';
 import { Model, SortOrder } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 import { PaginationInput } from 'common/library';
-import { EmailserviceService } from 'apps/emailservice/src/emailservice.service';
-import crypto from 'crypto';
-import { SendEmail } from './entities/send-email.entity';
 import * as nodemailer from 'nodemailer';
+import { UserResponse } from './responses/user-response.entity';
+import { CreateUserViaGoogleInput } from './inputs/create-user-via-google.input';
+import { EmailserviceService } from 'apps/emailservice/src/emailservice.service';
 
 @Injectable()
 export class UsersService {
@@ -34,7 +35,7 @@ export class UsersService {
     });
   }
 
-  async createUser(createUserInput: CreateUserInput) {
+  async createUser(createUserInput: CreateUserInput): Promise<User> {
     if (!createUserInput.email) {
       throw new BadRequestException('user not created');
     }
@@ -123,15 +124,15 @@ export class UsersService {
     return query;
   }
 
-  findOne(id: string) {
-    const getOneUser = this.userModel.findById(id);
+  async findOne(id: string): Promise<User> {
+    const getOneUser = await this.userModel.findById(id);
     if (!getOneUser) {
       throw new NotFoundException(`user not found  with id: ${id}`);
     }
     return getOneUser;
   }
 
-  async update(_id: string, updateUserInput: UpdateUserInput) {
+  async update(_id: string, updateUserInput: UpdateUserInput): Promise<User> {
     if (!updateUserInput.email) {
       throw new NotFoundException(`user not updated  with id: ${_id}`);
     }
@@ -140,16 +141,16 @@ export class UsersService {
     });
   }
 
-  remove(_id: string) {
-    const user = this.userModel.findByIdAndDelete(_id);
+  async remove(_id: string): Promise<any> {
+    const user = await this.userModel.findByIdAndDelete(_id);
     if (!user) {
       throw new BadRequestException('User not deleted');
     }
     return user;
   }
 
-  getUserByEmailId(email: string) {
-    const userByEmailId = this.userModel.findOne({ email: email }).exec();
+  async getUserByEmailId(email: string) {
+    const userByEmailId = await this.userModel.findOne({ email: email });
     if (!userByEmailId) {
       throw new NotFoundException('User not found of this email: ' + email);
     }
@@ -178,7 +179,7 @@ export class UsersService {
     return loginResponse;
   }
 
-  async forgetPassword(email: string): Promise<SendEmail> {
+  async forgetPassword(email: string) {
     const user = await this.getUserByEmailId(email);
 
     if (!user) {
@@ -215,12 +216,12 @@ export class UsersService {
     return { email, hexString, validTillNextHour };
   }
 
-  // async receiveForgetPasswordToken(newPassword: string, reset_token: string) {
-  //   return await this.emailService.receiveForgetPasswordToken(
-  //     newPassword,
-  //     reset_token,
-  //   );
-  // }
+  async receiveForgetPasswordToken(newPassword: string, reset_token: string) {
+    return await this.emailService.receiveForgetPasswordToken(
+      newPassword,
+      reset_token,
+    );
+  }
 
   async enterUsernameOrEmailOrPhoneNumber(credential: string): Promise<User> {
     const user = await this.userModel.findOne({
@@ -238,40 +239,120 @@ export class UsersService {
     return user;
   }
 
-  async sendOtp(credential: string): Promise<string> {
+  async sendOtpToLogin(phoneNumberOrEmailOrUsername: string): Promise<string> {
     const otp = Math.floor(Math.random() * 900000) + 100000;
 
-    const email = await this.userModel.findOne({ email: credential });
-
-    if (email) {
-      const info = await this.transporter.sendMail({
-        from: 'Chaitanya <chaitanyakurwade1234@gmail.com>',
-        to: email,
-        html: `<b>Hello, ${email}!</b><p>This is a test email and here it is your otp: "${otp}".</p>`,
-      });
-      console.log('Message sent: %s', info.messageId);
-      await this.transporter.sendMail(info);
-      await this.userModel.findOneAndUpdate({ email: email, otp: otp });
-      return 'otp sent sucessfully';
-    }
-
-    const phoneNumber = await this.userModel.findOne({
-      phoneNumber: credential,
+    const userByEmail = await this.userModel.findOne({
+      email: phoneNumberOrEmailOrUsername,
+    });
+    const userByUsername = await this.userModel.findOne({
+      username: phoneNumberOrEmailOrUsername,
     });
 
-    if (phoneNumber) {
-      console.log(phoneNumber);
+    if (userByEmail || userByUsername) {
+      //
+      const emailExpiry = Date.now() + 60000;
+
+      //
+      const info = await this.transporter.sendMail({
+        from: 'Chaitanya <chaitanyakurwade1234@gmail.com>',
+        to: userByEmail.email,
+        subject: 'Otp to login',
+        html: `<b>Hello, ${userByEmail.email}!</b><p>This is a email to login via otp, and here is your otp: "${otp}" and it is valid for 60 sec.</p>`,
+      });
+      //
+      console.log('Message sent: %s', info.messageId);
+      await this.transporter.sendMail(info);
+      await this.userModel.findOneAndUpdate(
+        {
+          email: userByEmail.email,
+        },
+        {
+          emailOtp: otp,
+          emailOtpExpiryTime: emailExpiry,
+        },
+      );
+
+      // below logic will convert this.example@gmail.com to thiXXXXXmple@XXXXXXX
+      const [username, domain] = userByEmail.email.split('@');
+      const visibleCharsUsername = Math.min(username.length, 3);
+      const maskedPartUsername = 'X'.repeat(
+        username.length - visibleCharsUsername,
+      );
+      const visibleCharsDomain = Math.min(domain.length, 3);
+      const maskedPartDomain = 'X'.repeat(domain.length - visibleCharsDomain);
+      return `otp sent on email: ${username.substring(
+        0,
+        visibleCharsUsername,
+      )}${maskedPartUsername}@${maskedPartDomain}${domain.substring(
+        domain.length - visibleCharsDomain,
+      )} sucessfully`;
+    }
+
+    const userByPhoneNumber = await this.userModel.findOne({
+      phoneNumber: phoneNumberOrEmailOrUsername,
+    });
+
+    if (userByPhoneNumber) {
+      const phoneOtpExpiry = Date.now() + 60000;
+      const phoneNumber = await userByPhoneNumber.phoneNumber;
+      console.log(phoneNumber, phoneOtpExpiry);
+      if (phoneNumber.length < 10) {
+        return phoneNumber;
+      }
+      const visibleDigits = 2;
+      const maskedDigits = phoneNumber.length - visibleDigits - 2;
+      const maskedPart = '*'.repeat(maskedDigits);
+
+      if (phoneNumber) {
+        console.log(phoneNumber);
+      }
+
+      return `otp sent on email: ${phoneNumber.substring(
+        0,
+        visibleDigits,
+      )}${maskedPart}${phoneNumber.substring(
+        phoneNumber.length - 2,
+      )} sucessfully`;
     }
   }
 
-  async getUserToVerifyOtp(credential: string): Promise<User> {
+  async createUserViaGoogle(
+    createUserViaGoogleInput: CreateUserViaGoogleInput,
+  ): Promise<UserResponse> {
+    if (!createUserViaGoogleInput) {
+      throw new BadRequestException('user not created');
+    }
+    const userExists = await this.userModel.findOne({
+      email: createUserViaGoogleInput.email,
+    });
+    if (userExists) {
+      throw new BadRequestException('User already exists');
+    }
+    const user = await this.userModel.create(createUserViaGoogleInput);
+    return user;
+  }
+
+  async getUserByPhoneOrEmailOrUsername(phoneOrEmail: string): Promise<User> {
     const user = await this.userModel.findOne({
       $or: [
-        { email: credential },
-        { phoneNumber: credential },
-        { username: credential },
+        { email: phoneOrEmail },
+        { phoneNumber: phoneOrEmail },
+        { username: phoneOrEmail },
       ],
     });
+    return user;
+  }
+
+  async validateOtp(otp: number) {
+    const user = await this.userModel.findOne({
+      $or: [{ emailOtp: otp }, { phoneOtp: otp }],
+      emailOtpExpiryTime: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      throw new NotFoundException('user not found or otp expired');
+    }
 
     return user;
   }

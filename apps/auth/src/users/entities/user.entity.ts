@@ -47,8 +47,21 @@ export class User {
   @Field({ nullable: false })
   hashedRefreshToken: string;
 
-  @Field()
-  otp: number;
+  @Prop()
+  @Field({ nullable: true })
+  emailOtp: number;
+
+  @Prop()
+  @Field(() => GraphQLISODateTime, { nullable: true })
+  emailOtpExpiryTime: Date;
+
+  @Prop()
+  @Field({ nullable: true })
+  phoneOtp: number;
+
+  @Prop()
+  @Field(() => GraphQLISODateTime, { nullable: true })
+  phoneOtpExpiryTime: Date;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

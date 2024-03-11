@@ -16,11 +16,11 @@ export class UserResponse {
   lastName: string;
 
   @Field({ nullable: true })
-  username: string;
+  username?: string;
 
   @IsPhoneNumber('IN')
   @Field({ nullable: true })
-  phoneNumber: string;
+  phoneNumber?: string;
 
   // @Prop({ type: Date, required: true, default: new Date() })
   @Field(() => GraphQLISODateTime, { nullable: false })

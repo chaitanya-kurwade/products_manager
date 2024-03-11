@@ -59,4 +59,16 @@ export class AuthResolver {
     const user = await this.authService.getUserByAccessToken(access_token);
     return user;
   }
+
+  @Public()
+  @Mutation(() => String, { name: 'loginViaOtp' })
+  async loginViaOtpAndPhoneOrEmail(@Args('phoneOrEmail') phoneOrEmail: string) {
+    return await this.authService.loginViaOtpAndPhoneOrEmail(phoneOrEmail);
+  }
+
+  @Public()
+  @Mutation(() => LoginResponse, { name: 'validateOtp' })
+  async validateOtp(@Args('otp') otp: number) {
+    return await this.authService.validateOtp(otp);
+  }
 }
