@@ -83,8 +83,8 @@ export class CategoryService {
   ): Promise<CategoryList> {
     const { page, limit, search, sortOrder } = paginationInput;
 
-    let query = this.categoryModel.find();
-    let totalCountQuery = this.categoryModel.find();
+    let query = this.categoryModel.find({ status: 'PUBLISHED' });
+    let totalCountQuery = this.categoryModel.find({ status: 'PUBLISHED' });
 
     if (search && searchFields.length > 0) {
       const searchQueries = searchFields.map((field) => ({

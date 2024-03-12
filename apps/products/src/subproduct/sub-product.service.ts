@@ -35,14 +35,17 @@ export class SubProductService {
   }
 
   async getAllSubProducts(
-    paginationInput: PaginationInput,
+    paginationInput: PaginationInput & { minPrice?: number; maxPrice?: number },
     searchFields?: string[],
     masterProductIds?: string[],
   ): Promise<SubProductList> {
-    const { page, limit, search, sortOrder } = paginationInput;
+    const { page, limit, search, sortOrder, minPrice, maxPrice } =
+      paginationInput;
 
     let query = this.subProductModel.find({ status: 'PUBLISHED' });
     let totalCountQuery = this.subProductModel.find({ status: 'PUBLISHED' });
+
+    // by search fields
     if (search && searchFields && searchFields.length > 0) {
       const searchQueries = searchFields.map((field) => ({
         [field]: { $regex: search, $options: 'i' },
@@ -52,6 +55,7 @@ export class SubProductService {
       totalCountQuery = totalCountQuery.find($orCondition);
     }
 
+    //  by masterProductIds
     if (masterProductIds && masterProductIds.length !== 0) {
       query = query.where('masterProductId').in(masterProductIds);
       totalCountQuery = totalCountQuery
@@ -59,6 +63,16 @@ export class SubProductService {
         .in(masterProductIds);
     }
 
+    // by minPrice and maxPrice
+    if (minPrice !== undefined && maxPrice !== undefined) {
+      query = query.where('prices').gte(minPrice).lte(maxPrice);
+      totalCountQuery = totalCountQuery
+        .where('prices')
+        .gte(minPrice)
+        .lte(maxPrice);
+    }
+
+    // sort options
     let sortOptions = {};
     if (sortOrder) {
       if (sortOrder.toUpperCase() === 'ASC') {
@@ -70,10 +84,19 @@ export class SubProductService {
       sortOptions = { createdAt: -1 };
     }
     query = query.sort(sortOptions);
+
+    // pagination
     const skip = (page - 1) * limit;
     query = query.skip(skip).limit(limit);
 
+    // execute queries
     const minMaxPricePipeline = [
+      {
+        $match: {
+          status: 'PUBLISHED',
+          price: { $gte: minPrice, $lte: maxPrice },
+        },
+      },
       {
         $group: {
           _id: null,
@@ -83,19 +106,103 @@ export class SubProductService {
       },
     ];
 
-    const [subProducts, minMaxPrice] = await Promise.all([
+    const [subProducts, minMaxPriceResult] = await Promise.all([
       query.exec(),
       this.subProductModel.aggregate(minMaxPricePipeline).exec(),
     ]);
-    // const subProducts = await query.exec();
     const totalCount = await totalCountQuery.countDocuments();
+
+    // Extract min and max prices
+    let minPriceValue = minPrice;
+    let maxPriceValue = maxPrice;
+
+    if (minMaxPriceResult.length !== 0) {
+      minPriceValue = minMaxPriceResult[0].minPrice;
+      maxPriceValue = minMaxPriceResult[0].maxPrice;
+    }
 
     return {
       subProducts,
       totalCount,
-      minPrice: minMaxPrice.length !== 0 ? minMaxPrice[0].minPrice : undefined,
-      maxPrice: minMaxPrice.length !== 0 ? minMaxPrice[0].maxPrice : undefined,
+      minPrice: minPriceValue,
+      maxPrice: maxPriceValue,
     };
+  }
+
+  // async getMinMaxPrices(minPrice: number, maxPrice: number) {
+  //   let query = this.subProductModel.find({ status: 'PUBLISHED' });
+
+  //   // Filter by minPrice and maxPrice
+  //   if (minPrice !== undefined && maxPrice !== undefined) {
+  //     query = query.where('prices').gte(minPrice).lte(maxPrice);
+  //   }
+
+  //   const subProducts = await query.exec();
+
+  //   const minMaxPricePipeline = [
+  //     {
+  //       $match: {
+  //         status: 'PUBLISHED',
+  //         prices: { $gte: minPrice, $lte: maxPrice },
+  //       },
+  //     },
+  //     {
+  //       $group: {
+  //         _id: null,
+  //         minPrice: { $min: '$prices' },
+  //         maxPrice: { $max: '$prices' },
+  //       },
+  //     },
+  //   ];
+
+  //   const minMaxPrices = await this.subProductModel
+  //     .aggregate(minMaxPricePipeline)
+  //     .exec();
+
+  //   const minPriceValue =
+  //     minMaxPrices.length !== 0 ? minMaxPrices[0].minPrice : null;
+  //   const maxPriceValue =
+  //     minMaxPrices.length !== 0 ? minMaxPrices[0].maxPrice : null;
+
+  //   return { subProducts, minPrice: minPriceValue, maxPrice: maxPriceValue };
+  // }
+
+  // acchaa  /////////////////////////
+
+  async getMinMaxPrices(minPrice: number, maxPrice: number) {
+    const query = this.subProductModel.find({ status: 'PUBLISHED' });
+
+    // by minPrice and maxPrice
+    if (minPrice !== undefined && maxPrice !== undefined) {
+      query.where('prices').gte(minPrice).lte(maxPrice);
+    }
+
+    const minMaxPricePipeline = [
+      {
+        $match: {
+          status: 'PUBLISHED',
+          prices: { $gte: minPrice, $lte: maxPrice },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          minPrice: { $min: '$prices' },
+          maxPrice: { $max: '$prices' },
+        },
+      },
+    ];
+
+    const minMaxPrices = await this.subProductModel
+      .aggregate(minMaxPricePipeline)
+      .exec();
+
+    const minPriceValue =
+      minMaxPrices.length !== 0 ? minMaxPrices[0].minPrice : null;
+    const maxPriceValue =
+      minMaxPrices.length !== 0 ? minMaxPrices[0].maxPrice : null;
+
+    return { minPrice: minPriceValue, maxPrice: maxPriceValue };
   }
 
   async getOneSubProductById(_id: string) {
@@ -123,23 +230,6 @@ export class SubProductService {
       );
     }
     return subProducts;
-  }
-
-  async getMinMaxPrices() {
-    const minPriceAggregate = await this.subProductModel
-      .aggregate([{ $group: { _id: null, minPrice: { $min: '$prices' } } }])
-      .exec();
-
-    const maxPriceAggregate = await this.subProductModel
-      .aggregate([{ $group: { _id: null, maxPrice: { $max: '$prices' } } }])
-      .exec();
-
-    const minPrice =
-      minPriceAggregate.length !== 0 ? minPriceAggregate[0].minPrice : null;
-    const maxPrice =
-      maxPriceAggregate.length !== 0 ? maxPriceAggregate[0].maxPrice : null;
-
-    return { minPrice, maxPrice };
   }
 
   async deleteSubProductsByMasterProductId(

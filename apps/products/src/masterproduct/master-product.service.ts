@@ -65,16 +65,20 @@ export class MasterProductService {
     searchFields?: string[],
     categoryIds?: string[],
   ): Promise<MasterProductList> {
-    const { page, limit, search, sortOrder } = paginationInput;
+    const { page, limit, search, sortOrder, minPrice, maxPrice } =
+      paginationInput;
 
     // query starts form here
     let query = this.masterProductModel.find({ status: 'PUBLISHED' });
     let totalCountQuery = this.masterProductModel.find({ status: 'PUBLISHED' });
 
     // getMinMaxPrices
-    const getMinMaxPrices = await this.subProductService.getMinMaxPrices();
-    const minPrice = getMinMaxPrices.minPrice;
-    const maxPrice = getMinMaxPrices.maxPrice;
+    const getMinMaxPrices = await this.subProductService.getMinMaxPrices(
+      minPrice,
+      maxPrice,
+    );
+    const fetchedMinPrice = getMinMaxPrices.minPrice;
+    const fetchedMaxPrice = getMinMaxPrices.maxPrice;
 
     // categoryIds[] wise search
     if (categoryIds && categoryIds.length !== 0) {
@@ -115,8 +119,8 @@ export class MasterProductService {
     return {
       masterProducts,
       totalCount,
-      minPrice: minPrice,
-      maxPrice: maxPrice,
+      minPrice: fetchedMinPrice,
+      maxPrice: fetchedMaxPrice,
     };
   }
 
