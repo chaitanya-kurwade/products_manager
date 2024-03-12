@@ -18,17 +18,20 @@ export class User {
 
   @Prop()
   @Field({ nullable: true })
-  username: string;
+  username?: string;
 
   @IsPhoneNumber('IN')
   @Prop()
   @Field({ nullable: true })
-  phoneNumber: string;
+  phoneNumber?: string;
 
   @IsEmail()
   @Prop()
   @Field()
   email: string;
+
+  @Field({ defaultValue: false })
+  isEmailVerified: boolean;
 
   @IsStrongPassword()
   @Prop()

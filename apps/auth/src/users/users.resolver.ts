@@ -16,13 +16,16 @@ export class UsersResolver {
   // }
 
   @Query(() => [UserResponse], { name: 'getAllUsers' })
-  getAllUsers(
+  async getAllUsers(
     @Args('paginationInput', { nullable: true })
     paginationInput: PaginationInput,
     @Args('searchFields', { type: () => [String], nullable: true })
     searchFields?: string[],
   ) {
-    return this.usersService.getAllUsers(paginationInput, searchFields ?? []);
+    return await this.usersService.getAllUsers(
+      paginationInput,
+      searchFields ?? [],
+    );
   }
 
   // @Query(() => User, { name: 'user' })

@@ -15,13 +15,17 @@ import * as nodemailer from 'nodemailer';
 import { UserResponse } from './responses/user-response.entity';
 import { CreateUserViaGoogleInput } from './inputs/create-user-via-google.input';
 import { EmailserviceService } from 'apps/emailservice/src/emailservice.service';
+import { ConfigService } from '@nestjs/config';
+import { Twilio } from 'twilio';
 
 @Injectable()
 export class UsersService {
   private transporter: nodemailer.Transporter;
+  private readonly client: Twilio;
 
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
+    private readonly configService: ConfigService,
     private readonly emailService: EmailserviceService,
   ) {
     this.transporter = nodemailer.createTransport({
@@ -33,6 +37,10 @@ export class UsersService {
         pass: 'uvtdgmeetvgituop',
       },
     });
+    this.client = new Twilio(
+      this.configService.get('TWILIO_ACCOUNT_SID'),
+      this.configService.get('TWILIO_AUTH_TOKEN'),
+    );
   }
 
   async createUser(createUserInput: CreateUserInput): Promise<User> {
@@ -241,46 +249,54 @@ export class UsersService {
 
   async sendOtpToLogin(phoneNumberOrEmailOrUsername: string): Promise<string> {
     const otp = Math.floor(Math.random() * 900000) + 100000;
+    const userByEmailOrUsername = await this.userModel
+      .findOne({
+        $or: [
+          { email: phoneNumberOrEmailOrUsername },
+          { username: phoneNumberOrEmailOrUsername },
+        ],
+      })
+      .exec();
 
-    const userByEmail = await this.userModel.findOne({
-      email: phoneNumberOrEmailOrUsername,
-    });
-    const userByUsername = await this.userModel.findOne({
-      username: phoneNumberOrEmailOrUsername,
-    });
-
-    if (userByEmail || userByUsername) {
+    // send email
+    if (userByEmailOrUsername) {
       //
-      const emailExpiry = Date.now() + 60000;
-
+      const email = userByEmailOrUsername.email;
+      console.log(email);
+      const timeInMiliSeconds =
+        this.configService.get('OTP_TIME_IN_MINUTES') * 60000;
+      const emailOtpExpiry = Date.now() + timeInMiliSeconds;
       //
       const info = await this.transporter.sendMail({
         from: 'Chaitanya <chaitanyakurwade1234@gmail.com>',
-        to: userByEmail.email,
+        to: email,
         subject: 'Otp to login',
-        html: `<b>Hello, ${userByEmail.email}!</b><p>This is a email to login via otp, and here is your otp: "${otp}" and it is valid for 60 sec.</p>`,
+        html: `<b>Hello, ${email}!</b><p>This is a email to login via otp, and here is your otp: "${otp}" and it is valid for ${this.configService.get(
+          'OTP_TIME_IN_MINUTES',
+        )} minutes.</p>`,
       });
-      //
-      console.log('Message sent: %s', info.messageId);
+      // console.log('Message sent: %s', info.messageId);
       await this.transporter.sendMail(info);
       await this.userModel.findOneAndUpdate(
         {
-          email: userByEmail.email,
+          email: email,
         },
         {
           emailOtp: otp,
-          emailOtpExpiryTime: emailExpiry,
+          emailOtpExpiryTime: emailOtpExpiry,
         },
       );
 
-      // below logic will convert this.example@gmail.com to thiXXXXXmple@XXXXXXX
-      const [username, domain] = userByEmail.email.split('@');
-      const visibleCharsUsername = Math.min(username.length, 3);
+      // below logic will convert this.example@gmail.com to thiXXXXXmple@gmail.com
+      const [username, domain] = email.split('@');
+      const visibleCharsUsername = Math.min(username.length, 5);
       const maskedPartUsername = 'X'.repeat(
         username.length - visibleCharsUsername,
       );
-      const visibleCharsDomain = Math.min(domain.length, 3);
+      const visibleCharsDomain = Math.min(domain.length);
       const maskedPartDomain = 'X'.repeat(domain.length - visibleCharsDomain);
+
+      //
       return `otp sent on email: ${username.substring(
         0,
         visibleCharsUsername,
@@ -289,31 +305,48 @@ export class UsersService {
       )} sucessfully`;
     }
 
-    const userByPhoneNumber = await this.userModel.findOne({
-      phoneNumber: phoneNumberOrEmailOrUsername,
-    });
+    // - send sms
+    const userByPhoneNumber = await this.userModel
+      .findOne({ phoneNumber: phoneNumberOrEmailOrUsername })
+      .exec();
 
     if (userByPhoneNumber) {
-      const phoneOtpExpiry = Date.now() + 60000;
-      const phoneNumber = await userByPhoneNumber.phoneNumber;
-      console.log(phoneNumber, phoneOtpExpiry);
-      if (phoneNumber.length < 10) {
-        return phoneNumber;
-      }
+      const timeInMiliSeconds =
+        this.configService.get('OTP_TIME_IN_MINUTES') * 60000;
+      const phoneOtpExpiry = Date.now() + timeInMiliSeconds;
+      const phoneNumber = userByPhoneNumber.phoneNumber;
+      console.log(phoneNumber, phoneOtpExpiry, '<- phoneOtpExpiry');
+
+      const info = await this.client.messages.create({
+        to: '9011248626',
+        from: '9011248626',
+        body: `Hello, This is a message to login via otp, and here is your otp: "${otp}" and it is valid for ${this.configService.get(
+          'OTP_TIME_IN_MINUTES',
+        )} minutes.`,
+      });
+      await this.client.messages.create(info);
+      await this.userModel.findOneAndUpdate(
+        {
+          phoneNumber: phoneNumber,
+        },
+        {
+          phoneOtp: otp,
+          phoneOtpExpiryTime: phoneOtpExpiry,
+        },
+      );
+
       const visibleDigits = 2;
       const maskedDigits = phoneNumber.length - visibleDigits - 2;
       const maskedPart = '*'.repeat(maskedDigits);
 
-      if (phoneNumber) {
-        console.log(phoneNumber);
-      }
-
-      return `otp sent on email: ${phoneNumber.substring(
+      return `otp sent on phone number: ${phoneNumber.substring(
         0,
         visibleDigits,
       )}${maskedPart}${phoneNumber.substring(
         phoneNumber.length - 2,
-      )} sucessfully`;
+      )} sucessfully, and valid for ${this.configService.get(
+        'OTP_TIME_IN_MINUTES',
+      )} minutes`;
     }
   }
 
@@ -336,15 +369,15 @@ export class UsersService {
   async getUserByPhoneOrEmailOrUsername(phoneOrEmail: string): Promise<User> {
     const user = await this.userModel.findOne({
       $or: [
-        { email: phoneOrEmail },
         { phoneNumber: phoneOrEmail },
+        { email: phoneOrEmail },
         { username: phoneOrEmail },
       ],
     });
     return user;
   }
 
-  async validateOtp(otp: number) {
+  async validateOtp(otp: number): Promise<User> {
     const user = await this.userModel.findOne({
       $or: [{ emailOtp: otp }, { phoneOtp: otp }],
       emailOtpExpiryTime: { $gt: Date.now() },

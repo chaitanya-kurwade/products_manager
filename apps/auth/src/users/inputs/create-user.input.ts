@@ -10,11 +10,11 @@ export class CreateUserInput {
   lastName: string;
 
   @Field({ nullable: true })
-  username: string;
+  username?: string;
 
   @IsPhoneNumber('IN')
   @Field({ nullable: true })
-  phoneNumber: string;
+  phoneNumber?: string;
 
   @IsEmail()
   @Field()

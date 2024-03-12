@@ -50,10 +50,14 @@ export class AuthService {
     const user = await this.userService.getUserByEmailId(email);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials : email not found');
-    } else {
+    }
+    if (user) {
       const isPasswordValid = await bcrypt.compare(password, user.password);
       if (!isPasswordValid) {
         throw new UnauthorizedException('Invalid credentials : wrong password');
+      }
+      if (!user.isEmailVerified) {
+        throw new Error('Email address is not verified.');
       }
       const { access_token, refresh_token } = await this.createTokens(
         user._id,

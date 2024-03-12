@@ -9,6 +9,9 @@ export class UserResponse {
   @Field()
   email: string;
 
+  @Field({ defaultValue: false })
+  isEmailVerified: boolean;
+
   @Field()
   firstName: string;
 
