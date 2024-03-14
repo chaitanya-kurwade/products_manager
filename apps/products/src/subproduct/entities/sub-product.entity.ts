@@ -52,6 +52,10 @@ export class SubProduct {
   masterProductId: string; //{ type: ObjectId, ref: "MasterProduct" },
 
   @Prop()
+  @Field({ nullable: false })
+  categoryId: string;
+
+  @Prop()
   @Field({ nullable: true })
   barcode: string; //, # Barcode or QRCode
 

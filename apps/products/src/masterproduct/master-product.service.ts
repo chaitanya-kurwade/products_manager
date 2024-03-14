@@ -73,13 +73,44 @@ export class MasterProductService {
     let totalCountQuery = this.masterProductModel.find({ status: 'PUBLISHED' });
 
     // getMinMaxPrices
-    const getMinMaxPrices = await this.subProductService.getMinMaxPrices(
-      minPrice,
-      maxPrice,
-    );
-    const fetchedMinPrice = getMinMaxPrices.minPrice;
-    const fetchedMaxPrice = getMinMaxPrices.maxPrice;
-
+    let fetchedMasterProductIds: string[];
+    let getMinMaxPrices: {
+      minPrice: number;
+      maxPrice: number;
+      masterProductId: string[];
+    };
+    if (minPrice !== 0 && maxPrice !== 0) {
+      getMinMaxPrices =
+        await this.subProductService.getMinMaxPricesForMasterProducts(
+          minPrice,
+          maxPrice,
+        );
+      getMinMaxPrices.minPrice;
+      getMinMaxPrices.maxPrice;
+      fetchedMasterProductIds = getMinMaxPrices.masterProductId;
+    } else if (
+      (minPrice === null && maxPrice === null) ||
+      (minPrice === undefined && maxPrice === undefined)
+    ) {
+      getMinMaxPrices =
+        await this.subProductService.getMinMaxPricesForMasterProducts(
+          minPrice,
+          maxPrice,
+        );
+      getMinMaxPrices.minPrice;
+      getMinMaxPrices.maxPrice;
+    }
+    // getting masterProducts as per subProduct's price
+    if (
+      minPrice !== undefined &&
+      maxPrice !== undefined &&
+      fetchedMasterProductIds
+    ) {
+      query = query.where('_id').in(fetchedMasterProductIds);
+      totalCountQuery = totalCountQuery
+        .where('_id')
+        .in(fetchedMasterProductIds);
+    }
     // categoryIds[] wise search
     if (categoryIds && categoryIds.length !== 0) {
       query = query.where('category._id').in(categoryIds);
@@ -119,8 +150,8 @@ export class MasterProductService {
     return {
       masterProducts,
       totalCount,
-      minPrice: fetchedMinPrice,
-      maxPrice: fetchedMaxPrice,
+      minPrice: getMinMaxPrices.minPrice,
+      maxPrice: getMinMaxPrices.maxPrice,
     };
   }
 
