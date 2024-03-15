@@ -39,7 +39,7 @@ export class SubProductResolver {
     return this.subProductService.getOneSubProductById(_id);
   }
 
-  @Mutation(() => [SubProduct], { name: 'getSubProductByMasterProductId' })
+  @Query(() => [SubProduct], { name: 'getSubProductByMasterProductId' })
   getSubProductsByMasterProductId(
     @Args('masterProductId') masterProductId: string,
   ) {

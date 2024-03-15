@@ -65,17 +65,52 @@ export class MasterProductService {
     searchFields?: string[],
     categoryIds?: string[],
   ): Promise<MasterProductList> {
-    const { page, limit, search, sortOrder } = paginationInput;
+    const { page, limit, search, sortOrder, minPrice, maxPrice } =
+      paginationInput;
 
     // query starts form here
     let query = this.masterProductModel.find({ status: 'PUBLISHED' });
     let totalCountQuery = this.masterProductModel.find({ status: 'PUBLISHED' });
 
     // getMinMaxPrices
-    const getMinMaxPrices = await this.subProductService.getMinMaxPrices();
-    const minPrice = getMinMaxPrices.minPrice;
-    const maxPrice = getMinMaxPrices.maxPrice;
-
+    let fetchedMasterProductIds: string[];
+    let getMinMaxPrices: {
+      minPrice: number;
+      maxPrice: number;
+      masterProductId: string[];
+    };
+    if (minPrice !== 0 && maxPrice !== 0) {
+      getMinMaxPrices =
+        await this.subProductService.getMinMaxPricesForMasterProducts(
+          minPrice,
+          maxPrice,
+        );
+      getMinMaxPrices.minPrice;
+      getMinMaxPrices.maxPrice;
+      fetchedMasterProductIds = getMinMaxPrices.masterProductId;
+    } else if (
+      (minPrice === null && maxPrice === null) ||
+      (minPrice === undefined && maxPrice === undefined)
+    ) {
+      getMinMaxPrices =
+        await this.subProductService.getMinMaxPricesForMasterProducts(
+          minPrice,
+          maxPrice,
+        );
+      getMinMaxPrices.minPrice;
+      getMinMaxPrices.maxPrice;
+    }
+    // getting masterProducts as per subProduct's price
+    if (
+      minPrice !== undefined &&
+      maxPrice !== undefined &&
+      fetchedMasterProductIds
+    ) {
+      query = query.where('_id').in(fetchedMasterProductIds);
+      totalCountQuery = totalCountQuery
+        .where('_id')
+        .in(fetchedMasterProductIds);
+    }
     // categoryIds[] wise search
     if (categoryIds && categoryIds.length !== 0) {
       query = query.where('category._id').in(categoryIds);
@@ -115,8 +150,8 @@ export class MasterProductService {
     return {
       masterProducts,
       totalCount,
-      minPrice: minPrice,
-      maxPrice: maxPrice,
+      minPrice: getMinMaxPrices.minPrice,
+      maxPrice: getMinMaxPrices.maxPrice,
     };
   }
 
@@ -176,11 +211,37 @@ export class MasterProductService {
         'category not found for this id: ' + categoryId,
       );
     }
+
+    if (category) {
+      const childCategories =
+        await this.categoryService.getChildCategoryByCategoryId(categoryId);
+
+      const masterProducts = await Promise.all(
+        childCategories.map((childCategory) => {
+          return this.masterProductModel.find({
+            'category._id': childCategory._id,
+            status: 'PUBLISHED',
+          });
+        }),
+      );
+
+      await Promise.all(
+        masterProducts.flat().map(async (masterProduct) => {
+          await this.deleteMasterProductAndItsSubProducts(masterProduct._id);
+        }),
+      );
+
+      await Promise.all(
+        childCategories.map(async (childCategory) => {
+          await this.deleteCategoryAndMasterProduct(childCategory._id);
+        }),
+      );
+    }
     const masterProduct = await this.masterProductModel.find({
       'category._id': categoryId,
       status: 'PUBLISHED',
     });
-    // console.log(masterProduct.map((product) => product._id));
+
     if (!masterProduct) {
       throw new NotFoundException('master product not found for this category');
     }

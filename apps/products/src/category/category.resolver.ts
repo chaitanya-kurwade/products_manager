@@ -36,6 +36,11 @@ export class CategoryResolver {
     return this.categoryService.getCategoryById(_id);
   }
 
+  @Query(() => Category, { name: 'getChildCategory' })
+  getChildCategoryByCategoryId(@Args('_id') _id: string) {
+    return this.categoryService.getChildCategoryByCategoryId(_id);
+  }
+
   @Mutation(() => Category)
   updateCategory(
     @Args('updateCategoryInput') updateCategoryInput: UpdateCategoryInput,
