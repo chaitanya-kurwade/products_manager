@@ -211,11 +211,37 @@ export class MasterProductService {
         'category not found for this id: ' + categoryId,
       );
     }
+
+    if (category) {
+      const childCategories =
+        await this.categoryService.getChildCategoryByCategoryId(categoryId);
+
+      const masterProducts = await Promise.all(
+        childCategories.map((childCategory) => {
+          return this.masterProductModel.find({
+            'category._id': childCategory._id,
+            status: 'PUBLISHED',
+          });
+        }),
+      );
+
+      await Promise.all(
+        masterProducts.flat().map(async (masterProduct) => {
+          await this.deleteMasterProductAndItsSubProducts(masterProduct._id);
+        }),
+      );
+
+      await Promise.all(
+        childCategories.map(async (childCategory) => {
+          await this.deleteCategoryAndMasterProduct(childCategory._id);
+        }),
+      );
+    }
     const masterProduct = await this.masterProductModel.find({
       'category._id': categoryId,
       status: 'PUBLISHED',
     });
-    // console.log(masterProduct.map((product) => product._id));
+
     if (!masterProduct) {
       throw new NotFoundException('master product not found for this category');
     }

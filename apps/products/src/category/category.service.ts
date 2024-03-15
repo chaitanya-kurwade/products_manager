@@ -117,13 +117,24 @@ export class CategoryService {
   }
 
   async getCategoryById(_id: string) {
-    const category = await this.categoryModel.findById(_id);
+    const category = await this.categoryModel.findByIdAndUpdate(_id);
     if (!category || category.status !== 'PUBLISHED') {
       throw new NotFoundException(
         'category not available with _id: ' + _id + ', or it is not published',
       );
     }
     return category;
+  }
+
+  async getChildCategoryByCategoryId(categoryId: string) {
+    const childCategory = await this.categoryModel.find({
+      immediateParentId: categoryId,
+      status: 'PUBLISHED',
+    });
+    if (!childCategory) {
+      throw new NotFoundException('Child category not found');
+    }
+    return childCategory;
   }
 
   async update(_id: string, updateCategoryInput: UpdateCategoryInput) {
@@ -144,5 +155,11 @@ export class CategoryService {
     }
     category.status = 'ARCHIVED';
     return category.save();
+  }
+
+  async convertPublishedToArchive(_id: string) {
+    return this.categoryModel.findByIdAndUpdate(_id, {
+      $set: { status: 'ARCHIVED' },
+    });
   }
 }
