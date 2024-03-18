@@ -25,14 +25,14 @@ export class SubProductResolver {
     searchFields: string[],
     @Args('masterProductIds', { type: () => [String], nullable: true })
     masterProductIds: string[],
-    @Args('categpryIds', { type: () => [String], nullable: true })
-    categpryIds: string[],
+    @Args('categoryIds', { type: () => [String], nullable: true })
+    categoryIds: string[],
   ) {
     const subProducts = await this.subProductService.getAllSubProducts(
       paginationInput,
       searchFields ?? [],
       masterProductIds ?? [],
-      categpryIds ?? [],
+      categoryIds ?? [],
     );
     return subProducts;
   }
