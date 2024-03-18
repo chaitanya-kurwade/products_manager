@@ -262,7 +262,6 @@ export class UsersService {
     if (userByEmailOrUsername) {
       //
       const email = userByEmailOrUsername.email;
-      console.log(email);
       const timeInMiliSeconds =
         this.configService.get('OTP_TIME_IN_MINUTES') * 60000;
       const emailOtpExpiry = Date.now() + timeInMiliSeconds;
@@ -388,5 +387,17 @@ export class UsersService {
     }
 
     return user;
+  }
+
+  async sendEmailToVerifyEmail(email: string) {
+    const user = await this.getUserByEmailId(email);
+    const emailId = user.email;
+    const info = await this.transporter.sendMail({
+      from: 'Chaitanya <chaitanyakurwade1234@gmail.com>',
+      to: emailId,
+      subject: 'Otp to login',
+      html: `<b>Hello, ${emailId}!</b><p>This is an email to verify your email, click on this`,
+    });
+    await this.transporter.sendMail(info);
   }
 }

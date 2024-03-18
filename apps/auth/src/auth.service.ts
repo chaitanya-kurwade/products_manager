@@ -56,8 +56,8 @@ export class AuthService {
       if (!isPasswordValid) {
         throw new UnauthorizedException('Invalid credentials : wrong password');
       }
-      if (!user.isEmailVerified) {
-        throw new Error('Email address is not verified.');
+      if (user.isEmailVerified === false) {
+        throw new Error('Email id is not verified.');
       }
       const { access_token, refresh_token } = await this.createTokens(
         user._id,
