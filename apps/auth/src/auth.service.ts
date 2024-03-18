@@ -209,4 +209,22 @@ export class AuthService {
     console.log(user.email);
     return tokens;
   }
+
+  async sendEmailToVerifyEmail(email: string) {
+    const user = await this.userService.getUserByEmailId(email);
+    const emailId = user.email;
+    const link = user.hashedRefreshToken;
+    const info = await this.transporter.sendMail({
+      from: 'Chaitanya <chaitanyakurwade1234@gmail.com>',
+      to: emailId,
+      subject: 'Otp to login',
+      html: `<b>Hello, ${emailId}!</b><p>This is an email to verify your email, click on this ${link}`,
+    });
+    await this.transporter.sendMail(info);
+  }
+
+  async verifyEmail(link: string) {
+    console.log(link);
+    
+  }
 }
