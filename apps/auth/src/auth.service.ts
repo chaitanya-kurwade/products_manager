@@ -57,7 +57,7 @@ export class AuthService {
         throw new UnauthorizedException('Invalid credentials : wrong password');
       }
       if (user.isEmailVerified === false) {
-        throw new Error('Email id is not verified.');
+        this.userService.sendEmailToVerifyEmail(user.email);
       }
       const { access_token, refresh_token } = await this.createTokens(
         user._id,
@@ -68,7 +68,8 @@ export class AuthService {
   }
 
   async signup(signupUserInput: CreateUserInput): Promise<User> {
-    const user = await this.userService.getUserByEmailId(signupUserInput.email);
+    const user = await this.userService.getUserToSignUp(signupUserInput.email);
+    console.log(user);
     if (user) {
       throw new BadRequestException(
         'User email id already exists, kindly login',
@@ -208,23 +209,5 @@ export class AuthService {
     const tokens = await this.createTokens(user._id, user.email);
     console.log(user.email);
     return tokens;
-  }
-
-  async sendEmailToVerifyEmail(email: string) {
-    const user = await this.userService.getUserByEmailId(email);
-    const emailId = user.email;
-    const link = user.hashedRefreshToken;
-    const info = await this.transporter.sendMail({
-      from: 'Chaitanya <chaitanyakurwade1234@gmail.com>',
-      to: emailId,
-      subject: 'Otp to login',
-      html: `<b>Hello, ${emailId}!</b><p>This is an email to verify your email, click on this ${link}`,
-    });
-    await this.transporter.sendMail(info);
-  }
-
-  async verifyEmail(link: string) {
-    console.log(link);
-    
   }
 }

@@ -31,6 +31,7 @@ export class User {
   email: string;
 
   @Field({ defaultValue: false })
+  @Prop()
   isEmailVerified: boolean;
 
   @IsStrongPassword()

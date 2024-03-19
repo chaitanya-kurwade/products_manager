@@ -17,6 +17,7 @@ import { CreateUserViaGoogleInput } from './inputs/create-user-via-google.input'
 import { EmailserviceService } from 'apps/emailservice/src/emailservice.service';
 import { ConfigService } from '@nestjs/config';
 import { Twilio } from 'twilio';
+import * as jwt from 'jsonwebtoken';
 
 @Injectable()
 export class UsersService {
@@ -162,6 +163,11 @@ export class UsersService {
     if (!userByEmailId) {
       throw new NotFoundException('User not found of this email: ' + email);
     }
+    return userByEmailId;
+  }
+
+  async getUserToSignUp(email: string) {
+    const userByEmailId = await this.userModel.findOne({ email: email });
     return userByEmailId;
   }
 
@@ -387,5 +393,35 @@ export class UsersService {
     }
 
     return user;
+  }
+
+  async sendEmailToVerifyEmail(email: string) {
+    const secretKey = 'your_secret_key_here';
+    const user = await this.getUserByEmailId(email);
+    const userId = user._id;
+    const emailId = user.email;
+    const token = jwt.sign({ userId }, secretKey, { expiresIn: '1d' });
+    const link = `https://ddhlb4gj-3000.inc1.devtunnels.ms/verifyemail/?token=${token}`;
+    const info = await this.transporter.sendMail({
+      from: 'Chaitanya <chaitanyakurwade1234@gmail.com>',
+      to: emailId,
+      subject: 'Otp to login',
+      html: `<b>Hello, ${emailId}!</b><p>This is an email to verify your email, click on this ${link}`,
+    });
+    await this.transporter.sendMail(info);
+    return 'verification link sent on your email';
+  }
+
+  async verifyEmail(token: string) {
+    const secretKey = 'your_secret_key_here';
+    const decoded: any = jwt.verify(token, secretKey);
+    const userId = decoded.userId;
+    if (!userId) {
+      throw new Error('Invalid or expired token');
+    }
+    this.userModel.updateOne({ isEmailVerified: true });
+    // Mark user's email as verified
+    return 'ur email verified';
+    // await this.markEmailAsVerified(userId);
   }
 }

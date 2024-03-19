@@ -70,4 +70,19 @@ export class UsersResolver {
       reset_token,
     );
   }
+
+  @Mutation(() => String, { name: 'sendVerificationEmail' })
+  async sendVerificationEmail(@Args('email') email: string): Promise<string> {
+    const user = await this.usersService.getUserByEmailId(email);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return await this.usersService.sendEmailToVerifyEmail(email);
+  }
+
+  @Mutation(() => String, { name: 'verifyemail' })
+  async verifyEmail(@Args('token') token: string): Promise<string> {
+    return this.usersService.verifyEmail(token);
+  }
 }
