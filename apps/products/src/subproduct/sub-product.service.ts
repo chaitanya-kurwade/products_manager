@@ -19,12 +19,12 @@ export class SubProductService {
     private readonly subProductModel: Model<SubPorductDocument>,
   ) {}
   async createSubProduct(createSubProductInput: CreateSubProductInput) {
-    const existingSku = await this.subProductModel.findOne({
+    const existingSkuSubProduct = await this.subProductModel.findOne({
       sku: createSubProductInput.sku,
     });
-    if (existingSku) {
+    if (existingSkuSubProduct) {
       throw new BadGatewayException(
-        'sku already exists with this name:' + existingSku,
+        'sku already exists with this name:' + existingSkuSubProduct.sku,
       );
     }
     const product = await this.subProductModel.create(createSubProductInput);
@@ -33,137 +33,6 @@ export class SubProductService {
     }
     return product;
   }
-
-  // async getAllSubProducts(
-  //   paginationInput: PaginationInput & { minPrice?: number; maxPrice?: number },
-  //   searchFields?: string[],
-  //   masterProductIds?: string[],
-  // ): Promise<SubProductList> {
-  //   const { page, limit, search, sortOrder, minPrice, maxPrice } =
-  //     paginationInput;
-
-  //   let query = this.subProductModel.find({ status: 'PUBLISHED' });
-  //   let totalCountQuery = this.subProductModel.find({ status: 'PUBLISHED' });
-
-  //   // by search fields
-  //   if (search && searchFields && searchFields.length > 0) {
-  //     const searchQueries = searchFields.map((field) => ({
-  //       [field]: { $regex: search, $options: 'i' },
-  //     }));
-  //     const $orCondition = { $or: searchQueries };
-  //     query = query.find($orCondition);
-  //     totalCountQuery = totalCountQuery.find($orCondition);
-  //   }
-
-  //   //  by masterProductIds
-  //   if (masterProductIds && masterProductIds.length !== 0) {
-  //     query = query.where('masterProductId').in(masterProductIds);
-  //     totalCountQuery = totalCountQuery
-  //       .where('masterProductId')
-  //       .in(masterProductIds);
-  //   }
-
-  //   // by minPrice and maxPrice
-  //   if (
-  //     (minPrice !== undefined && maxPrice !== undefined) ||
-  //     (minPrice !== null && maxPrice !== null)
-  //   ) {
-  //     query = query.where('prices').gte(minPrice).lte(maxPrice);
-  //     totalCountQuery = totalCountQuery
-  //       .where('prices')
-  //       .gte(minPrice)
-  //       .lte(maxPrice);
-  //   }
-
-  //   if (
-  //     (minPrice === undefined && maxPrice === undefined) ||
-  //     (minPrice === null && maxPrice === null)
-  //   ) {
-  //   }
-  //   // sort options
-  //   let sortOptions = {};
-  //   if (sortOrder) {
-  //     if (sortOrder.toUpperCase() === 'ASC') {
-  //       sortOptions = { createdAt: 1 };
-  //     } else if (sortOrder.toUpperCase() === 'DESC') {
-  //       sortOptions = { createdAt: -1 };
-  //     }
-  //   } else {
-  //     sortOptions = { createdAt: -1 };
-  //   }
-  //   query = query.sort(sortOptions);
-
-  //   // pagination
-  //   const skip = (page - 1) * limit;
-  //   query = query.skip(skip).limit(limit);
-
-  //   // execute queries
-  //   let minMaxPricePipeline;
-
-  //   if (
-  //     (minPrice !== undefined && maxPrice !== undefined) ||
-  //     (minPrice !== null && maxPrice !== null)
-  //   ) {
-  //     minMaxPricePipeline = [
-  //       {
-  //         $match: {
-  //           status: 'PUBLISHED',
-  //           prices: { $gte: minPrice, $lte: maxPrice },
-  //         },
-  //       },
-  //       {
-  //         $group: {
-  //           _id: null,
-  //           minPrice: { $min: '$prices' },
-  //           maxPrice: { $max: '$prices' },
-  //         },
-  //       },
-  //     ];
-  //   }
-
-  //   if (
-  //     (minPrice === undefined && maxPrice === undefined) ||
-  //     (minPrice === null && maxPrice === null)
-  //   ) {
-  //     minMaxPricePipeline = [
-  //       {
-  //         $match: {
-  //           status: 'PUBLISHED',
-  //         },
-  //       },
-  //       {
-  //         $group: {
-  //           _id: null,
-  //           minPrice: { $min: '$prices' },
-  //           maxPrice: { $max: '$prices' },
-  //         },
-  //       },
-  //     ];
-  //     console.log(minMaxPricePipeline);
-  //   }
-
-  //   // const [subProducts, minMaxPriceResult] = await Promise.all([
-  //   //   query.exec(),
-  //   //   this.subProductModel.aggregate(minMaxPricePipeline).exec(),
-  //   // ]);
-  //   const subProducts = await query.exec();
-  //   const minMaxPricesQ = await this.subProductModel
-  //     .aggregate(minMaxPricePipeline)
-  //     .exec();
-  //   const totalCount = await totalCountQuery.countDocuments();
-
-  //   // if (minMaxPriceResult.length !== 0) {
-  //   //   minMaxPriceResult[0].minPrice;
-  //   //   minMaxPriceResult[0].maxPrice;
-  //   // }
-
-  //   return {
-  //     subProducts,
-  //     totalCount,
-  //     minPrice: minPrice || minMaxPricesQ[0]?.minPrice,
-  //     maxPrice: maxPrice || minMaxPricesQ[0]?.maxPrice,
-  //   };
-  // }
 
   async getAllSubProducts(
     paginationInput: PaginationInput,
@@ -494,13 +363,27 @@ export class SubProductService {
     _id: string,
     updateSubProductInput: UpdateSubProductInput,
   ) {
+    const subProductOfExistingSku = await this.subProductModel.findOne({
+      sku: updateSubProductInput.sku,
+    });
+
+    if (subProductOfExistingSku) {
+      throw new BadGatewayException(
+        'Product not updated. Product already exists with sku: ' +
+          subProductOfExistingSku.sku,
+      );
+    }
+
     const product = await this.subProductModel.findByIdAndUpdate(
       _id,
       updateSubProductInput,
+      { new: true, runValidators: true },
     );
+
     if (!product || product.status !== 'PUBLISHED') {
       throw new BadRequestException('SubProduct not updated, _id: ' + _id);
     }
+
     return product;
   }
 
