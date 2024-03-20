@@ -51,9 +51,9 @@ export class SubProduct {
   @Field({ nullable: false })
   masterProductId: string; //{ type: ObjectId, ref: "MasterProduct" },
 
-  // @Prop()
-  // @Field({ nullable: false })
-  // categoryId: string;
+  @Prop()
+  @Field({ nullable: true })
+  categoryId: string;
 
   @Prop()
   @Field({ nullable: true })

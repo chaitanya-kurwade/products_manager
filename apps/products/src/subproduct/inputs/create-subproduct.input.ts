@@ -38,8 +38,8 @@ export class CreateSubProductInput {
   @Field({ nullable: false })
   masterProductId: string; //{ type: ObjectId, ref: "MasterProduct" },
 
-  // @Field({ nullable: false })
-  // categoryId: string;
+  @Field({ nullable: true })
+  categoryId: string;
 
   @Field({ nullable: true })
   isSameAsAMasterProductImage: boolean;

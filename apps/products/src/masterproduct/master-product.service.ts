@@ -146,12 +146,18 @@ export class MasterProductService {
 
     const masterProducts = await query.exec();
     const totalCount = await totalCountQuery.countDocuments().exec();
+    const minPriceFromDb = await (
+      await this.subProductService.getMinMaxPricesFromDB()
+    ).minPrice;
+    const maxPriceFromDb = await (
+      await this.subProductService.getMinMaxPricesFromDB()
+    ).maxPrice;
 
     return {
       masterProducts,
       totalCount,
-      minPrice: getMinMaxPrices.minPrice,
-      maxPrice: getMinMaxPrices.maxPrice,
+      minPrice: minPriceFromDb,
+      maxPrice: maxPriceFromDb,
     };
   }
 
@@ -254,4 +260,13 @@ export class MasterProductService {
     await this.categoryService.remove(categoryId);
     return 'category, master product and its sub-products are deleted successfully';
   }
+
+  // async getAllCategoriesInMasterProduct(categoryIds: string[]) {
+  //   console.log(categoryIds);
+  //   const masterProds = await this.masterProductModel.find({
+  //     'category._id': { $in: categoryIds },
+  //   });
+
+  //   return masterProds.map((prduct) => prduct.category._id.toString());
+  // }
 }
