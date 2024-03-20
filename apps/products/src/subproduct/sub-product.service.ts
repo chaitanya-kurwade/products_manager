@@ -53,15 +53,7 @@ export class SubProductService {
       maxPrice: number;
       _ids: string[];
     };
-    if (minPrice !== 0 && maxPrice !== 0) {
-      getMinMaxPrices = await this.getMinMaxPricesForSubProducts(
-        minPrice,
-        maxPrice,
-      );
-      getMinMaxPrices.minPrice;
-      getMinMaxPrices.maxPrice;
-      fetched_ids = getMinMaxPrices._ids;
-    } else if (
+    if (
       (minPrice === null && maxPrice === null) ||
       (minPrice === undefined && maxPrice === undefined)
     ) {
@@ -71,6 +63,14 @@ export class SubProductService {
       );
       getMinMaxPrices.minPrice;
       getMinMaxPrices.maxPrice;
+    } else if (minPrice !== 0 && maxPrice !== 0) {
+      getMinMaxPrices = await this.getMinMaxPricesForSubProducts(
+        minPrice,
+        maxPrice,
+      );
+      minPrice;
+      maxPrice;
+      fetched_ids = getMinMaxPrices._ids;
     }
     // getting subProducts as per subProduct's price
     if (minPrice !== undefined && maxPrice !== undefined && fetched_ids) {
@@ -80,6 +80,10 @@ export class SubProductService {
 
     // categoryIds[] wise search
     if (categoryIds && categoryIds.length !== 0) {
+      // const fetchedCategoriesId =
+      //   await this.masterProductService.getAllCategoriesInMasterProduct(
+      //     categoryIds,
+      //   );
       query = query.where('categoryId').in(categoryIds);
       totalCountQuery = totalCountQuery.where('categoryId').in(categoryIds);
     }
@@ -129,12 +133,38 @@ export class SubProductService {
     const subProducts = await query.exec();
     const totalCount = await totalCountQuery.countDocuments().exec();
 
+    const minPriceFromDb = await (await this.getMinMaxPricesFromDB()).minPrice;
+    const maxPriceFromDb = await (await this.getMinMaxPricesFromDB()).maxPrice;
+
     return {
       subProducts,
       totalCount,
-      minPrice: getMinMaxPrices.minPrice,
-      maxPrice: getMinMaxPrices.maxPrice,
+      minPrice: minPriceFromDb,
+      maxPrice: maxPriceFromDb,
     };
+  }
+
+  async getMinMaxPricesFromDB() {
+    const minMaxPricesFromDB = await this.subProductModel.aggregate([
+      {
+        $match: { status: 'PUBLISHED' },
+      },
+      {
+        $group: {
+          _id: null,
+          minPriceFromDb: { $min: '$prices' },
+          maxPriceFromDb: { $max: '$prices' },
+        },
+      },
+    ]);
+
+    if (minMaxPricesFromDB.length > 0) {
+      const { minPriceFromDb, maxPriceFromDb } = minMaxPricesFromDB[0];
+      return { minPrice: minPriceFromDb, maxPrice: maxPriceFromDb };
+    } else {
+      console.error("No documents found with status 'PUBLISHED'");
+      return null;
+    }
   }
 
   async getMinMaxPricesForSubProducts(
