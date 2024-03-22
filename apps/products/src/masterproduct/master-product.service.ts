@@ -64,6 +64,7 @@ export class MasterProductService {
     paginationInput: PaginationInput,
     searchFields?: string[],
     categoryIds?: string[],
+    userRole?: string,
   ): Promise<MasterProductList> {
     const { page, limit, search, sortOrder, minPrice, maxPrice } =
       paginationInput;
@@ -72,6 +73,15 @@ export class MasterProductService {
     let query = this.masterProductModel.find({ status: 'PUBLISHED' });
     let totalCountQuery = this.masterProductModel.find({ status: 'PUBLISHED' });
 
+    if (userRole === 'SUPER_ADMIN') {
+      query = query.where('status').in(['PUBLISHED', 'ARCHIVED']);
+      totalCountQuery = totalCountQuery
+        .where('status')
+        .in(['PUBLISHED', 'ARCHIVED']);
+    } else {
+      query = query.where('status').equals('PUBLISHED');
+      totalCountQuery = totalCountQuery.where('status').equals('PUBLISHED');
+    }
     // getMinMaxPrices
     let fetchedMasterProductIds: string[];
     let getMinMaxPrices: {

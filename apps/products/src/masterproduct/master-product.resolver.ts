@@ -1,15 +1,20 @@
-import { Resolver, Query, Mutation, Args } from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args, Context } from '@nestjs/graphql';
 import { MasterProduct } from './entities/master-product.entity';
 import { MasterProductService } from './master-product.service';
 import { CreateMasterProductInput } from './inputs/create-master-product.input';
 import { UpdateMasterProductInput } from './inputs/update-masterproduct.input';
 import { PaginationInput } from 'common/library';
 import { MasterProductList } from './responses/master-products-list.response.entity';
+import { Roles } from 'common/library/decorators/roles.decorator';
+import { ROLES } from 'apps/auth/src/users/enums/role.enum';
+import { Request } from 'express';
+import { ContextService } from 'common/library/service/context.service';
 
 @Resolver(() => MasterProduct)
 export class MasterProductResolver {
   constructor(private readonly masterProductService: MasterProductService) {}
 
+  @Roles(ROLES.ADMIN, ROLES.SUPERADMIN)
   @Mutation(() => MasterProduct)
   createMasterProduct(
     @Args('createMasterProductInput')
@@ -20,8 +25,10 @@ export class MasterProductResolver {
     );
   }
 
+  @Roles(ROLES.ADMIN, ROLES.SUPERADMIN, ROLES.MANAGER)
   @Query(() => MasterProductList, { name: 'getAllMasterProduct' })
   async getAllMasterProducts(
+    @Context() context: { req: Request },
     @Args('paginationInput', { nullable: true })
     paginationInput: PaginationInput,
     @Args('searchFields', { type: () => [String], nullable: true })
@@ -29,19 +36,24 @@ export class MasterProductResolver {
     @Args('categoryIds', { type: () => [String], nullable: true })
     categoryIds?: string[],
   ): Promise<MasterProductList> {
+    const { role } = await new ContextService().getContextInfo(context.req);
+
     const products = await this.masterProductService.getAllMasterProducts(
       paginationInput,
       searchFields ?? [],
       categoryIds ?? [],
+      role,
     );
     return products;
   }
 
+  @Roles(ROLES.ADMIN, ROLES.SUPERADMIN, ROLES.MANAGER)
   @Query(() => MasterProduct, { name: 'getMasterProduct' })
   getOneMasterProductById(@Args('_id') _id: string) {
     return this.masterProductService.getOneMasterProductById(_id);
   }
 
+  @Roles(ROLES.ADMIN, ROLES.SUPERADMIN)
   @Mutation(() => MasterProduct)
   updateMasterProductById(
     @Args('updateMasterProductInput')
@@ -58,6 +70,7 @@ export class MasterProductResolver {
   //   return this.masterProductService.deleteMasterProductById(_id);
   // }
 
+  @Roles(ROLES.ADMIN, ROLES.SUPERADMIN)
   @Mutation(() => String)
   deleteCategoryById(
     @Args('categoryId', { type: () => String }) categoryId: string,
@@ -65,6 +78,7 @@ export class MasterProductResolver {
     return this.masterProductService.deleteCategoryAndMasterProduct(categoryId);
   }
 
+  @Roles(ROLES.ADMIN, ROLES.SUPERADMIN)
   @Mutation(() => String)
   deleteMasterProduct(
     @Args('masterProductId', { type: () => String }) masterProductId: string,

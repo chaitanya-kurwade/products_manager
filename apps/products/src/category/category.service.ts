@@ -80,11 +80,22 @@ export class CategoryService {
   async findAll(
     paginationInput: PaginationInput,
     searchFields?: string[],
+    userRole?: string,
   ): Promise<CategoryList> {
     const { page, limit, search, sortOrder } = paginationInput;
 
     let query = this.categoryModel.find({ status: 'PUBLISHED' });
     let totalCountQuery = this.categoryModel.find({ status: 'PUBLISHED' });
+
+    if (userRole === 'SUPER_ADMIN') {
+      query = query.where('status').in(['PUBLISHED', 'ARCHIVED']);
+      totalCountQuery = totalCountQuery
+        .where('status')
+        .in(['PUBLISHED', 'ARCHIVED']);
+    } else {
+      query = query.where('status').equals('PUBLISHED');
+      totalCountQuery = totalCountQuery.where('status').equals('PUBLISHED');
+    }
 
     if (search && searchFields.length > 0) {
       const searchQueries = searchFields.map((field) => ({

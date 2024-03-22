@@ -36,7 +36,6 @@ export class UsersService {
     const { page, limit, search, sortField, sortOrder } = paginationInput;
     let query = this.userModel.find();
     if (searchFields == null || !searchFields.length) {
-      console.log(query);
       if (search) {
         query = query.where('email').regex(new RegExp(search, 'i'));
       }
@@ -97,8 +96,8 @@ export class UsersService {
     return query;
   }
 
-  findOne(id: string) {
-    const getOneUser = this.userModel.findById(id);
+  async getUserById(id: string) {
+    const getOneUser = await this.userModel.findById(id);
     if (!getOneUser) {
       throw new NotFoundException(`user not found  with id: ${id}`);
     }

@@ -39,12 +39,33 @@ export class SubProductService {
     searchFields?: string[],
     masterProductIds?: string[],
     categoryIds?: string[],
+    userRole?: string,
   ): Promise<SubProductList> {
     const { page, limit, search, sortOrder, minPrice, maxPrice } =
       paginationInput;
 
     let query = this.subProductModel.find({ status: 'PUBLISHED' });
     let totalCountQuery = this.subProductModel.find({ status: 'PUBLISHED' });
+
+    if (userRole === 'SUPER_ADMIN') {
+      query = query.find({
+        status: {
+          $in: ['PUBLISHED', 'ARCHIVED'],
+        },
+      });
+      totalCountQuery = totalCountQuery.find({
+        status: {
+          $in: ['PUBLISHED', 'ARCHIVED'],
+        },
+      });
+    } else {
+      query = query.find({
+        status: 'PUBLISHED',
+      });
+      totalCountQuery = totalCountQuery.find({
+        status: 'PUBLISHED',
+      });
+    }
 
     // getMinMaxPrices
     let fetched_ids: string[];
@@ -175,7 +196,7 @@ export class SubProductService {
     maxPrice: number;
     _ids: string[];
   }> {
-    // If either or both minPrice and maxPrice are not provided, aggregate the prices
+    // minPrice === null && maxPrice === null
     if (
       (minPrice === null && maxPrice === null) ||
       (minPrice === undefined && maxPrice === undefined)
@@ -212,8 +233,7 @@ export class SubProductService {
         _ids: _ids,
       };
     }
-
-    // If both minPrice and maxPrice are provided, execute the pipeline to get the price range
+    // minPrice !== null && maxPrice !== null
     else if (
       (minPrice !== null && maxPrice !== null) ||
       (minPrice !== undefined && maxPrice !== undefined)
@@ -230,7 +250,7 @@ export class SubProductService {
             _id: null,
             minPrice: { $min: '$prices' },
             maxPrice: { $max: '$prices' },
-            masterProductId: { $addToSet: '$_id' }, // Add IDs of products to the result
+            masterProductId: { $addToSet: '$_id' },
           },
         },
       ];
@@ -260,7 +280,6 @@ export class SubProductService {
     maxPrice: number;
     masterProductId: string[];
   }> {
-    // If either or both minPrice and maxPrice are not provided, aggregate the prices
     if (
       (minPrice === null && maxPrice === null) ||
       (minPrice === undefined && maxPrice === undefined)
@@ -297,10 +316,7 @@ export class SubProductService {
         maxPrice: maxPriceValue,
         masterProductId: masterProductIds,
       };
-    }
-
-    // If both minPrice and maxPrice are provided, execute the pipeline to get the price range
-    else if (
+    } else if (
       (minPrice !== null && maxPrice !== null) ||
       (minPrice !== undefined && maxPrice !== undefined)
     ) {
@@ -316,7 +332,7 @@ export class SubProductService {
             _id: null,
             minPrice: { $min: '$prices' },
             maxPrice: { $max: '$prices' },
-            masterProductId: { $addToSet: '$masterProductId' }, // Add IDs of products to the result
+            masterProductId: { $addToSet: '$masterProductId' }, // Adding ids
           },
         },
       ];
@@ -325,8 +341,6 @@ export class SubProductService {
         .aggregate(minMaxPricePipeline)
         .exec();
 
-      // minMaxPrices.length !== 0 ? minMaxPrices[0].minPrice : null;
-      // minMaxPrices.length !== 0 ? minMaxPrices[0].maxPrice : null;
       const masterProductIds =
         minMaxPrices.length !== 0 ? minMaxPrices[0].masterProductId : [];
 
@@ -342,7 +356,7 @@ export class SubProductService {
     const product = await this.subProductModel.findById({
       _id,
     });
-    if (!product || product.status !== 'PUBLISHED') {
+    if (!product) {
       throw new NotFoundException(
         'SubProduct not available with _id: ' +
           _id +
@@ -395,26 +409,16 @@ export class SubProductService {
   ) {
     const subProductOfExistingSku = await this.subProductModel.findOne({
       sku: updateSubProductInput.sku,
+      _id: updateSubProductInput._id,
     });
 
-    if (subProductOfExistingSku) {
-      throw new BadGatewayException(
-        'Product not updated. Product already exists with sku: ' +
-          subProductOfExistingSku.sku,
-      );
-    }
-
-    const product = await this.subProductModel.findByIdAndUpdate(
-      _id,
-      updateSubProductInput,
-      { new: true, runValidators: true },
-    );
-
-    if (!product || product.status !== 'PUBLISHED') {
+    if (
+      !subProductOfExistingSku ||
+      subProductOfExistingSku.status !== 'PUBLISHED'
+    ) {
       throw new BadRequestException('SubProduct not updated, _id: ' + _id);
     }
-
-    return product;
+    return subProductOfExistingSku;
   }
 
   async deleteSubProductById(_id: string) {

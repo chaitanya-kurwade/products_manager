@@ -6,6 +6,8 @@ import { UserResponse } from './responses/user-response.entity';
 import { PaginationInput, Public } from 'common/library';
 import { NotFoundException } from '@nestjs/common';
 import { SendEmail } from './entities/send-email.entity';
+import { ROLES } from './enums/role.enum';
+import { Roles } from 'common/library/decorators/roles.decorator';
 
 @Resolver(() => User)
 export class UsersResolver {
@@ -16,14 +18,18 @@ export class UsersResolver {
   //   return this.usersService.create(createUserInput);
   // }
 
+  @Roles(ROLES.ADMIN, ROLES.MANAGER, ROLES.SUPERADMIN)
   @Query(() => [UserResponse], { name: 'getAllUsers' })
-  getAllUsers(
+  async getAllUsers(
     @Args('paginationInput', { nullable: true })
     paginationInput: PaginationInput,
     @Args('searchFields', { type: () => [String], nullable: true })
     searchFields?: string[],
   ) {
-    return this.usersService.getAllUsers(paginationInput, searchFields ?? []);
+    return await this.usersService.getAllUsers(
+      paginationInput,
+      searchFields ?? [],
+    );
   }
 
   // @Query(() => User, { name: 'user' })
@@ -31,6 +37,7 @@ export class UsersResolver {
   //   return this.usersService.findOne(_id);
   // }
 
+  @Roles(ROLES.SUPERADMIN)
   @Mutation(() => UserResponse)
   updateUser(@Args('updateUserInput') updateUserInput: UpdateUserInput) {
     return this.usersService.update(updateUserInput._id, updateUserInput);
@@ -41,11 +48,13 @@ export class UsersResolver {
   //   return this.usersService.remove(_id);
   // }
 
+  @Roles(ROLES.SUPERADMIN)
   @Query(() => UserResponse, { name: 'userByEmail' })
   getUserByEmailId(@Args('email') email: string) {
     return this.usersService.getUserByEmailId(email);
   }
 
+  @Roles(ROLES.SUPERADMIN)
   @Mutation(() => String, { name: 'userLogout' })
   userLogout(@Args('email') email: string) {
     return this.usersService.userLogout(email);

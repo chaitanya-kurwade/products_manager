@@ -13,6 +13,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtStrategy } from 'common/library/strategies/jwt-strategy';
 import { MasterProductModule } from './masterproduct/master-product.module';
 import { SubProductModule } from './subproduct/sub-product.module';
+import { RolesGuard } from 'common/library/guards/roles.guard';
 
 @Module({
   imports: [
@@ -39,6 +40,10 @@ import { SubProductModule } from './subproduct/sub-product.module';
     }),
   ],
 
-  providers: [JwtStrategy, { provide: APP_GUARD, useClass: JwtAuthGuard }],
+  providers: [
+    JwtStrategy,
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: RolesGuard },
+  ],
 })
 export class ProductsModule {}
