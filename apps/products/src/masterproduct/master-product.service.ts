@@ -171,16 +171,17 @@ export class MasterProductService {
     };
   }
 
-  async getOneMasterProductById(_id: string) {
-    const product = await this.masterProductModel.findById({
-      _id,
-    });
-    if (!product || product.status !== 'PUBLISHED') {
+  async getOneMasterProductById(_id: string, role: string) {
+    const masterProduct = await this.masterProductModel.findById(_id);
+    if (role === 'SUPER_ADMIN') {
+      return masterProduct;
+    }
+    if (!masterProduct || masterProduct.status !== 'PUBLISHED') {
       throw new NotFoundException(
         'Product not available with _id: ' + _id + ', or it is not published',
       );
     }
-    return product;
+    return masterProduct;
   }
 
   async updateMasterProductById(

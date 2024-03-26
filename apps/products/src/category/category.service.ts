@@ -127,9 +127,11 @@ export class CategoryService {
     return { categories, totalCount };
   }
 
-  async getCategoryById(_id: string) {
-    const category = await this.categoryModel.findByIdAndUpdate(_id);
-    if (!category || category.status !== 'PUBLISHED') {
+  async getCategoryById(_id: string, role?: string) {
+    const category = await this.categoryModel.findById(_id);
+    if (role === 'SUPER_ADMIN') {
+      return category;
+    } else if (!category || category.status !== 'PUBLISHED') {
       throw new NotFoundException(
         'category not available with _id: ' + _id + ', or it is not published',
       );
@@ -137,26 +139,50 @@ export class CategoryService {
     return category;
   }
 
-  async getChildCategoryByCategoryId(categoryId: string) {
-    const childCategory = await this.categoryModel.find({
+  async getChildCategoryByCategoryId(categoryId: string, role?: string) {
+    const childCategories = await this.categoryModel.find({
       immediateParentId: categoryId,
-      status: 'PUBLISHED',
     });
-    if (!childCategory) {
+    if (!childCategories || childCategories.length === 0) {
       throw new NotFoundException('Child category not found');
     }
-    return childCategory;
+    if (role === 'SUPER_ADMIN') {
+      return childCategories;
+    } else {
+      const categories =
+        childCategories.filter((category) => category.status === 'PUBLISHED') ||
+        [];
+      return categories;
+    }
   }
 
-  async update(_id: string, updateCategoryInput: UpdateCategoryInput) {
-    const category = await this.categoryModel.findByIdAndUpdate(
+  async updateCategoryById(
+    _id: string,
+    updateCategoryInput: UpdateCategoryInput,
+    role: string,
+  ) {
+    if (role === 'SUPER_ADMIN') {
+      const category = await this.categoryModel.findByIdAndUpdate(
+        _id,
+        updateCategoryInput,
+        { new: true },
+      );
+      return category.save();
+    }
+
+    const category = await this.categoryModel.findById(_id);
+    if (!category || category.status !== 'PUBLISHED') {
+      throw new BadGatewayException(
+        `Category not found with id: ${_id} or Category status is not 'PUBLISHED'`,
+      );
+    }
+    const updatedCategory = await this.categoryModel.findByIdAndUpdate(
       _id,
       updateCategoryInput,
+      { new: true },
     );
-    if (!category || category.status !== 'PUBLISHED') {
-      throw new BadGatewayException('category not updated, _id: ' + _id);
-    }
-    return category;
+    console.log(updatedCategory, 'OTHERS');
+    return updatedCategory;
   }
 
   async remove(_id: string) {

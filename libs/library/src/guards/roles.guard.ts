@@ -20,7 +20,6 @@ export class RolesGuard implements CanActivate {
     ]);
 
     if (!requiredRoles || requiredRoles.length === 0) {
-      console.log(requiredRoles, 'if');
       return true;
     }
 
@@ -36,9 +35,6 @@ export class RolesGuard implements CanActivate {
     }
 
     const user = jwt.verify(token, 'mysecretkey');
-
-    // console.log(requiredRoles);
-    // console.log(requiredRoles.some((role) => [user.role].includes(role)));
 
     // // does the current user making request, have those requied role(s) in it
     return requiredRoles.some((role) => [user.role].includes(role));

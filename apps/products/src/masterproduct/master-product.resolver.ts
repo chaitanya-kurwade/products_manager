@@ -49,8 +49,15 @@ export class MasterProductResolver {
 
   @Roles(ROLES.ADMIN, ROLES.SUPERADMIN, ROLES.MANAGER)
   @Query(() => MasterProduct, { name: 'getMasterProduct' })
-  getOneMasterProductById(@Args('_id') _id: string) {
-    return this.masterProductService.getOneMasterProductById(_id);
+  async getOneMasterProductById(
+    @Args('_id') _id: string,
+    @Context() context: { req: Request },
+  ) {
+    const { role } = await new ContextService().getContextInfo(context.req);
+
+    const masterProduct =
+      await this.masterProductService.getOneMasterProductById(_id, role);
+    return masterProduct;
   }
 
   @Roles(ROLES.ADMIN, ROLES.SUPERADMIN)
