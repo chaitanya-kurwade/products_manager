@@ -62,14 +62,21 @@ export class MasterProductResolver {
 
   @Roles(ROLES.ADMIN, ROLES.SUPERADMIN)
   @Mutation(() => MasterProduct)
-  updateMasterProductById(
+  async updateMasterProductById(
+    @Context() context: { req: Request },
     @Args('updateMasterProductInput')
     updateMasterProductInput: UpdateMasterProductInput,
   ) {
-    return this.masterProductService.updateMasterProductById(
-      updateMasterProductInput._id,
-      updateMasterProductInput,
-    );
+    const { role } = await new ContextService().getContextInfo(context.req);
+
+    const updatedMasterProduct =
+      await this.masterProductService.updateMasterProductById(
+        updateMasterProductInput._id,
+        updateMasterProductInput,
+        role,
+      );
+
+    return updatedMasterProduct;
   }
 
   // @Mutation(() => MasterProduct)

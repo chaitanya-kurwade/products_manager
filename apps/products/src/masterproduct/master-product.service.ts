@@ -187,15 +187,30 @@ export class MasterProductService {
   async updateMasterProductById(
     _id: string,
     updateMasterProductInput: UpdateMasterProductInput,
+    role?: string,
   ) {
-    const product = await this.masterProductModel.findByIdAndUpdate(
-      _id,
-      updateMasterProductInput,
-    );
-    if (!product || product.status !== 'PUBLISHED') {
-      throw new BadRequestException('MasterProduct not updated, _id: ' + _id);
+    if (role === 'SUPER_ADMIN') {
+      const product = await this.masterProductModel.findByIdAndUpdate(
+        _id,
+        updateMasterProductInput,
+        { new: true },
+      );
+      return product.save();
     }
-    return product;
+
+    const product = await this.masterProductModel.findById(_id);
+    if (!product || product.status !== 'PUBLISHED') {
+      throw new BadRequestException(
+        `MasterProduct not found with id: ${_id} or MasterProduct status is not 'PUBLISHED'`,
+      );
+    }
+    const updatedMasterProduct =
+      await this.masterProductModel.findByIdAndUpdate(
+        _id,
+        updateMasterProductInput,
+        { new: true },
+      );
+    return updatedMasterProduct;
   }
 
   async deleteMasterProductById(_id: string) {

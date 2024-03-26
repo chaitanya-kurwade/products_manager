@@ -352,11 +352,12 @@ export class SubProductService {
     }
   }
 
-  async getOneSubProductById(_id: string) {
-    const product = await this.subProductModel.findById({
-      _id,
-    });
-    if (!product) {
+  async getOneSubProductById(_id: string, role?: string) {
+    const product = await this.subProductModel.findById(_id);
+    if (role === 'SUPER_ADMIN') {
+      return product;
+    }
+    if (!product || product.status !== 'PUBLISHED') {
       throw new NotFoundException(
         'SubProduct not available with _id: ' +
           _id +
@@ -366,17 +367,67 @@ export class SubProductService {
     return product;
   }
 
-  async getSubProductsByMasterProductId(masterProductId: string) {
+  async getSubProductsByMasterProductId(
+    masterProductId: string,
+    role?: string,
+  ) {
+    if (role === 'SUPER_ADMIN') {
+      const subProducts = await this.subProductModel
+        .find({ masterProductId })
+        .exec();
+
+      if (!subProducts || subProducts.length === 0) {
+        throw new NotFoundException(
+          'SubProduct not available with ' +
+            masterProductId +
+            ' masterProductId',
+        );
+      }
+    }
     const subProducts = await this.subProductModel
       .find({ masterProductId, status: 'PUBLISHED' })
       .exec();
-    console.log(subProducts);
     if (!subProducts || subProducts.length === 0) {
       throw new NotFoundException(
         'SubProduct not available with ' + masterProductId + ' masterProductId',
       );
     }
     return subProducts;
+  }
+
+  async updateSubProductById(
+    _id: string,
+    updateSubProductInput: UpdateSubProductInput,
+    role?: string,
+  ) {
+    if (role === 'SUPER_ADMIN') {
+      const subProductOfExistingSku = await this.subProductModel.findOne({
+        sku: updateSubProductInput.sku,
+        _id: updateSubProductInput._id,
+      });
+
+      if (!subProductOfExistingSku) {
+        throw new BadRequestException('SubProduct not updated, _id: ' + _id);
+      }
+      return subProductOfExistingSku;
+    }
+
+    const subProductOfExistingSku = await this.subProductModel.findOne({
+      sku: updateSubProductInput.sku,
+      _id: updateSubProductInput._id,
+    });
+
+    if (
+      !subProductOfExistingSku ||
+      subProductOfExistingSku.status !== 'PUBLISHED'
+    ) {
+      throw new BadRequestException(
+        'Sub-Product not updated, _id: ' +
+          _id +
+          ", or it is not 'PUBLISHED' at this moment",
+      );
+    }
+    return subProductOfExistingSku;
   }
 
   async deleteSubProductsByMasterProductId(
@@ -401,24 +452,6 @@ export class SubProductService {
       ),
     );
     return 'subproducts deleted';
-  }
-
-  async updateSubProductById(
-    _id: string,
-    updateSubProductInput: UpdateSubProductInput,
-  ) {
-    const subProductOfExistingSku = await this.subProductModel.findOne({
-      sku: updateSubProductInput.sku,
-      _id: updateSubProductInput._id,
-    });
-
-    if (
-      !subProductOfExistingSku ||
-      subProductOfExistingSku.status !== 'PUBLISHED'
-    ) {
-      throw new BadRequestException('SubProduct not updated, _id: ' + _id);
-    }
-    return subProductOfExistingSku;
   }
 
   async deleteSubProductById(_id: string) {

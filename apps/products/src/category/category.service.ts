@@ -25,28 +25,7 @@ export class CategoryService {
     if (existingCategory) {
       throw new BadGatewayException('Category already exists');
     }
-    // const parentCategory = await this.categoryModel.findOne({
-    //   _id: createCategoryInput.immediateParentId,
-    // });
-    // const ancestors = parentCategory.ancestors;
-    // if (ancestors) {
-    //   if (
-    //     createCategoryInput.immediateParentId !== null &&
-    //     createCategoryInput.immediateParentId !== undefined &&
-    //     createCategoryInput.immediateParentId.length === 0
-    //   ) {
-    //     // if (!ancestors.includes(createCategoryInput.immediateParentId)) {
-    //     //   ancestors.unshift(createCategoryInput.immediateParentId);
-    //     // }
-    //     const ancestor = new CategoryAncestor();
-    //     if (!(ancestor.ancestorId === parentCategory._id)) {
-    //       ancestor.ancestorName = parentCategory.categoryName.toString();
-    //       ancestor.ancestorId = parentCategory._id.toString();
-    //       ancestors.unshift(ancestor);
-    //     }
-    //   }
-    // }
-    //////////////////////////
+
     let ancestors = [];
     if (createCategoryInput.immediateParentId) {
       const parentCategory = await this.categoryModel.findById(
@@ -77,7 +56,7 @@ export class CategoryService {
     return newCategory;
   }
 
-  async findAll(
+  async getAllCategories(
     paginationInput: PaginationInput,
     searchFields?: string[],
     userRole?: string,
@@ -131,7 +110,8 @@ export class CategoryService {
     const category = await this.categoryModel.findById(_id);
     if (role === 'SUPER_ADMIN') {
       return category;
-    } else if (!category || category.status !== 'PUBLISHED') {
+    }
+    if (!category || category.status !== 'PUBLISHED') {
       throw new NotFoundException(
         'category not available with _id: ' + _id + ', or it is not published',
       );
@@ -159,7 +139,7 @@ export class CategoryService {
   async updateCategoryById(
     _id: string,
     updateCategoryInput: UpdateCategoryInput,
-    role: string,
+    role?: string,
   ) {
     if (role === 'SUPER_ADMIN') {
       const category = await this.categoryModel.findByIdAndUpdate(
@@ -181,7 +161,6 @@ export class CategoryService {
       updateCategoryInput,
       { new: true },
     );
-    console.log(updatedCategory, 'OTHERS');
     return updatedCategory;
   }
 

@@ -48,30 +48,49 @@ export class SubProductResolver {
 
   @Roles(ROLES.ADMIN, ROLES.SUPERADMIN, ROLES.MANAGER)
   @Query(() => SubProduct, { name: 'getOneSubProductById' })
-  getOneSubProductById(@Args('_id') _id: string) {
-    return this.subProductService.getOneSubProductById(_id);
+  async getOneSubProductById(
+    @Context() context: { req: Request },
+    @Args('_id') _id: string,
+  ) {
+    const { role } = await new ContextService().getContextInfo(context.req);
+    const subProduct = await this.subProductService.getOneSubProductById(
+      _id,
+      role,
+    );
+    return subProduct;
   }
 
   @Roles(ROLES.ADMIN, ROLES.SUPERADMIN, ROLES.MANAGER)
   @Query(() => [SubProduct], { name: 'getSubProductByMasterProductId' })
-  getSubProductsByMasterProductId(
+  async getSubProductsByMasterProductId(
+    @Context() context: { req: Request },
     @Args('masterProductId') masterProductId: string,
   ) {
-    console.log(masterProductId);
-    return this.subProductService.getSubProductsByMasterProductId(
-      masterProductId,
-    );
+    const { role } = await new ContextService().getContextInfo(context.req);
+    const subProductsByMasterProductId =
+      await this.subProductService.getSubProductsByMasterProductId(
+        masterProductId,
+        role,
+      );
+
+    return subProductsByMasterProductId;
   }
 
   @Roles(ROLES.ADMIN, ROLES.SUPERADMIN)
   @Mutation(() => SubProduct)
-  updateSubProductById(
+  async updateSubProductById(
+    @Context() context: { req: Request },
     @Args('updateSubProductInput') updateSubProductInput: UpdateSubProductInput,
   ) {
-    return this.subProductService.updateSubProductById(
+    const { role } = await new ContextService().getContextInfo(context.req);
+
+    const updatedProduct = await this.subProductService.updateSubProductById(
       updateSubProductInput._id,
       updateSubProductInput,
+      role,
     );
+
+    return updatedProduct;
   }
 
   @Roles(ROLES.ADMIN, ROLES.SUPERADMIN)

@@ -32,7 +32,7 @@ export class CategoryResolver {
     searchFields?: string[],
   ): Promise<CategoryList> {
     const { role } = await new ContextService().getContextInfo(context.req);
-    const categoryList = await this.categoryService.findAll(
+    const categoryList = await this.categoryService.getAllCategories(
       paginationInput,
       searchFields ?? [],
       role,
