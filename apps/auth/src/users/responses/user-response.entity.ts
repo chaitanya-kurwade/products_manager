@@ -14,6 +14,9 @@ export class UserResponse {
   @Field()
   lastName: string;
 
+  @Field({ nullable: true })
+  role: string;
+
   // @Prop({ type: Date, required: true, default: new Date() })
   @Field(() => GraphQLISODateTime, { nullable: false })
   createdAt: Date;

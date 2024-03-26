@@ -11,6 +11,7 @@ import { CreateUserInput } from './users/inputs/create-user.input';
 import { Public } from 'common/library/decorators/public.decorator';
 import { UserResponse } from './users/responses/user-response.entity';
 import { User } from './users/entities/user.entity';
+
 @Resolver()
 export class AuthResolver {
   constructor(private readonly authService: AuthService) {}

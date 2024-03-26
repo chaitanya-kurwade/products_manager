@@ -64,6 +64,7 @@ export class MasterProductService {
     paginationInput: PaginationInput,
     searchFields?: string[],
     categoryIds?: string[],
+    userRole?: string,
   ): Promise<MasterProductList> {
     const { page, limit, search, sortOrder, minPrice, maxPrice } =
       paginationInput;
@@ -72,6 +73,15 @@ export class MasterProductService {
     let query = this.masterProductModel.find({ status: 'PUBLISHED' });
     let totalCountQuery = this.masterProductModel.find({ status: 'PUBLISHED' });
 
+    if (userRole === 'SUPER_ADMIN') {
+      query = query.where('status').in(['PUBLISHED', 'ARCHIVED']);
+      totalCountQuery = totalCountQuery
+        .where('status')
+        .in(['PUBLISHED', 'ARCHIVED']);
+    } else {
+      query = query.where('status').equals('PUBLISHED');
+      totalCountQuery = totalCountQuery.where('status').equals('PUBLISHED');
+    }
     // getMinMaxPrices
     let fetchedMasterProductIds: string[];
     let getMinMaxPrices: {
@@ -161,30 +171,46 @@ export class MasterProductService {
     };
   }
 
-  async getOneMasterProductById(_id: string) {
-    const product = await this.masterProductModel.findById({
-      _id,
-    });
-    if (!product || product.status !== 'PUBLISHED') {
+  async getOneMasterProductById(_id: string, role: string) {
+    const masterProduct = await this.masterProductModel.findById(_id);
+    if (role === 'SUPER_ADMIN') {
+      return masterProduct;
+    }
+    if (!masterProduct || masterProduct.status !== 'PUBLISHED') {
       throw new NotFoundException(
         'Product not available with _id: ' + _id + ', or it is not published',
       );
     }
-    return product;
+    return masterProduct;
   }
 
   async updateMasterProductById(
     _id: string,
     updateMasterProductInput: UpdateMasterProductInput,
+    role?: string,
   ) {
-    const product = await this.masterProductModel.findByIdAndUpdate(
-      _id,
-      updateMasterProductInput,
-    );
-    if (!product || product.status !== 'PUBLISHED') {
-      throw new BadRequestException('MasterProduct not updated, _id: ' + _id);
+    if (role === 'SUPER_ADMIN') {
+      const product = await this.masterProductModel.findByIdAndUpdate(
+        _id,
+        updateMasterProductInput,
+        { new: true },
+      );
+      return product.save();
     }
-    return product;
+
+    const product = await this.masterProductModel.findById(_id);
+    if (!product || product.status !== 'PUBLISHED') {
+      throw new BadRequestException(
+        `MasterProduct not found with id: ${_id} or MasterProduct status is not 'PUBLISHED'`,
+      );
+    }
+    const updatedMasterProduct =
+      await this.masterProductModel.findByIdAndUpdate(
+        _id,
+        updateMasterProductInput,
+        { new: true },
+      );
+    return updatedMasterProduct;
   }
 
   async deleteMasterProductById(_id: string) {

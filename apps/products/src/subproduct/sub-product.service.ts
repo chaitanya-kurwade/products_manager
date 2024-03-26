@@ -39,12 +39,33 @@ export class SubProductService {
     searchFields?: string[],
     masterProductIds?: string[],
     categoryIds?: string[],
+    userRole?: string,
   ): Promise<SubProductList> {
     const { page, limit, search, sortOrder, minPrice, maxPrice } =
       paginationInput;
 
     let query = this.subProductModel.find({ status: 'PUBLISHED' });
     let totalCountQuery = this.subProductModel.find({ status: 'PUBLISHED' });
+
+    if (userRole === 'SUPER_ADMIN') {
+      query = query.find({
+        status: {
+          $in: ['PUBLISHED', 'ARCHIVED'],
+        },
+      });
+      totalCountQuery = totalCountQuery.find({
+        status: {
+          $in: ['PUBLISHED', 'ARCHIVED'],
+        },
+      });
+    } else {
+      query = query.find({
+        status: 'PUBLISHED',
+      });
+      totalCountQuery = totalCountQuery.find({
+        status: 'PUBLISHED',
+      });
+    }
 
     // getMinMaxPrices
     let fetched_ids: string[];
@@ -175,7 +196,7 @@ export class SubProductService {
     maxPrice: number;
     _ids: string[];
   }> {
-    // If either or both minPrice and maxPrice are not provided, aggregate the prices
+    // minPrice === null && maxPrice === null
     if (
       (minPrice === null && maxPrice === null) ||
       (minPrice === undefined && maxPrice === undefined)
@@ -212,8 +233,7 @@ export class SubProductService {
         _ids: _ids,
       };
     }
-
-    // If both minPrice and maxPrice are provided, execute the pipeline to get the price range
+    // minPrice !== null && maxPrice !== null
     else if (
       (minPrice !== null && maxPrice !== null) ||
       (minPrice !== undefined && maxPrice !== undefined)
@@ -230,7 +250,7 @@ export class SubProductService {
             _id: null,
             minPrice: { $min: '$prices' },
             maxPrice: { $max: '$prices' },
-            masterProductId: { $addToSet: '$_id' }, // Add IDs of products to the result
+            masterProductId: { $addToSet: '$_id' },
           },
         },
       ];
@@ -260,7 +280,6 @@ export class SubProductService {
     maxPrice: number;
     masterProductId: string[];
   }> {
-    // If either or both minPrice and maxPrice are not provided, aggregate the prices
     if (
       (minPrice === null && maxPrice === null) ||
       (minPrice === undefined && maxPrice === undefined)
@@ -297,10 +316,7 @@ export class SubProductService {
         maxPrice: maxPriceValue,
         masterProductId: masterProductIds,
       };
-    }
-
-    // If both minPrice and maxPrice are provided, execute the pipeline to get the price range
-    else if (
+    } else if (
       (minPrice !== null && maxPrice !== null) ||
       (minPrice !== undefined && maxPrice !== undefined)
     ) {
@@ -316,7 +332,7 @@ export class SubProductService {
             _id: null,
             minPrice: { $min: '$prices' },
             maxPrice: { $max: '$prices' },
-            masterProductId: { $addToSet: '$masterProductId' }, // Add IDs of products to the result
+            masterProductId: { $addToSet: '$masterProductId' }, // Adding ids
           },
         },
       ];
@@ -325,8 +341,6 @@ export class SubProductService {
         .aggregate(minMaxPricePipeline)
         .exec();
 
-      // minMaxPrices.length !== 0 ? minMaxPrices[0].minPrice : null;
-      // minMaxPrices.length !== 0 ? minMaxPrices[0].maxPrice : null;
       const masterProductIds =
         minMaxPrices.length !== 0 ? minMaxPrices[0].masterProductId : [];
 
@@ -338,10 +352,11 @@ export class SubProductService {
     }
   }
 
-  async getOneSubProductById(_id: string) {
-    const product = await this.subProductModel.findById({
-      _id,
-    });
+  async getOneSubProductById(_id: string, role?: string) {
+    const product = await this.subProductModel.findById(_id);
+    if (role === 'SUPER_ADMIN') {
+      return product;
+    }
     if (!product || product.status !== 'PUBLISHED') {
       throw new NotFoundException(
         'SubProduct not available with _id: ' +
@@ -352,17 +367,67 @@ export class SubProductService {
     return product;
   }
 
-  async getSubProductsByMasterProductId(masterProductId: string) {
+  async getSubProductsByMasterProductId(
+    masterProductId: string,
+    role?: string,
+  ) {
+    if (role === 'SUPER_ADMIN') {
+      const subProducts = await this.subProductModel
+        .find({ masterProductId })
+        .exec();
+
+      if (!subProducts || subProducts.length === 0) {
+        throw new NotFoundException(
+          'SubProduct not available with ' +
+            masterProductId +
+            ' masterProductId',
+        );
+      }
+    }
     const subProducts = await this.subProductModel
       .find({ masterProductId, status: 'PUBLISHED' })
       .exec();
-    console.log(subProducts);
     if (!subProducts || subProducts.length === 0) {
       throw new NotFoundException(
         'SubProduct not available with ' + masterProductId + ' masterProductId',
       );
     }
     return subProducts;
+  }
+
+  async updateSubProductById(
+    _id: string,
+    updateSubProductInput: UpdateSubProductInput,
+    role?: string,
+  ) {
+    if (role === 'SUPER_ADMIN') {
+      const subProductOfExistingSku = await this.subProductModel.findOne({
+        sku: updateSubProductInput.sku,
+        _id: updateSubProductInput._id,
+      });
+
+      if (!subProductOfExistingSku) {
+        throw new BadRequestException('SubProduct not updated, _id: ' + _id);
+      }
+      return subProductOfExistingSku;
+    }
+
+    const subProductOfExistingSku = await this.subProductModel.findOne({
+      sku: updateSubProductInput.sku,
+      _id: updateSubProductInput._id,
+    });
+
+    if (
+      !subProductOfExistingSku ||
+      subProductOfExistingSku.status !== 'PUBLISHED'
+    ) {
+      throw new BadRequestException(
+        'Sub-Product not updated, _id: ' +
+          _id +
+          ", or it is not 'PUBLISHED' at this moment",
+      );
+    }
+    return subProductOfExistingSku;
   }
 
   async deleteSubProductsByMasterProductId(
@@ -387,34 +452,6 @@ export class SubProductService {
       ),
     );
     return 'subproducts deleted';
-  }
-
-  async updateSubProductById(
-    _id: string,
-    updateSubProductInput: UpdateSubProductInput,
-  ) {
-    const subProductOfExistingSku = await this.subProductModel.findOne({
-      sku: updateSubProductInput.sku,
-    });
-
-    if (subProductOfExistingSku) {
-      throw new BadGatewayException(
-        'Product not updated. Product already exists with sku: ' +
-          subProductOfExistingSku.sku,
-      );
-    }
-
-    const product = await this.subProductModel.findByIdAndUpdate(
-      _id,
-      updateSubProductInput,
-      { new: true, runValidators: true },
-    );
-
-    if (!product || product.status !== 'PUBLISHED') {
-      throw new BadRequestException('SubProduct not updated, _id: ' + _id);
-    }
-
-    return product;
   }
 
   async deleteSubProductById(_id: string) {
