@@ -6,8 +6,8 @@ export class CategoryAncestor {
   id: string;
 
   @Field(() => String, { description: 'ancestorName', nullable: true })
-  categoryName: string;
+  categoryName?: string;
 
   @Field(() => Int, { description: 'sortingOrder', nullable: true })
-  sortingOrder: number;
+  sortingOrder?: number;
 }

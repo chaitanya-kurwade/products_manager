@@ -195,7 +195,7 @@ export class MasterProductService {
         updateMasterProductInput,
         { new: true },
       );
-      return product.save();
+      return product;
     }
 
     const product = await this.masterProductModel.findById(_id);

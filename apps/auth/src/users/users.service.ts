@@ -6,13 +6,14 @@ import {
 import { CreateUserInput } from './inputs/create-user.input';
 import { UpdateUserInput } from './inputs/update-user.input';
 import { User, UserDocument } from './entities/user.entity';
-import { Model, SortOrder } from 'mongoose';
+import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import * as bcrypt from 'bcrypt';
 import { PaginationInput } from 'common/library';
 import { EmailserviceService } from 'apps/emailservice/src/emailservice.service';
 import crypto from 'crypto';
 import { SendEmail } from './entities/send-email.entity';
+import { ROLES } from './enums/role.enum';
 
 @Injectable()
 export class UsersService {
@@ -32,76 +33,105 @@ export class UsersService {
     });
   }
 
-  async getAllUsers(paginationInput: PaginationInput, searchFields?: string[]) {
-    const { page, limit, search, sortField, sortOrder } = paginationInput;
+  async getAllUsers(
+    paginationInput?: PaginationInput,
+    searchFields?: string[],
+    role?: string,
+  ) {
+    const { page, limit, search, sortOrder } = paginationInput;
     let query = this.userModel.find();
-    if (searchFields == null || !searchFields.length) {
-      if (search) {
-        query = query.where('email').regex(new RegExp(search, 'i'));
-      }
-      if (!page && !limit && !sortField && !sortOrder) {
-        return query.sort({ createdAt: -1 }).exec();
-      }
-      if (sortField && !['ASC', 'DESC'].includes(sortOrder)) {
-        throw new BadRequestException(
-          'Invalid sortOrder. It must be either ASC or DESC.',
-        );
-      }
-      if (sortField && sortOrder) {
-        console.log(sortOrder, 'single', sortField);
-        const sortOptions: { [key: string]: SortOrder } = {};
-        sortOptions[sortField] = sortOrder.toLowerCase() as SortOrder;
-        query = query.sort(sortOptions);
-      }
-      const skip = (page - 1) * limit;
-      const users = await query.skip(skip).limit(limit).exec();
-      if (!users && users.length === 0) {
-        throw new NotFoundException('Users not found');
-      }
-      return users;
-    } else {
-      query = this.buildQuery(search, searchFields);
-      console.log(query);
-      if (!page && !limit) {
-        return query.sort({ createdAt: -1 }).exec();
-      }
-      if (sortField && !['ASC', 'DESC'].includes(sortOrder)) {
-        throw new BadRequestException(
-          'Invalid sortOrder. It must be either ASC or DESC.',
-        );
-      }
-      if (sortField && sortOrder) {
-        console.log(sortOrder, 'single', sortField);
-        const sortOptions: { [key: string]: SortOrder } = {};
-        sortOptions[sortField] = sortOrder.toLowerCase() as SortOrder;
-        query = query.sort(sortOptions);
-      }
-      const skip = (page - 1) * limit;
-      const users = await query.skip(skip).limit(limit).exec();
-      if (!users && users.length == 0) {
-        throw new NotFoundException('Users not found');
-      }
-      return users;
-    }
-  }
+    let totalCountQuery = this.userModel.find();
 
-  private buildQuery(search: string, searchFields?: string[]): any {
-    let query = this.userModel.find();
-    if (search) {
-      const orConditions = searchFields.map((field) => ({
-        [field]: { $regex: new RegExp(search, 'i') },
+    if (role) {
+      if (role.toUpperCase() === 'SUPER_ADMIN') {
+        // If role is SUPER_ADMIN, return all users
+        // No need to modify the query
+      } else if (role.toUpperCase() === 'ADMIN') {
+        console.log(role);
+        // If role is ADMIN, include MANAGER and USER roles
+        query = query.find({ role: { $in: ['MANAGER', 'USER'] } });
+        totalCountQuery = totalCountQuery.find({
+          role: { $in: ['MANAGER', 'USER'] },
+        });
+      } else if (role.toUpperCase() === 'MANAGER') {
+        console.log(role);
+        // If role is ADMIN, include MANAGER and USER roles
+        query = query.find({ role: { $in: ['USER'] } });
+        totalCountQuery = totalCountQuery.find({
+          role: { $in: ['USER'] },
+        });
+      } else {
+        // For other roles, filter users based on the provided role
+        query = query.find({ role: role.toUpperCase() });
+        totalCountQuery = totalCountQuery.find({ role: role.toUpperCase() });
+      }
+    }
+
+    if (search && searchFields.length > 0) {
+      const searchQueries = searchFields.map((field) => ({
+        [field]: { $regex: search, $options: 'i' },
       }));
-      query = query.or(orConditions);
+      const $orCondition = { $or: searchQueries };
+      query = query.find($orCondition);
+      totalCountQuery = totalCountQuery.find($orCondition);
     }
-    return query;
+
+    let sortOptions = {};
+    if (sortOrder) {
+      if (sortOrder.toUpperCase() === 'ASC') {
+        sortOptions = { createdAt: 1 };
+      } else if (sortOrder.toUpperCase() === 'DESC') {
+        sortOptions = { createdAt: -1 };
+      }
+    } else {
+      sortOptions = { createdAt: -1 };
+    }
+    query = query.sort(sortOptions);
+    const skip = (page - 1) * limit;
+    query = query.skip(skip).limit(limit);
+
+    const users = await query.exec();
+    const totalCount = await totalCountQuery.countDocuments();
+
+    return { users, totalCount };
   }
 
-  async getUserById(id: string) {
-    const getOneUser = await this.userModel.findById(id);
-    if (!getOneUser) {
-      throw new NotFoundException(`user not found  with id: ${id}`);
+  // async getUserById(_id: string) {
+  //   const getOneUser = await this.userModel.findById(_id);
+  //   if (!getOneUser) {
+  //     throw new NotFoundException(`user not found  with id: ${_id}`);
+  //   }
+  //   return getOneUser;
+  // }
+
+  async getUserById(_id: string, role?: string) {
+    if (role && role.toUpperCase() === 'SUPER_ADMIN') {
+      // If role is SUPER_ADMIN, return any user
+      return await this.userModel.findById(_id);
+    } else if (role && role.toUpperCase() === 'ADMIN') {
+      // If role is ADMIN, only return manager and user
+      const user = await this.userModel.findById(_id);
+      if (user && (user.role === 'MANAGER' || user.role === 'USER')) {
+        return user;
+      } else {
+        throw new NotFoundException(`User not found with id: ${_id}`);
+      }
+    } else if (role && role.toUpperCase() === 'MANAGER') {
+      // If role is ADMIN, only return manager and user
+      const user = await this.userModel.findById(_id);
+      if (user && user.role === 'USER') {
+        return user;
+      } else {
+        throw new NotFoundException(`User not found with id: ${_id}`);
+      }
+    } else {
+      // For other roles, return the user without any restriction
+      const user = await this.userModel.findById(_id);
+      if (!user) {
+        throw new NotFoundException(`User not found with id: ${_id}`);
+      }
+      return user;
     }
-    return getOneUser;
   }
 
   async update(_id: string, updateUserInput: UpdateUserInput) {
@@ -121,12 +151,37 @@ export class UsersService {
     return user;
   }
 
-  getUserByEmailId(email: string) {
-    const userByEmailId = this.userModel.findOne({ email: email }).exec();
-    if (!userByEmailId) {
-      throw new NotFoundException('User not found of this email: ' + email);
+  async getUserByEmailId(email: string, role?: string) {
+    const userQuery = this.userModel.findOne({ email: email });
+
+    if (role) {
+      const user = await userQuery.exec();
+      if (!user) {
+        throw new NotFoundException(`User not found with email: ${email}`);
+      }
+      if (role.toUpperCase() === ROLES.SUPERADMIN) {
+        return user;
+      }
+      if (role.toUpperCase() === ROLES.ADMIN) {
+        if (user.role === 'MANAGER' || user.role === 'USER') {
+          return user;
+        } else {
+          throw new NotFoundException(`User not found with email: ${email}`);
+        }
+      }
+      if (role.toUpperCase() === ROLES.MANAGER) {
+        if (user.role === 'USER') {
+          return user;
+        } else {
+          throw new NotFoundException(`User not found with email: ${email}`);
+        }
+      }
     }
-    return userByEmailId;
+    const user = await userQuery.exec();
+    if (!user) {
+      throw new NotFoundException(`User not found with email: ${email}`);
+    }
+    return user;
   }
 
   async updateRefreshTokenFromUser(email: string, hashedRefreshToken: string) {
