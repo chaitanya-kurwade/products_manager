@@ -13,6 +13,7 @@ import { PaginationInput } from 'common/library';
 import { EmailserviceService } from 'apps/emailservice/src/emailservice.service';
 import crypto from 'crypto';
 import { SendEmail } from './entities/send-email.entity';
+import { ROLES } from './enums/role.enum';
 
 @Injectable()
 export class UsersService {
@@ -151,40 +152,6 @@ export class UsersService {
   }
 
   async getUserByEmailId(email: string, role?: string) {
-    // const userByEmailId = this.userModel.findOne({ email: email }).exec();
-    // if (!userByEmailId) {
-    //   throw new NotFoundException('User not found of this email: ' + email);
-    // }
-    // return userByEmailId;
-
-    // if (role && role.toUpperCase() === 'SUPER_ADMIN') {
-    //   // If role is SUPER_ADMIN, return any user
-    //   return await this.userModel.find({ email: email });
-    // } else if (role && role.toUpperCase() === 'ADMIN') {
-    //   // If role is ADMIN, only return manager and user
-    //   const user = await this.userModel.findById({ email: email });
-    //   if (user && (user.role === 'MANAGER' || user.role === 'USER')) {
-    //     return user;
-    //   } else {
-    //     throw new NotFoundException(`User not found with email: ${email}`);
-    //   }
-    // } else if (role && role.toUpperCase() === 'MANAGER') {
-    //   // If role is ADMIN, only return manager and user
-    //   const user = await this.userModel.findById({ email: email });
-    //   if (user && user.role === 'USER') {
-    //     return user;
-    //   } else {
-    //     throw new NotFoundException(`User not found with email: ${email}`);
-    //   }
-    // } else {
-    //   // For other roles, return the user without any restriction
-    //   const user = await this.userModel.findById({ email: email });
-    //   if (!user) {
-    //     throw new NotFoundException(`User not found with email: ${email}`);
-    //   }
-    //   return user;
-    // }
-
     const userQuery = this.userModel.findOne({ email: email });
 
     if (role) {
@@ -192,23 +159,17 @@ export class UsersService {
       if (!user) {
         throw new NotFoundException(`User not found with email: ${email}`);
       }
-
-      // For SUPER_ADMIN role, return any user
-      if (role.toUpperCase() === 'SUPER_ADMIN') {
+      if (role.toUpperCase() === ROLES.SUPERADMIN) {
         return user;
       }
-
-      // For ADMIN role, return MANAGER and USER users
-      if (role.toUpperCase() === 'ADMIN') {
+      if (role.toUpperCase() === ROLES.ADMIN) {
         if (user.role === 'MANAGER' || user.role === 'USER') {
           return user;
         } else {
           throw new NotFoundException(`User not found with email: ${email}`);
         }
       }
-
-      // For MANAGER role, return USER users
-      if (role.toUpperCase() === 'MANAGER') {
+      if (role.toUpperCase() === ROLES.MANAGER) {
         if (user.role === 'USER') {
           return user;
         } else {
@@ -216,8 +177,6 @@ export class UsersService {
         }
       }
     }
-
-    // If no role specified, return user without restriction
     const user = await userQuery.exec();
     if (!user) {
       throw new NotFoundException(`User not found with email: ${email}`);
