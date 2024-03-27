@@ -367,32 +367,60 @@ export class SubProductService {
     return product;
   }
 
+  // async getSubProductsByMasterProductId(
+  //   masterProductId: string,
+  //   role?: string,
+  // ) {
+  //   const query: any = { masterProductId };
+
+  //   if (role !== 'SUPER_ADMIN') {
+  //     query.status = 'PUBLISHED';
+  //   }
+
+  //   const subProducts = await this.subProductModel.find(query).exec();
+
+  //   if (!subProducts || subProducts.length === 0) {
+  //     throw new NotFoundException(
+  //       `SubProduct not available with ${masterProductId} masterProductId`,
+  //     );
+  //   }
+
+  //   return subProducts;
+  // }
+
   async getSubProductsByMasterProductId(
     masterProductId: string,
     role?: string,
   ) {
-    if (role === 'SUPER_ADMIN') {
-      const subProducts = await this.subProductModel
-        .find({ masterProductId })
-        .exec();
-
-      if (!subProducts || subProducts.length === 0) {
-        throw new NotFoundException(
-          'SubProduct not available with ' +
-            masterProductId +
-            ' masterProductId',
-        );
-      }
-    }
     const subProducts = await this.subProductModel
-      .find({ masterProductId, status: 'PUBLISHED' })
+      .find({ masterProductId })
       .exec();
+    console.log(subProducts);
+
     if (!subProducts || subProducts.length === 0) {
       throw new NotFoundException(
         'SubProduct not available with ' + masterProductId + ' masterProductId',
       );
     }
-    return subProducts;
+
+    if (role === 'SUPER_ADMIN') {
+      console.log(subProducts);
+
+      return subProducts;
+    }
+
+    const publishedProducts = subProducts.filter(
+      (products) => products.status === 'PUBLISHED',
+    );
+
+    if (!publishedProducts || publishedProducts.length === 0) {
+      throw new NotFoundException(
+        'SubProducts not available with ' +
+          masterProductId +
+          ' masterProductId',
+      );
+    }
+    return publishedProducts;
   }
 
   async updateSubProductById(

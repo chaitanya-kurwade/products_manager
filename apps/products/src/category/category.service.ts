@@ -164,6 +164,66 @@ export class CategoryService {
     return updatedCategory;
   }
 
+  /*
+   
+  async updateCategoryById(
+    _id: string,
+    updateCategoryInput: UpdateCategoryInput,
+    role?: string,
+  ) {
+    if (role === 'SUPER_ADMIN') {
+      const category = await this.categoryModel.findByIdAndUpdate(
+        _id,
+        updateCategoryInput,
+        { new: true },
+      );
+      if (updateCategoryInput.immediateParentId) {
+        const immediateParentId = updateCategoryInput.immediateParentId;
+        const immediateParent =
+          await this.categoryModel.findById(immediateParentId);
+        // category.ancestors. map((cats) => {
+        //   cats.id === immediateParent._id,
+        //     cats.categoryName === immediateParent.categoryName;
+        // });
+
+        const categoryName = immediateParent.categoryName;
+        const id = immediateParent._id;
+        // const sortingOrder = immediateParent.
+        const ancestor = { id, categoryName };
+        category.ancestors?.unshift(ancestor);
+      }
+      return category;
+    }
+
+    const category = await this.categoryModel.findById(updateCategoryInput._id);
+    if (!category || category.status !== 'PUBLISHED') {
+      throw new BadGatewayException(
+        `Category not found with id: ${_id} or Category status is not 'PUBLISHED'`,
+      );
+    }
+
+    const updatedCategory = await this.categoryModel.findByIdAndUpdate(
+      _id,
+      updateCategoryInput,
+      { new: true },
+    );
+
+    if (updateCategoryInput.immediateParentId) {
+      const immediateParentId = updateCategoryInput.immediateParentId;
+      const immediateParent =
+        await this.categoryModel.findById(immediateParentId);
+      const categoryName = immediateParent.categoryName;
+      const id = immediateParent._id;
+      // const sortingOrder = immediateParent.
+      const ancestor = { id, categoryName };
+      updatedCategory.ancestors?.unshift(ancestor);
+    }
+    return updatedCategory;
+  }
+    
+    
+  */
+
   async remove(_id: string) {
     const category = await this.categoryModel.findById(_id);
     if (!category) {
