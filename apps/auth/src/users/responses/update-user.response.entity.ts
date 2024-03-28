@@ -10,4 +10,7 @@ export class UpdateUserResponse {
 
   @Field()
   lastName: string;
+
+  @Field({ nullable: true })
+  role?: string;
 }

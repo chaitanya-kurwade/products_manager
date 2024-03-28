@@ -7,10 +7,10 @@ import { CreateUserInput } from './users/inputs/create-user.input';
 import { Public } from 'common/library/decorators/public.decorator';
 import { UserResponse } from './users/responses/user-response.entity';
 import { User } from './users/entities/user.entity';
-import { Roles } from 'common/library/decorators/roles.decorator';
-import { ROLES } from './users/enums/role.enum';
 import { ContextService } from 'common/library/service/context.service';
 import { Request } from 'express';
+import { Roles } from 'common/library/decorators/roles.decorator';
+import { ROLES } from './users/enums/role.enum';
 
 @Resolver()
 export class AuthResolver {
@@ -39,10 +39,10 @@ export class AuthResolver {
   @Public()
   async signup(
     @Context() context: { req: Request },
-    @Args('createUserInput') createUserInput: CreateUserInput,
+    @Args('signupUserInput') signupUserInput: CreateUserInput,
   ) {
     const { role } = await new ContextService().getContextInfo(context.req);
-    const user = this.authService.signup(createUserInput, role);
+    const user = await this.authService.signup(signupUserInput, role);
     return user;
   }
 

@@ -27,9 +27,9 @@ export class User {
   @Field()
   password: string;
 
-  @Prop({ type: String, enum: ROLES })
+  // @Prop({ type: String, enum: ROLES })
   @Prop({ enum: ROLES, default: ROLES.USER, type: String })
-  role: ROLES;
+  role?: ROLES;
 
   // @Prop({ type: Date, required: false, default: new Date() })
   @Field(() => GraphQLISODateTime, { nullable: false })

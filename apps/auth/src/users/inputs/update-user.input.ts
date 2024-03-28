@@ -5,15 +5,12 @@ export class UpdateUserInput {
   @Field()
   _id: string;
 
-  @Field()
-  email: string;
+  @Field(() => String, { nullable: true })
+  firstName?: string;
 
-  @Field()
-  firstName: string;
+  @Field(() => String, { nullable: true })
+  lastName?: string;
 
-  @Field()
-  lastName: string;
-
-  @Field()
-  hashedRefreshToken: string;
+  @Field(() => String, { nullable: true })
+  role?: string;
 }

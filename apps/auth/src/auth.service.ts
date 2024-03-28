@@ -72,8 +72,15 @@ export class AuthService {
     }
   }
 
-  async signup(signupUserInput: CreateUserInput, role?: string): Promise<User> {
-    const user = await this.userService.findOne(signupUserInput.email);
+  async signup(
+    signupUserInput: CreateUserInput,
+    role?: string,
+  ): Promise<UserResponse> {
+    const user = await this.userService.findOne(
+      null,
+      signupUserInput.email,
+      null,
+    );
 
     if (user) {
       throw new BadRequestException('User already exists');
@@ -94,7 +101,6 @@ export class AuthService {
       );
     }
     const newRole = signupUserInput.role || ROLES.USER;
-    console.log(newRole, 'newRole');
 
     if (role === ROLES.SUPERADMIN) {
       const createUserInput = {
@@ -102,7 +108,7 @@ export class AuthService {
         hashedRefreshToken: '',
         newRole,
       };
-      return this.userService.createUser(createUserInput);
+      return await this.userService.createUser(createUserInput);
     } else if (role === ROLES.ADMIN) {
       if (newRole !== 'MANAGER' && newRole !== 'USER') {
         console.log(newRole);
@@ -113,7 +119,7 @@ export class AuthService {
         hashedRefreshToken: '',
         newRole,
       };
-      return this.userService.createUser(createUserInput);
+      return await this.userService.createUser(createUserInput);
     } else if (role === ROLES.MANAGER) {
       if (newRole !== 'USER') {
         throw new BadRequestException(`You cannot create ${newRole}`);
@@ -123,7 +129,7 @@ export class AuthService {
         hashedRefreshToken: '',
         newRole,
       };
-      return this.userService.createUser(createUserInput);
+      return await this.userService.createUser(createUserInput);
     } else if (role === ROLES.USER) {
       throw new BadRequestException(
         `You dont have access to create ${newRole}`,
