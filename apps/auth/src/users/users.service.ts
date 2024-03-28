@@ -138,16 +138,24 @@ export class UsersService {
     if (!updateUserInput.email) {
       throw new NotFoundException(`user not updated  with id: ${_id}`);
     }
-    return this.userModel.findByIdAndUpdate({
+    return await this.userModel.findByIdAndUpdate({
       updateUserInput,
     });
   }
 
-  remove(_id: string) {
-    const user = this.userModel.findByIdAndDelete(_id);
+  async remove(_id: string) {
+    const user = await this.userModel.findByIdAndDelete(_id);
     if (!user) {
       throw new BadRequestException('User not deleted');
     }
+    return user;
+  }
+
+  async findOne(email?: string, phoneNumber?: string) {
+    const user = await this.userModel.findOne({
+      ...(email && { email }),
+      ...(phoneNumber && { phoneNumber }),
+    });
     return user;
   }
 

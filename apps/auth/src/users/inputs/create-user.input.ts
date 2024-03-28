@@ -18,6 +18,6 @@ export class CreateUserInput {
   @Field()
   password: string;
 
-  @Field({ nullable: true, defaultValue: ROLES.USER })
-  role: string;
+  @Field(() => String, { nullable: true, defaultValue: ROLES.USER })
+  role?: ROLES;
 }
