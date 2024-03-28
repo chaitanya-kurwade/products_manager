@@ -423,39 +423,107 @@ export class SubProductService {
     return publishedProducts;
   }
 
+  // async updateSubProductById(
+  //   _id: string,
+  //   updateSubProductInput: UpdateSubProductInput,
+  //   role?: string,
+  // ) {
+  //   if (role === 'SUPER_ADMIN') {
+  //     const subProduct = await this.subProductModel.findOne({
+  //       _id: updateSubProductInput._id,
+  //     });
+  //     // console.log(subProduct);
+  //     if (!subProduct) {
+  //       throw new BadRequestException('SubProduct not updated, _id: ' + _id);
+  //     }
+
+  //     // checking if another sku is present in database or not
+  //     const uniqueSkuSubProduct = await this.subProductModel.findOne({
+  //       sku: subProduct.sku,
+  //     });
+  //     if (subProduct.sku === uniqueSkuSubProduct.sku) {
+  //       console.log(subProduct.sku, uniqueSkuSubProduct.sku);
+
+  //       const prod = await this.subProductModel.findByIdAndUpdate(
+  //         _id,
+  //         updateSubProductInput,
+  //         { new: true },
+  //       );
+  //       console.log(prod);
+
+  //       return prod;
+  //     } else {
+  //       throw new BadGatewayException('sku should be unique');
+  //     }
+  //   }
+
+  //   const subProduct = await this.subProductModel.findOne({
+  //     _id: updateSubProductInput._id,
+  //     status: 'PUBLISHED',
+  //   });
+  //   if (!subProduct) {
+  //     throw new BadRequestException('SubProduct not updated, _id: ' + _id);
+  //   }
+
+  //   // checking if another sku is present in database or not for same subProduct
+  //   const uniqueSkuSubProduct = await this.subProductModel.findOne({
+  //     sku: subProduct.sku,
+  //   });
+  //   if (subProduct.sku === uniqueSkuSubProduct.sku) {
+  //     const prod = await this.subProductModel.findByIdAndUpdate(
+  //       _id,
+  //       updateSubProductInput,
+  //       { new: true },
+  //     );
+  //     console.log(prod);
+  //     return prod;
+  //   } else {
+  //     throw new BadGatewayException('sku should be unique');
+  //   }
+  // }
+
   async updateSubProductById(
     _id: string,
     updateSubProductInput: UpdateSubProductInput,
     role?: string,
   ) {
     if (role === 'SUPER_ADMIN') {
-      const subProductOfExistingSku = await this.subProductModel.findOne({
+      const subProduct = await this.subProductModel.findById(_id);
+      if (!subProduct) {
+        throw new BadRequestException(`SubProduct not found with _id: ${_id}`);
+      }
+      const uniqueSkuSubProduct = await this.subProductModel.findOne({
         sku: updateSubProductInput.sku,
-        _id: updateSubProductInput._id,
       });
 
-      if (!subProductOfExistingSku) {
-        throw new BadRequestException('SubProduct not updated, _id: ' + _id);
+      if (uniqueSkuSubProduct && uniqueSkuSubProduct._id.toString() !== _id) {
+        throw new BadGatewayException('SKU should be unique');
       }
-      return subProductOfExistingSku;
-    }
+      return await this.subProductModel.findByIdAndUpdate(
+        _id,
+        updateSubProductInput,
+        { new: true },
+      );
+    } else {
+      const subProduct = await this.subProductModel.findById(_id, {
+        status: 'PUBLISHED',
+      });
+      if (!subProduct) {
+        throw new BadRequestException(`SubProduct not found with _id: ${_id}`);
+      }
+      const uniqueSkuSubProduct = await this.subProductModel.findOne({
+        sku: updateSubProductInput.sku,
+      });
 
-    const subProductOfExistingSku = await this.subProductModel.findOne({
-      sku: updateSubProductInput.sku,
-      _id: updateSubProductInput._id,
-    });
-
-    if (
-      !subProductOfExistingSku ||
-      subProductOfExistingSku.status !== 'PUBLISHED'
-    ) {
-      throw new BadRequestException(
-        'Sub-Product not updated, _id: ' +
-          _id +
-          ", or it is not 'PUBLISHED' at this moment",
+      if (uniqueSkuSubProduct && uniqueSkuSubProduct._id.toString() !== _id) {
+        throw new BadGatewayException('SKU should be unique');
+      }
+      return await this.subProductModel.findByIdAndUpdate(
+        _id,
+        updateSubProductInput,
+        { new: true },
       );
     }
-    return subProductOfExistingSku;
   }
 
   async deleteSubProductsByMasterProductId(

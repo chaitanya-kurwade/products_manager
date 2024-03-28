@@ -123,9 +123,9 @@ export class CategoryService {
     const childCategories = await this.categoryModel.find({
       immediateParentId: categoryId,
     });
-    if (!childCategories || childCategories.length === 0) {
-      throw new NotFoundException('Child category not found');
-    }
+    // if (!childCategories || childCategories.length === 0) {
+    //   throw new NotFoundException('Child category not found');
+    // }
     if (role === 'SUPER_ADMIN') {
       return childCategories;
     } else {

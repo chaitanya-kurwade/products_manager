@@ -13,6 +13,7 @@ import { ConfigService } from '@nestjs/config';
 import { EmailserviceService } from 'apps/emailservice/src/emailservice.service';
 import { LoginResponse } from './users/responses/user-login.response.entity';
 import { UserResponse } from './users/responses/user-response.entity';
+import { ROLES } from './users/enums/role.enum';
 
 @Injectable()
 export class AuthService {
@@ -71,13 +72,64 @@ export class AuthService {
     }
   }
 
-  async signup(signupUserInput: CreateUserInput): Promise<User> {
-    const user = await this.userService.getUserByEmailId(signupUserInput.email);
+  async signup(signupUserInput: CreateUserInput, role?: string): Promise<User> {
+    const user = await this.userService.findOne(signupUserInput.email);
+
     if (user) {
       throw new BadRequestException('User already exists');
     }
-    const createUserInput = { ...signupUserInput, hashedRefreshToken: '' };
-    return this.userService.createUser(createUserInput);
+    // if (
+    //   signupUserInput.role === undefined ||
+    //   signupUserInput.role === null ||
+    //   signupUserInput.role.length === 0
+    // ) {
+    if (
+      signupUserInput.role !== ROLES.SUPERADMIN &&
+      signupUserInput.role !== ROLES.ADMIN &&
+      signupUserInput.role !== ROLES.MANAGER &&
+      signupUserInput.role !== ROLES.USER
+    ) {
+      throw new BadRequestException(
+        `Please check the spelling ${signupUserInput.role}`,
+      );
+    }
+    const newRole = signupUserInput.role || ROLES.USER;
+    console.log(newRole, 'newRole');
+
+    if (role === ROLES.SUPERADMIN) {
+      const createUserInput = {
+        ...signupUserInput,
+        hashedRefreshToken: '',
+        newRole,
+      };
+      return this.userService.createUser(createUserInput);
+    } else if (role === ROLES.ADMIN) {
+      if (newRole !== 'MANAGER' && newRole !== 'USER') {
+        console.log(newRole);
+        throw new BadRequestException(`You cannot create ${newRole}`);
+      }
+      const createUserInput = {
+        ...signupUserInput,
+        hashedRefreshToken: '',
+        newRole,
+      };
+      return this.userService.createUser(createUserInput);
+    } else if (role === ROLES.MANAGER) {
+      if (newRole !== 'USER') {
+        throw new BadRequestException(`You cannot create ${newRole}`);
+      }
+      const createUserInput = {
+        ...signupUserInput,
+        hashedRefreshToken: '',
+        newRole,
+      };
+      return this.userService.createUser(createUserInput);
+    } else if (role === ROLES.USER) {
+      throw new BadRequestException(
+        `You dont have access to create ${newRole}`,
+      );
+    }
+    // }
   }
 
   async getUserByAccessToken(access_token: string) {
