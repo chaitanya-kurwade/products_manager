@@ -126,9 +126,10 @@ export class AuthService {
           `You dont have access to create ${newRole}`,
         );
       }
-    } else {
-      return await this.userService.createUser(createUserInput);
     }
+    // else {
+    //   return await this.userService.createUser(createUserInput);
+    // }
 
     // }
   }
