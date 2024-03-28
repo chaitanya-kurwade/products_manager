@@ -495,7 +495,6 @@ export class SubProductService {
       const uniqueSkuSubProduct = await this.subProductModel.findOne({
         sku: updateSubProductInput.sku,
       });
-
       if (uniqueSkuSubProduct && uniqueSkuSubProduct._id.toString() !== _id) {
         throw new BadGatewayException('SKU should be unique');
       }
@@ -504,11 +503,9 @@ export class SubProductService {
         updateSubProductInput,
         { new: true },
       );
-    } else {
-      const subProduct = await this.subProductModel.findById(_id, {
-        status: 'PUBLISHED',
-      });
-      if (!subProduct) {
+    } else if (role !== 'SUPER_ADMIN') {
+      const subProduct = await this.subProductModel.findById(_id);
+      if (!subProduct || subProduct.status !== 'PUBLISHED') {
         throw new BadRequestException(`SubProduct not found with _id: ${_id}`);
       }
       const uniqueSkuSubProduct = await this.subProductModel.findOne({
