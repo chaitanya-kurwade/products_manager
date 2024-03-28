@@ -90,51 +90,47 @@ export class AuthService {
     //   signupUserInput.role === null ||
     //   signupUserInput.role.length === 0
     // ) {
-    if (
-      signupUserInput.role !== ROLES.SUPERADMIN &&
-      signupUserInput.role !== ROLES.ADMIN &&
-      signupUserInput.role !== ROLES.MANAGER &&
-      signupUserInput.role !== ROLES.USER
-    ) {
-      throw new BadRequestException(
-        `Please check the spelling ${signupUserInput.role}`,
-      );
-    }
     const newRole = signupUserInput.role || ROLES.USER;
 
-    if (role === ROLES.SUPERADMIN) {
-      const createUserInput = {
-        ...signupUserInput,
-        hashedRefreshToken: '',
-        newRole,
-      };
-      return await this.userService.createUser(createUserInput);
-    } else if (role === ROLES.ADMIN) {
-      if (newRole !== 'MANAGER' && newRole !== 'USER') {
-        console.log(newRole);
-        throw new BadRequestException(`You cannot create ${newRole}`);
+    const createUserInput = {
+      ...signupUserInput,
+      hashedRefreshToken: '',
+      newRole,
+    };
+    if (role) {
+      if (
+        signupUserInput.role !== ROLES.SUPERADMIN &&
+        signupUserInput.role !== ROLES.ADMIN &&
+        signupUserInput.role !== ROLES.MANAGER &&
+        signupUserInput.role !== ROLES.USER
+      ) {
+        throw new BadRequestException(
+          `Please check the spelling ${signupUserInput.role}`,
+        );
       }
-      const createUserInput = {
-        ...signupUserInput,
-        hashedRefreshToken: '',
-        newRole,
-      };
-      return await this.userService.createUser(createUserInput);
-    } else if (role === ROLES.MANAGER) {
-      if (newRole !== 'USER') {
-        throw new BadRequestException(`You cannot create ${newRole}`);
+      if (role === ROLES.SUPERADMIN) {
+        return await this.userService.createUser(createUserInput);
+      } else if (role === ROLES.ADMIN) {
+        if (newRole !== ROLES.MANAGER && newRole !== ROLES.USER) {
+          console.log(newRole);
+          throw new BadRequestException(`You cannot create ${newRole}`);
+        }
+        return await this.userService.createUser(createUserInput);
+      } else if (role === ROLES.MANAGER) {
+        if (newRole !== 'USER') {
+          throw new BadRequestException(`You cannot create ${newRole}`);
+        }
+        return await this.userService.createUser(createUserInput);
+      } else if (role === ROLES.USER) {
+        throw new BadRequestException(
+          `You dont have access to create ${newRole}`,
+        );
       }
-      const createUserInput = {
-        ...signupUserInput,
-        hashedRefreshToken: '',
-        newRole,
-      };
-      return await this.userService.createUser(createUserInput);
-    } else if (role === ROLES.USER) {
-      throw new BadRequestException(
-        `You dont have access to create ${newRole}`,
-      );
     }
+    // else {
+    //   return await this.userService.createUser(createUserInput);
+    // }
+
     // }
   }
 
