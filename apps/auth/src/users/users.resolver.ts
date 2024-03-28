@@ -10,7 +10,7 @@ import { ROLES } from './enums/role.enum';
 import { Roles } from 'common/library/decorators/roles.decorator';
 import { ContextService } from 'common/library/service/context.service';
 import { Request } from 'express';
-import { UsersList } from './responses/user-list.entity';
+import { UsersList } from './responses/user-list.response';
 
 @Resolver(() => User)
 export class UsersResolver {
@@ -45,10 +45,20 @@ export class UsersResolver {
   //   return this.usersService.findOne(_id);
   // }
 
-  @Roles(ROLES.SUPERADMIN)
+  @Roles(ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.MANAGER)
   @Mutation(() => UserResponse)
-  updateUser(@Args('updateUserInput') updateUserInput: UpdateUserInput) {
-    return this.usersService.update(updateUserInput._id, updateUserInput);
+  async updateUser(
+    @Context() context: { req: Request },
+    @Args('updateUserInput') updateUserInput: UpdateUserInput,
+  ) {
+    const { role } = await new ContextService().getContextInfo(context.req);
+
+    const user = await this.usersService.updateUser(
+      updateUserInput._id,
+      updateUserInput,
+      role,
+    );
+    return user;
   }
 
   // @Mutation(() => User)
@@ -67,7 +77,7 @@ export class UsersResolver {
     return user;
   }
 
-  @Roles(ROLES.SUPERADMIN)
+  @Roles(ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.MANAGER)
   @Mutation(() => String, { name: 'userLogout' })
   userLogout(@Args('email') email: string) {
     return this.usersService.userLogout(email);

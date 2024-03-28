@@ -27,7 +27,7 @@ export class UsersService {
       throw new BadRequestException('user not created');
     }
     const password = await bcrypt.hash(createUserInput.password, 10);
-    return this.userModel.create({
+    return await this.userModel.create({
       ...createUserInput,
       password,
     });
@@ -134,13 +134,58 @@ export class UsersService {
     }
   }
 
-  async update(_id: string, updateUserInput: UpdateUserInput) {
-    if (!updateUserInput.email) {
+  async updateUser(
+    _id: string,
+    updateUserInput: UpdateUserInput,
+    role?: string,
+  ) {
+    // const updateInputDemo = new UpdateUserInput();
+    const user = await this.findOne(_id);
+
+    if (!user) {
       throw new NotFoundException(`user not updated  with id: ${_id}`);
     }
-    return await this.userModel.findByIdAndUpdate({
+
+    const updatedUser = await this.userModel.findByIdAndUpdate(
+      _id,
       updateUserInput,
-    });
+      { new: true },
+    );
+    console.log({ updateUserInput }, { role });
+
+    if (role === ROLES.SUPERADMIN) {
+      return updatedUser;
+    } else if (role === ROLES.ADMIN) {
+      // try {
+      //   if (updateUserInput.role) {
+      //     throw new BadRequestException(
+      //       `You cannot change ${user.role} to ${updateUserInput.role}`,
+      //     );
+      //   }
+      // } catch (error) {
+      //   console.log(error);
+      //   updateInputDemo._id = updatedUser._id;
+      //   updateInputDemo.firstName = '';
+      //   updateInputDemo.lastName = '';
+      //   updateInputDemo.role = '';
+      //   return updateInputDemo;
+      // }
+      if (updateUserInput.role) {
+        throw new BadRequestException(
+          `You cannot change ${user.role} to ${updateUserInput.role}`,
+        );
+      } else if (user.role === ROLES.USER || user.role === ROLES.MANAGER) {
+        return updatedUser;
+      }
+    } else if (role === ROLES.MANAGER) {
+      if (updateUserInput.role) {
+        throw new BadRequestException(
+          `You cannot change ${user.role} to ${updateUserInput.role}`,
+        );
+      } else if (user.role === ROLES.USER) {
+        return updatedUser;
+      }
+    }
   }
 
   async remove(_id: string) {
@@ -151,9 +196,10 @@ export class UsersService {
     return user;
   }
 
-  async findOne(email?: string, phoneNumber?: string) {
+  async findOne(_id?: string, email?: string, phoneNumber?: string) {
     const user = await this.userModel.findOne({
       ...(email && { email }),
+      ...(_id && { _id }),
       ...(phoneNumber && { phoneNumber }),
     });
     return user;
