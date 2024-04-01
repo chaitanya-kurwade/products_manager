@@ -3,7 +3,7 @@ import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
 import { UpdateUserInput } from './inputs/update-user.input';
 import { UserResponse } from './responses/user-response.entity';
-import { PaginationInput, Public } from 'common/library';
+import { PaginationInput } from 'common/library';
 import { NotFoundException } from '@nestjs/common';
 
 @Resolver(() => User)
@@ -53,28 +53,27 @@ export class UsersResolver {
     return this.usersService.userLogout(email);
   }
 
-  @Public()
-  @Mutation(() => String, { name: 'forgetPassword' })
-  async forgetPasswordSendEmail(@Args('email') email: string) {
-    const user = await this.usersService.getUserByEmailId(email);
-    if (!user) {
-      throw new NotFoundException('user not found');
-    }
-    return await this.usersService.forgetPassword(user.email);
-  }
+  // @Public()
+  // @Mutation(() => String, { name: 'forgetPassword' })
+  // async forgetPasswordSendEmail(@Args('email') email: string) {
+  //   const user = await this.usersService.getUserByEmailId(email);
+  //   if (!user) {
+  //     throw new NotFoundException('user not found');
+  //   }
+  //   return await this.usersService.forgetPassword(user.email);
+  // }
 
-  @Mutation(() => String, { name: 'receiveForgetPasswordToken' })
-  async receiveForgetPasswordToken(newPassword: string, reset_token: string) {
-    return await this.usersService.receiveForgetPasswordToken(
-      newPassword,
-      reset_token,
-    );
-  }
+  // @Mutation(() => String, { name: 'receiveForgetPasswordToken' })
+  // async receiveForgetPasswordToken(newPassword: string, reset_token: string) {
+  //   return await this.usersService.receiveForgetPasswordToken(
+  //     newPassword,
+  //     reset_token,
+  //   );
+  // }
 
   @Mutation(() => String, { name: 'sendVerificationEmail' })
   async sendVerificationEmail(@Args('email') email: string): Promise<string> {
     const user = await this.usersService.getUserByEmailId(email);
-
     if (!user) {
       throw new NotFoundException('User not found');
     }

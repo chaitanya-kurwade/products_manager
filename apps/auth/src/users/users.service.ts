@@ -9,7 +9,7 @@ import { User, UserDocument } from './entities/user.entity';
 import { Model, SortOrder } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import * as bcrypt from 'bcrypt';
-import * as crypto from 'crypto';
+// import * as crypto from 'crypto';
 import { PaginationInput } from 'common/library';
 import * as nodemailer from 'nodemailer';
 import { UserResponse } from './responses/user-response.entity';
@@ -193,51 +193,52 @@ export class UsersService {
     return loginResponse;
   }
 
-  async forgetPassword(email: string) {
-    const user = await this.getUserByEmailId(email);
+  // async forgetPassword(email: string) {
+  //   const user = await this.getUserByEmailId(email);
+  //   if (!user) {
+  //     throw new NotFoundException(
+  //       `user not found with ${email} email id, kindly put valid email id`,
+  //     );
+  //   }
 
-    if (!user) {
-      throw new NotFoundException(
-        `user not found with ${email} email id, kindly put valid email id`,
-      );
-    }
+  //   const generateRandomHexString = (length: number): string =>
+  //     crypto.randomBytes(length / 2).toString('hex');
 
-    const generateRandomHexString = (length: number): string =>
-      crypto.randomBytes(length / 2).toString('hex');
+  //   const isHexStringUnique = async (hexString: string): Promise<string> => {
+  //     const isUniqueHex = await this.emailService.checkHexIsUnique(hexString);
+  //     return isUniqueHex;
+  //   };
 
-    const isHexStringUnique = async (hexString: string): Promise<string> => {
-      const isUniqueHex = await this.emailService.checkHexIsUnique(hexString);
-      return isUniqueHex;
-    };
+  //   let hexString: string;
+  //   do {
+  //     hexString = generateRandomHexString(32);
+  //   } while (!isHexStringUnique(hexString));
+  //   console.log(hexString);
+  //   const now = new Date();
+  //   // Get the current time in UTC
+  //   const currentUTCTime = now.getTime() + now.getTimezoneOffset() * 60000;
+  //   // IST is UTC+5:30, so add 5 hours and 30 minutes in milliseconds
+  //   const istOffset = 5 * 60 * 60 * 1000 + 30 * 60 * 1000;
+  //   // Calculate the timestamp for the next hour in IST
+  //   const nextHourTimestamp = currentUTCTime + 60 * 60 * 1000 + istOffset;
+  //   // Create a new Date object for the next hour in IST
+  //   const validTillNextHour = new Date(nextHourTimestamp);
+  //   this.emailService.sendEmailToClient(email, hexString);
+  //   console.log({ email, hexString, validTillNextHour });
 
-    let hexString: string;
-    do {
-      hexString = generateRandomHexString(32);
-    } while (!isHexStringUnique(hexString));
-    console.log(hexString);
-    const now = new Date();
-    // Get the current time in UTC
-    const currentUTCTime = now.getTime() + now.getTimezoneOffset() * 60000;
-    // IST is UTC+5:30, so add 5 hours and 30 minutes in milliseconds
-    const istOffset = 5 * 60 * 60 * 1000 + 30 * 60 * 1000;
-    // Calculate the timestamp for the next hour in IST
-    const nextHourTimestamp = currentUTCTime + 60 * 60 * 1000 + istOffset;
-    // Create a new Date object for the next hour in IST
-    const validTillNextHour = new Date(nextHourTimestamp);
-    this.emailService.sendEmailToClient(email, hexString);
-    console.log({ email, hexString, validTillNextHour });
+  //   return { email, hexString, validTillNextHour };
+  // }
 
-    return { email, hexString, validTillNextHour };
-  }
+  // async receiveForgetPasswordToken(newPassword: string, reset_token: string) {
+  //   return await this.emailService.receiveForgetPasswordToken(
+  //     newPassword,
+  //     reset_token,
+  //   );
+  // }
 
-  async receiveForgetPasswordToken(newPassword: string, reset_token: string) {
-    return await this.emailService.receiveForgetPasswordToken(
-      newPassword,
-      reset_token,
-    );
-  }
-
-  async enterUsernameOrEmailOrPhoneNumber(credential: string): Promise<User> {
+  async enterUsernameOrEmailOrPhoneNumberToLogin(
+    credential: string,
+  ): Promise<User> {
     const user = await this.userModel.findOne({
       $or: [
         { email: credential },
@@ -290,6 +291,7 @@ export class UsersService {
           emailOtp: otp,
           emailOtpExpiryTime: emailOtpExpiry,
         },
+        { new: true },
       );
 
       // below logic will convert this.example@gmail.com to thiXXXXXmple@gmail.com
@@ -398,17 +400,24 @@ export class UsersService {
   async sendEmailToVerifyEmail(email: string) {
     const secretKey = 'your_secret_key_here';
     const user = await this.getUserByEmailId(email);
+    console.log({ user }, 'sendEmailToVerifyEmail');
+
     const userId = user._id;
     const emailId = user.email;
     const token = jwt.sign({ userId }, secretKey, { expiresIn: '1d' });
-    const link = `https://ddhlb4gj-3000.inc1.devtunnels.ms/verifyemail/?token=${token}`;
+    const link = `await ${this.configService.get(
+      'VERIFY_EMAIL_LINK',
+    )}/auth/token/?token=${token}`;
+    console.log(link);
     const info = await this.transporter.sendMail({
       from: 'Chaitanya <chaitanyakurwade1234@gmail.com>',
       to: emailId,
-      subject: 'Otp to login',
+      subject: 'verify your email',
       html: `<b>Hello, ${emailId}!</b><p>This is an email to verify your email, click on this ${link}`,
     });
     await this.transporter.sendMail(info);
+    console.log(info);
+
     return 'verification link sent on your email';
   }
 
@@ -416,12 +425,21 @@ export class UsersService {
     const secretKey = 'your_secret_key_here';
     const decoded: any = jwt.verify(token, secretKey);
     const userId = decoded.userId;
+    console.log(userId);
     if (!userId) {
       throw new Error('Invalid or expired token');
     }
-    this.userModel.updateOne({ isEmailVerified: true });
+    const user = await this.userModel.findByIdAndUpdate(
+      userId,
+      {
+        isEmailVerified: true,
+      },
+      { new: true },
+    );
+    console.log(user.isEmailVerified, 'user.isEmailVerified');
+
     // Mark user's email as verified
-    return 'ur email verified';
+    return 'your email is verified, you can close this tab';
     // await this.markEmailAsVerified(userId);
   }
 }

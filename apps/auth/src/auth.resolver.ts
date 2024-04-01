@@ -16,12 +16,15 @@ export class AuthResolver {
   async login(
     @Args('userLoginInput') userLoginInput: UserLoginInput,
   ): Promise<LoginResponse> {
-    const { email, username, phoneNumber } = userLoginInput;
-    const credential = email || username || phoneNumber;
-    const userLogin = await this.authService.enterUsernameOrEmailOrPhoneNumber(
-      credential,
-      userLoginInput.password,
-    );
+    const credential =
+      userLoginInput.email ||
+      userLoginInput.username ||
+      userLoginInput.phoneNumber;
+    const userLogin =
+      await this.authService.enterUsernameOrEmailOrPhoneNumberToLogin(
+        credential,
+        userLoginInput.password,
+      );
     return userLogin;
   }
 

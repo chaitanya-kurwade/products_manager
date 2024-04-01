@@ -23,4 +23,7 @@ export class CreateUserInput {
   @IsStrongPassword()
   @Field()
   password: string;
+
+  @Field({ nullable: true, defaultValue: false })
+  isEmailVerified?: boolean;
 }

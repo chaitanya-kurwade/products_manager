@@ -31,12 +31,14 @@ export class AuthService {
     return pass ? user : null;
   }
 
-  async enterUsernameOrEmailOrPhoneNumber(
+  async enterUsernameOrEmailOrPhoneNumberToLogin(
     credential: string,
     password: string,
   ): Promise<LoginResponse> {
     const user =
-      await this.userService.enterUsernameOrEmailOrPhoneNumber(credential);
+      await this.userService.enterUsernameOrEmailOrPhoneNumberToLogin(
+        credential,
+      );
     console.log(user.email);
     if (!user) {
       throw new NotFoundException(
@@ -56,7 +58,7 @@ export class AuthService {
       if (!isPasswordValid) {
         throw new UnauthorizedException('Invalid credentials : wrong password');
       }
-      if (user.isEmailVerified === false) {
+      if (!user.isEmailVerified) {
         this.userService.sendEmailToVerifyEmail(user.email);
       }
       const { access_token, refresh_token } = await this.createTokens(
@@ -69,7 +71,6 @@ export class AuthService {
 
   async signup(signupUserInput: CreateUserInput): Promise<User> {
     const user = await this.userService.getUserToSignUp(signupUserInput.email);
-    console.log(user);
     if (user) {
       throw new BadRequestException(
         'User email id already exists, kindly login',
@@ -209,5 +210,10 @@ export class AuthService {
     const tokens = await this.createTokens(user._id, user.email);
     console.log(user.email);
     return tokens;
+  }
+
+  // verify email
+  async verifyEmail(token: string) {
+    return this.userService.verifyEmail(token);
   }
 }
