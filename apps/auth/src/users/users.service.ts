@@ -12,10 +12,7 @@ import { UserResponse } from './responses/user-response.entity';
 import { CreateUserViaGoogleInput } from './inputs/create-user-via-google.input';
 import { EmailserviceService } from 'apps/emailservice/src/emailservice.service';
 import { ConfigService } from '@nestjs/config';
-import crypto from 'crypto';
-import { SendEmail } from './entities/send-email.entity';
 import { ROLES } from './enums/role.enum';
-
 
 @Injectable()
 export class UsersService {
@@ -55,11 +52,7 @@ export class UsersService {
     });
   }
 
-  async getAllUsers(
-    paginationInput?: PaginationInput,
-    searchFields?: string[],
-    role?: string,
-  ) {
+  async getAllUsers(paginationInput?: PaginationInput, searchFields?: string[], role?: string) {
     const { page, limit, search, sortOrder } = paginationInput;
     let query = this.userModel.find();
     let totalCountQuery = this.userModel.find();
@@ -118,7 +111,6 @@ export class UsersService {
     return { users, totalCount };
   }
 
-
   // async getUserById(_id: string) {
   //   const getOneUser = await this.userModel.findById(_id);
   //   if (!getOneUser) {
@@ -157,11 +149,7 @@ export class UsersService {
     }
   }
 
-  async updateUser(
-    _id: string,
-    updateUserInput: UpdateUserInput,
-    role?: string,
-  ) {
+  async updateUser(_id: string, updateUserInput: UpdateUserInput, role?: string) {
     // const updateInputDemo = new UpdateUserInput();
     const user = await this.findOne(_id);
 
@@ -169,11 +157,7 @@ export class UsersService {
       throw new NotFoundException(`user not updated  with id: ${_id}`);
     }
 
-    const updatedUser = await this.userModel.findByIdAndUpdate(
-      _id,
-      updateUserInput,
-      { new: true },
-    );
+    const updatedUser = await this.userModel.findByIdAndUpdate(_id, updateUserInput, { new: true });
     console.log({ updateUserInput }, { role });
 
     if (role === ROLES.SUPERADMIN) {
@@ -194,24 +178,19 @@ export class UsersService {
       //   return updateInputDemo;
       // }
       if (updateUserInput.role) {
-        throw new BadRequestException(
-          `You cannot change ${user.role} to ${updateUserInput.role}`,
-        );
+        throw new BadRequestException(`You cannot change ${user.role} to ${updateUserInput.role}`);
       } else if (user.role === ROLES.USER || user.role === ROLES.MANAGER) {
         return updatedUser;
       }
     } else if (role === ROLES.MANAGER) {
       if (updateUserInput.role) {
-        throw new BadRequestException(
-          `You cannot change ${user.role} to ${updateUserInput.role}`,
-        );
+        throw new BadRequestException(`You cannot change ${user.role} to ${updateUserInput.role}`);
       } else if (user.role === ROLES.USER) {
         return updatedUser;
       }
     }
   }
 
-  
   async remove(_id: string) {
     const user = await this.userModel.findByIdAndDelete(_id);
     if (!user) {
@@ -219,7 +198,6 @@ export class UsersService {
     }
     return user;
   }
-
 
   async findOne(_id?: string, email?: string, phoneNumber?: string) {
     const user = await this.userModel.findOne({

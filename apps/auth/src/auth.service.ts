@@ -67,43 +67,35 @@ export class AuthService {
 
   async signup(signupUserInput: CreateUserInput): Promise<User> {
     const user = await this.userService.getUserToSignUp(signupUserInput.email);
-      const { access_token, refresh_token } = await this.createTokens(
-        user._id,
-        user.email,
-        user.role,
-      );
+    const { access_token, refresh_token } = await this.createTokens(
+      user._id,
+      user.email,
+      user.role,
+    );
 
-      const _id = user._id;
-      const email = user.email;
-      const firstName = user.firstName;
-      const lastName = user.lastName;
-      const role = user.role;
-      const createdAt = user.createdAt;
-      const updatedAt = user.updatedAt;
+    const _id = user._id;
+    const email = user.email;
+    const firstName = user.firstName;
+    const lastName = user.lastName;
+    const role = user.role;
+    const createdAt = user.createdAt;
+    const updatedAt = user.updatedAt;
 
-      const userResponse: UserResponse = {
-        _id,
-        email,
-        firstName,
-        lastName,
-        role,
-        createdAt,
-        updatedAt,
-      };
+    const userResponse: UserResponse = {
+      _id,
+      email,
+      firstName,
+      lastName,
+      role,
+      createdAt,
+      updatedAt,
+    };
 
-      return { access_token, refresh_token, userResponse };
-    }
+    return { access_token, refresh_token, userResponse };
   }
 
-  async signup(
-    signupUserInput: CreateUserInput,
-    role?: string,
-  ): Promise<UserResponse> {
-    const user = await this.userService.findOne(
-      null,
-      signupUserInput.email,
-      null,
-    );
+  async signup(signupUserInput: CreateUserInput, role?: string): Promise<UserResponse> {
+    const user = await this.userService.findOne(null, signupUserInput.email, null);
 
     if (user) {
       throw new BadRequestException('User email id already exists, kindly login');
@@ -127,9 +119,7 @@ export class AuthService {
         signupUserInput.role !== ROLES.MANAGER &&
         signupUserInput.role !== ROLES.USER
       ) {
-        throw new BadRequestException(
-          `Please check the spelling ${signupUserInput.role}`,
-        );
+        throw new BadRequestException(`Please check the spelling ${signupUserInput.role}`);
       }
       if (role === ROLES.SUPERADMIN) {
         return await this.userService.createUser(createUserInput);
@@ -145,9 +135,7 @@ export class AuthService {
         }
         return await this.userService.createUser(createUserInput);
       } else if (role === ROLES.USER) {
-        throw new BadRequestException(
-          `You dont have access to create ${newRole}`,
-        );
+        throw new BadRequestException(`You dont have access to create ${newRole}`);
       }
     }
     // else {
@@ -168,7 +156,6 @@ export class AuthService {
     const user = await this.userService.getUserByEmailId(decoded.email);
     return user;
   }
-
 
   async createTokens(_id: string, email: string, role: string) {
     const payload = { email: email, _id: _id, role: role };
