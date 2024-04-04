@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as nodemailer from 'nodemailer';
 import { SendEmail, SendEmailDocument } from './entity/sendemail.entity';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class EmailserviceService {
@@ -11,22 +12,21 @@ export class EmailserviceService {
   constructor(
     @InjectModel(SendEmail.name)
     private readonly sendEmailModel: Model<SendEmailDocument>,
+    private readonly configService: ConfigService,
   ) {
     this.transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 587,
+      host: `${this.configService.get('SMTP_HOST')}`,
+      port: `${this.configService.get('SMTP_PORT')}`,
       secure: false,
       auth: {
-        user: 'chaitanyakurwade1234@gmail.com',
-        pass: 'uvtdgmeetvgituop',
+        user: `${this.configService.get('SENDER_EMAIL')}`,
+        pass: `${this.configService.get('SENDER_SMTP_PASS')}`,
       },
     });
   }
 
   async checkHexIsUnique(hexString: string): Promise<string> {
-    const hexInDb = await this.sendEmailModel
-      .findOne({ value: hexString })
-      .exec();
+    const hexInDb = await this.sendEmailModel.findOne({ value: hexString }).exec();
     if (!hexInDb) {
       return hexString;
     } else {
@@ -54,7 +54,7 @@ export class EmailserviceService {
 
   async sendEmailToClient(email: string, hexString: string) {
     const info = await this.transporter.sendMail({
-      from: 'Chaitanya <chaitanyakurwade1234@gmail.com>',
+      from: `${this.configService.get('SENDER_NAME')} ${this.configService.get('SENDER_EMAIL')}>`,
       to: email,
       html: `<p>Hello, ${email}!</p><p>This is a test email and it is your reset_token "${hexString}".</p>`,
     });

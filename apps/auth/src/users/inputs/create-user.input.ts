@@ -24,6 +24,6 @@ export class CreateUserInput {
   @Field()
   password: string;
 
-  @Field({ nullable: true, defaultValue: false })
-  isEmailVerified?: boolean;
+  // @Field({ nullable: true, defaultValue: false })
+  // isEmailVerified?: boolean;
 }

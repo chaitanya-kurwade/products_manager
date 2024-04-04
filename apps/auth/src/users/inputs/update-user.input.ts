@@ -16,4 +16,7 @@ export class UpdateUserInput {
 
   @Field()
   hashedRefreshToken: string;
+
+  @Field({ nullable: true, defaultValue: false })
+  isEmailVerified?: boolean;
 }

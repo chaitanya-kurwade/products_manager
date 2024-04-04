@@ -5,6 +5,9 @@ import { IsEmail, IsPhoneNumber, IsStrongPassword } from 'class-validator';
 @ObjectType()
 @Schema({ timestamps: true })
 export class User {
+  save() {
+    throw new Error('Method not implemented.');
+  }
   @Field()
   _id: string;
 
@@ -30,7 +33,7 @@ export class User {
   @Field()
   email: string;
 
-  @Field({ defaultValue: false })
+  @Field({ nullable: true, defaultValue: false })
   @Prop()
   isEmailVerified: boolean;
 

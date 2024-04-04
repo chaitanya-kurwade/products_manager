@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserInput } from './inputs/create-user.input';
 import { UpdateUserInput } from './inputs/update-user.input';
 import { User, UserDocument } from './entities/user.entity';
@@ -17,7 +13,6 @@ import { CreateUserViaGoogleInput } from './inputs/create-user-via-google.input'
 import { EmailserviceService } from 'apps/emailservice/src/emailservice.service';
 import { ConfigService } from '@nestjs/config';
 import { Twilio } from 'twilio';
-import * as jwt from 'jsonwebtoken';
 
 @Injectable()
 export class UsersService {
@@ -30,12 +25,12 @@ export class UsersService {
     private readonly emailService: EmailserviceService,
   ) {
     this.transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 587,
+      host: `${this.configService.get('SMTP_HOST')}`,
+      port: `${this.configService.get('SMTP_PORT')}`,
       secure: false,
       auth: {
-        user: 'chaitanyakurwade1234@gmail.com',
-        pass: 'uvtdgmeetvgituop',
+        user: `${this.configService.get('SENDER_EMAIL')}`,
+        pass: `${this.configService.get('SENDER_SMTP_PASS')}`,
       },
     });
     this.client = new Twilio(
@@ -50,16 +45,10 @@ export class UsersService {
     }
     const { email, username, phoneNumber } = createUserInput;
     const user = await this.userModel.findOne({
-      $or: [
-        { email: email },
-        { phoneNumber: phoneNumber },
-        { username: username },
-      ],
+      $or: [{ email: email }, { phoneNumber: phoneNumber }, { username: username }],
     });
     if (user) {
-      throw new BadRequestException(
-        'user not created, please pass valid username or phone number',
-      );
+      throw new BadRequestException('user not created, please pass valid username or phone number');
     }
     const password = await bcrypt.hash(createUserInput.password, 10);
     return this.userModel.create({
@@ -80,9 +69,7 @@ export class UsersService {
         return query.sort({ createdAt: -1 }).exec();
       }
       if (sortField && !['ASC', 'DESC'].includes(sortOrder)) {
-        throw new BadRequestException(
-          'Invalid sortOrder. It must be either ASC or DESC.',
-        );
+        throw new BadRequestException('Invalid sortOrder. It must be either ASC or DESC.');
       }
       if (sortField && sortOrder) {
         console.log(sortOrder, 'single', sortField);
@@ -103,9 +90,7 @@ export class UsersService {
         return query.sort({ createdAt: -1 }).exec();
       }
       if (sortField && !['ASC', 'DESC'].includes(sortOrder)) {
-        throw new BadRequestException(
-          'Invalid sortOrder. It must be either ASC or DESC.',
-        );
+        throw new BadRequestException('Invalid sortOrder. It must be either ASC or DESC.');
       }
       if (sortField && sortOrder) {
         console.log(sortOrder, 'single', sortField);
@@ -158,7 +143,7 @@ export class UsersService {
     return user;
   }
 
-  async getUserByEmailId(email: string) {
+  async getUserByEmailId(email: string): Promise<User> {
     const userByEmailId = await this.userModel.findOne({ email: email });
     if (!userByEmailId) {
       throw new NotFoundException('User not found of this email: ' + email);
@@ -166,31 +151,27 @@ export class UsersService {
     return userByEmailId;
   }
 
-  async getUserToSignUp(email: string) {
+  async getUserToSignUp(email: string): Promise<User> {
     const userByEmailId = await this.userModel.findOne({ email: email });
     return userByEmailId;
   }
 
-  async updateRefreshTokenFromUser(email: string, hashedRefreshToken: string) {
+  async updateRefreshTokenFromUser(email: string, hashedRefreshToken: string): Promise<string> {
     const user = await this.getUserByEmailId(email);
     if (user) {
-      return this.userModel.findOneAndUpdate(
-        { email },
-        { hashedRefreshToken },
-        { new: true },
-      );
+      return this.userModel.findOneAndUpdate({ email }, { hashedRefreshToken }, { new: true });
     }
   }
 
-  async userLogout(email: string) {
+  async userLogout(email: string): Promise<string> {
     const user = await this.getUserByEmailId(email);
     if (!user) {
       throw new NotFoundException('User not found');
     }
     user.hashedRefreshToken = null;
     await user.save();
-    const loginResponse = `you've been logged out successfully with ${email}`;
-    return loginResponse;
+    const logOutResponse = `you've been logged out successfully with ${email}`;
+    return logOutResponse;
   }
 
   // async forgetPassword(email: string) {
@@ -236,20 +217,12 @@ export class UsersService {
   //   );
   // }
 
-  async enterUsernameOrEmailOrPhoneNumberToLogin(
-    credential: string,
-  ): Promise<User> {
+  async enterUsernameOrEmailOrPhoneNumberToLogin(credential: string): Promise<User> {
     const user = await this.userModel.findOne({
-      $or: [
-        { email: credential },
-        { phoneNumber: credential },
-        { username: credential },
-      ],
+      $or: [{ email: credential }, { phoneNumber: credential }, { username: credential }],
     });
     if (!user) {
-      throw new NotFoundException(
-        'user not found, please pass valid credentials',
-      );
+      throw new NotFoundException('user not found, please pass valid credentials');
     }
     return user;
   }
@@ -258,10 +231,7 @@ export class UsersService {
     const otp = Math.floor(Math.random() * 900000) + 100000;
     const userByEmailOrUsername = await this.userModel
       .findOne({
-        $or: [
-          { email: phoneNumberOrEmailOrUsername },
-          { username: phoneNumberOrEmailOrUsername },
-        ],
+        $or: [{ email: phoneNumberOrEmailOrUsername }, { username: phoneNumberOrEmailOrUsername }],
       })
       .exec();
 
@@ -269,12 +239,13 @@ export class UsersService {
     if (userByEmailOrUsername) {
       //
       const email = userByEmailOrUsername.email;
-      const timeInMiliSeconds =
-        this.configService.get('OTP_TIME_IN_MINUTES') * 60000;
+      const timeInMiliSeconds = this.configService.get('OTP_TIME_IN_MINUTES') * 60000;
       const emailOtpExpiry = Date.now() + timeInMiliSeconds;
       //
       const info = await this.transporter.sendMail({
-        from: 'Chaitanya <chaitanyakurwade1234@gmail.com>',
+        from: `<${this.configService.get('SENDER_NAME')} ${this.configService.get(
+          'SENDER_EMAIL',
+        )}>`,
         to: email,
         subject: 'Otp to login',
         html: `<b>Hello, ${email}!</b><p>This is a email to login via otp, and here is your otp: "${otp}" and it is valid for ${this.configService.get(
@@ -297,9 +268,7 @@ export class UsersService {
       // below logic will convert this.example@gmail.com to thiXXXXXmple@gmail.com
       const [username, domain] = email.split('@');
       const visibleCharsUsername = Math.min(username.length, 5);
-      const maskedPartUsername = 'X'.repeat(
-        username.length - visibleCharsUsername,
-      );
+      const maskedPartUsername = 'X'.repeat(username.length - visibleCharsUsername);
       const visibleCharsDomain = Math.min(domain.length);
       const maskedPartDomain = 'X'.repeat(domain.length - visibleCharsDomain);
 
@@ -318,8 +287,7 @@ export class UsersService {
       .exec();
 
     if (userByPhoneNumber) {
-      const timeInMiliSeconds =
-        this.configService.get('OTP_TIME_IN_MINUTES') * 60000;
+      const timeInMiliSeconds = this.configService.get('OTP_TIME_IN_MINUTES') * 60000;
       const phoneOtpExpiry = Date.now() + timeInMiliSeconds;
       const phoneNumber = userByPhoneNumber.phoneNumber;
       console.log(phoneNumber, phoneOtpExpiry, '<- phoneOtpExpiry');
@@ -351,9 +319,7 @@ export class UsersService {
         visibleDigits,
       )}${maskedPart}${phoneNumber.substring(
         phoneNumber.length - 2,
-      )} sucessfully, and valid for ${this.configService.get(
-        'OTP_TIME_IN_MINUTES',
-      )} minutes`;
+      )} sucessfully, and valid for ${this.configService.get('OTP_TIME_IN_MINUTES')} minutes`;
     }
   }
 
@@ -375,11 +341,7 @@ export class UsersService {
 
   async getUserByPhoneOrEmailOrUsername(phoneOrEmail: string): Promise<User> {
     const user = await this.userModel.findOne({
-      $or: [
-        { phoneNumber: phoneOrEmail },
-        { email: phoneOrEmail },
-        { username: phoneOrEmail },
-      ],
+      $or: [{ phoneNumber: phoneOrEmail }, { email: phoneOrEmail }, { username: phoneOrEmail }],
     });
     return user;
   }
@@ -389,57 +351,15 @@ export class UsersService {
       $or: [{ emailOtp: otp }, { phoneOtp: otp }],
       emailOtpExpiryTime: { $gt: Date.now() },
     });
-
     if (!user) {
       throw new NotFoundException('user not found or otp expired');
     }
-
     return user;
   }
 
-  async sendEmailToVerifyEmail(email: string) {
-    const secretKey = 'your_secret_key_here';
-    const user = await this.getUserByEmailId(email);
-    console.log({ user }, 'sendEmailToVerifyEmail');
-
-    const userId = user._id;
-    const emailId = user.email;
-    const token = jwt.sign({ userId }, secretKey, { expiresIn: '1d' });
-    const link = `await ${this.configService.get(
-      'VERIFY_EMAIL_LINK',
-    )}/auth/token/?token=${token}`;
-    console.log(link);
-    const info = await this.transporter.sendMail({
-      from: 'Chaitanya <chaitanyakurwade1234@gmail.com>',
-      to: emailId,
-      subject: 'verify your email',
-      html: `<b>Hello, ${emailId}!</b><p>This is an email to verify your email, click on this ${link}`,
+  async updateEmailVerificationStatus(userId: string) {
+    return await this.userModel.findByIdAndUpdate(userId, {
+      isEmailVerified: true,
     });
-    await this.transporter.sendMail(info);
-    console.log(info);
-
-    return 'verification link sent on your email';
-  }
-
-  async verifyEmail(token: string) {
-    const secretKey = 'your_secret_key_here';
-    const decoded: any = jwt.verify(token, secretKey);
-    const userId = decoded.userId;
-    console.log(userId);
-    if (!userId) {
-      throw new Error('Invalid or expired token');
-    }
-    const user = await this.userModel.findByIdAndUpdate(
-      userId,
-      {
-        isEmailVerified: true,
-      },
-      { new: true },
-    );
-    console.log(user.isEmailVerified, 'user.isEmailVerified');
-
-    // Mark user's email as verified
-    return 'your email is verified, you can close this tab';
-    // await this.markEmailAsVerified(userId);
   }
 }

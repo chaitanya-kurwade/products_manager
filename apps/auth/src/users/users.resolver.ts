@@ -22,10 +22,7 @@ export class UsersResolver {
     @Args('searchFields', { type: () => [String], nullable: true })
     searchFields?: string[],
   ) {
-    return await this.usersService.getAllUsers(
-      paginationInput,
-      searchFields ?? [],
-    );
+    return await this.usersService.getAllUsers(paginationInput, searchFields ?? []);
   }
 
   // @Query(() => User, { name: 'user' })

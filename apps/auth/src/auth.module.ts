@@ -10,6 +10,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { EmailserviceModule } from 'apps/emailservice/src/emailservice.module';
 import { AuthController } from './auth.controller';
 import { GoogleStrategy } from 'common/library/strategies/google-strategy';
+import { VerificationModule } from './verification/verification.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { GoogleStrategy } from 'common/library/strategies/google-strategy';
         },
       }),
     }),
+    VerificationModule,
   ],
   controllers: [AuthController],
   providers: [

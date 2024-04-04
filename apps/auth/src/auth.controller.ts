@@ -2,10 +2,14 @@ import { Controller, Get, Query, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthGuard } from '@nestjs/passport';
 import { Public } from 'common/library';
+import { VerificationService } from './verification/verification.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly verificationService: VerificationService,
+  ) {}
 
   @Public()
   @Get('google')
@@ -23,7 +27,7 @@ export class AuthController {
   @Public()
   @Get('token')
   verifyEmail(@Query('token') token: string) {
-    console.log('controller');
-    return this.authService.verifyEmail(token);
+    // console.log('controller');
+    return this.verificationService.verifyEmail(token);
   }
 }

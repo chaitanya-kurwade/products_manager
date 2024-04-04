@@ -12,6 +12,7 @@ import { User } from './users/entities/user.entity';
 import { ConfigService } from '@nestjs/config';
 import { LoginResponse } from './users/responses/user-login.response.entity';
 import { EmailserviceService } from 'apps/emailservice/src/emailservice.service';
+import { VerificationService } from './verification/verification.service';
 
 @Injectable()
 export class AuthService {
@@ -20,9 +21,10 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly emailService: EmailserviceService,
+    private readonly verificationService: VerificationService,
   ) {}
 
-  async validate(email: string, password: string) {
+  async validate(email: string, password: string): Promise<User | null> {
     const user = await this.userService.getUserByEmailId(email);
     const pass = await bcrypt.compare(password, user.password);
     if (!user) {
@@ -35,15 +37,10 @@ export class AuthService {
     credential: string,
     password: string,
   ): Promise<LoginResponse> {
-    const user =
-      await this.userService.enterUsernameOrEmailOrPhoneNumberToLogin(
-        credential,
-      );
+    const user = await this.userService.enterUsernameOrEmailOrPhoneNumberToLogin(credential);
     console.log(user.email);
     if (!user) {
-      throw new NotFoundException(
-        'user not found, please pass valid credentials',
-      );
+      throw new NotFoundException('user not found, please pass valid credentials');
     }
     return this.login(user.email, password);
   }
@@ -59,12 +56,9 @@ export class AuthService {
         throw new UnauthorizedException('Invalid credentials : wrong password');
       }
       if (!user.isEmailVerified) {
-        this.userService.sendEmailToVerifyEmail(user.email);
+        this.verificationService.sendEmailToVerifyEmail(user.email);
       }
-      const { access_token, refresh_token } = await this.createTokens(
-        user._id,
-        user.email,
-      );
+      const { access_token, refresh_token } = await this.createTokens(user._id, user.email);
       return { access_token, refresh_token };
     }
   }
@@ -72,15 +66,13 @@ export class AuthService {
   async signup(signupUserInput: CreateUserInput): Promise<User> {
     const user = await this.userService.getUserToSignUp(signupUserInput.email);
     if (user) {
-      throw new BadRequestException(
-        'User email id already exists, kindly login',
-      );
+      throw new BadRequestException('User email id already exists, kindly login');
     }
     const createUserInput = { ...signupUserInput, hashedRefreshToken: '' };
     return this.userService.createUser(createUserInput);
   }
 
-  async getUserByAccessToken(access_token: string) {
+  async getUserByAccessToken(access_token: string): Promise<User> {
     return await this.verify(access_token);
   }
 
@@ -92,7 +84,7 @@ export class AuthService {
     return user;
   }
 
-  async createTokens(_id: string, email: string) {
+  async createTokens(_id: string, email: string): Promise<LoginResponse> {
     const payload = { email: email, _id: _id };
     const access_token = this.jwtService.sign(payload, {
       secret: this.configService.get('JWT_SECRET'),
@@ -109,25 +101,19 @@ export class AuthService {
     return { access_token, refresh_token };
   }
 
-  async storeRefreshToken(email: string, refreshToken: string) {
+  async storeRefreshToken(email: string, refreshToken: string): Promise<string> {
     const saltRounds = 10;
     const salt = await bcrypt.genSalt(saltRounds);
     const hashedRefreshToken = await bcrypt.hash(refreshToken, salt);
     const user = await this.userService.getUserByEmailId(email);
-    return await this.userService.updateRefreshTokenFromUser(
-      user.email,
-      hashedRefreshToken,
-    );
+    return await this.userService.updateRefreshTokenFromUser(user.email, hashedRefreshToken);
   }
 
   async refreshAccessToken(refresh_token: string): Promise<string> {
     const payload = this.jwtService.decode(refresh_token);
     const { email } = payload;
     const user = await this.userService.getUserByEmailId(email);
-    const refreshToken = await bcrypt.compare(
-      refresh_token,
-      user.hashedRefreshToken,
-    );
+    const refreshToken = await bcrypt.compare(refresh_token, user.hashedRefreshToken);
     console.log(refreshToken);
     if (refreshToken) {
       const payload = { email: user.email, _id: user._id };
@@ -140,7 +126,7 @@ export class AuthService {
   }
 
   // forget password
-  async forgetPassword(email: string) {
+  async forgetPassword(email: string): Promise<any> {
     const user = await this.userService.getUserByEmailId(email);
     if (!user) {
       throw new NotFoundException(`user not found with ${email} email id`);
@@ -158,7 +144,7 @@ export class AuthService {
   }
 
   // google login
-  async googleLogin(req: { user: any }) {
+  async googleLogin(req: { user: any }): Promise<any> {
     if (!req.user) {
       throw new Error('User not found!!!');
     }
@@ -196,16 +182,15 @@ export class AuthService {
   }
 
   // login with otp
-  async loginViaOtpAndPhoneOrEmail(phoneOrEmail: string) {
-    const user =
-      await this.userService.getUserByPhoneOrEmailOrUsername(phoneOrEmail);
+  async loginViaOtpAndPhoneOrEmail(phoneOrEmail: string): Promise<string> {
+    const user = await this.userService.getUserByPhoneOrEmailOrUsername(phoneOrEmail);
     if (!user) {
       throw new NotFoundException('User not found');
     }
     return await this.userService.sendOtpToLogin(phoneOrEmail);
   }
 
-  async validateOtp(otp: number) {
+  async validateOtp(otp: number): Promise<LoginResponse> {
     const user = await this.userService.validateOtp(otp);
     const tokens = await this.createTokens(user._id, user.email);
     console.log(user.email);
@@ -213,7 +198,7 @@ export class AuthService {
   }
 
   // verify email
-  async verifyEmail(token: string) {
-    return this.userService.verifyEmail(token);
+  async verifyEmail(token: string): Promise<string> {
+    return this.verificationService.verifyEmail(token);
   }
 }

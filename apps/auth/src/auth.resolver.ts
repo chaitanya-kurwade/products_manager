@@ -13,51 +13,37 @@ export class AuthResolver {
 
   @Mutation(() => LoginResponse)
   @Public()
-  async login(
-    @Args('userLoginInput') userLoginInput: UserLoginInput,
-  ): Promise<LoginResponse> {
+  async login(@Args('userLoginInput') userLoginInput: UserLoginInput): Promise<LoginResponse> {
     const credential =
-      userLoginInput.email ||
-      userLoginInput.username ||
-      userLoginInput.phoneNumber;
-    const userLogin =
-      await this.authService.enterUsernameOrEmailOrPhoneNumberToLogin(
-        credential,
-        userLoginInput.password,
-      );
+      userLoginInput.email || userLoginInput.username || userLoginInput.phoneNumber;
+    const userLogin = await this.authService.enterUsernameOrEmailOrPhoneNumberToLogin(
+      credential,
+      userLoginInput.password,
+    );
     return userLogin;
   }
 
   @Mutation(() => UserResponse)
   @Public()
-  signup(
-    @Args('createUserInput') createUserInput: CreateUserInput,
-  ): Promise<UserResponse> {
+  signup(@Args('createUserInput') createUserInput: CreateUserInput): Promise<UserResponse> {
     const user = this.authService.signup(createUserInput);
     return user;
   }
 
   @Mutation(() => String, { name: 'RefreshToken' })
   @Public()
-  async refreshAccessToken(
-    @Context() context: { req: Request },
-  ): Promise<string> {
-    const refreshToken =
-      context.req.headers['authorization']?.split(' ')[1] || null;
+  async refreshAccessToken(@Context() context: { req: Request }): Promise<string> {
+    const refreshToken = context.req.headers['authorization']?.split(' ')[1] || null;
     if (!refreshToken) {
       throw new BadRequestException('token not found');
     }
-    const access_token =
-      await this.authService.refreshAccessToken(refreshToken);
+    const access_token = await this.authService.refreshAccessToken(refreshToken);
     return access_token;
   }
 
   @Mutation(() => UserResponse, { name: 'getUserByAccessToken' })
-  async getUserByAccessToken(
-    @Context() context: { req: Request },
-  ): Promise<User> {
-    const access_token =
-      context.req.headers['authorization']?.split(' ')[1] || null;
+  async getUserByAccessToken(@Context() context: { req: Request }): Promise<User> {
+    const access_token = context.req.headers['authorization']?.split(' ')[1] || null;
 
     const user = await this.authService.getUserByAccessToken(access_token);
     return user;
