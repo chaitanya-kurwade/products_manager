@@ -1,4 +1,4 @@
-import { Resolver } from '@nestjs/graphql';
+import { Args, Mutation, Resolver } from '@nestjs/graphql';
 import { VerificationService } from './verification.service';
 import { Verification } from './entities/verification.entity';
 
@@ -39,4 +39,14 @@ export class VerificationResolver {
   // removeVerification(@Args('_id', { type: () => Int }) _id: string) {
   //   return this.verificationService.remove(_id);
   // }
+
+  @Mutation(() => String, { name: 'sendVerificationEmail' })
+  async sendVerificationEmail(@Args('email') email: string): Promise<string> {
+    return await this.verificationService.sendEmailToVerifyEmail(email);
+  }
+
+  @Mutation(() => String, { name: 'verifyemail' })
+  async verifyEmail(@Args('token') token: string): Promise<string> {
+    return this.verificationService.verifyEmail(token);
+  }
 }

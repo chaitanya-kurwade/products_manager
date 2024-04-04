@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 // import { CreateVerificationInput } from './dto/create-verification.input';
 // import { UpdateVerificationInput } from './dto/update-verification.input';
 import { InjectModel } from '@nestjs/mongoose';
@@ -56,8 +56,10 @@ export class VerificationService {
   async sendEmailToVerifyEmail(email: string): Promise<string> {
     const secretKey = await this.configService.get('VERIFY_EMAIL_SECRET_KEY');
     const user = await this.usersService.getUserByEmailId(email);
-    const userId = user._id;
-    const emailId = user.email;
+    if (!user) {
+      throw new NotFoundException('user not found to verify email');
+    }
+    const { _id: userId, email: emailId } = user;
     const token = await jwt.sign({ userId, emailId }, secretKey, { expiresIn: '1d' });
     const saltRounds = 10;
     const salt = await bcrypt.genSalt(saltRounds);
@@ -67,7 +69,7 @@ export class VerificationService {
       from: `${this.configService.get('SENDER_NAME')} <${this.configService.get('SENDER_EMAIL')}>`,
       to: emailId,
       subject: 'verify your email',
-      html: `<b>Hello, ${emailId}!</b><p>This is an email to verify your email, click on this ${link}`,
+      html: `<b>Hello, ${emailId}!</b><p>This is an email to verify your email, <a href="${link}">click here to verify your email</a>.`,
     };
     await this.transporter.sendMail(info);
     await this.verificationModel.create({

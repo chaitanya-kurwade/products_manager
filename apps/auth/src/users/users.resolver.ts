@@ -4,7 +4,6 @@ import { User } from './entities/user.entity';
 import { UpdateUserInput } from './inputs/update-user.input';
 import { UserResponse } from './responses/user-response.entity';
 import { PaginationInput } from 'common/library';
-import { NotFoundException } from '@nestjs/common';
 
 @Resolver(() => User)
 export class UsersResolver {
@@ -67,18 +66,4 @@ export class UsersResolver {
   //     reset_token,
   //   );
   // }
-
-  @Mutation(() => String, { name: 'sendVerificationEmail' })
-  async sendVerificationEmail(@Args('email') email: string): Promise<string> {
-    const user = await this.usersService.getUserByEmailId(email);
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-    return await this.usersService.sendEmailToVerifyEmail(email);
-  }
-
-  @Mutation(() => String, { name: 'verifyemail' })
-  async verifyEmail(@Args('token') token: string): Promise<string> {
-    return this.usersService.verifyEmail(token);
-  }
 }

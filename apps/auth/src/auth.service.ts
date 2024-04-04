@@ -38,7 +38,6 @@ export class AuthService {
     password: string,
   ): Promise<LoginResponse> {
     const user = await this.userService.enterUsernameOrEmailOrPhoneNumberToLogin(credential);
-    console.log(user.email);
     if (!user) {
       throw new NotFoundException('user not found, please pass valid credentials');
     }
