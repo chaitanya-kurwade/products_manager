@@ -11,10 +11,10 @@ export class AuthController {
     private readonly verificationService: VerificationService,
   ) {}
 
-  @Public()
-  @Get('google')
-  @UseGuards(AuthGuard('google'))
-  googleAuth(@Req() req) {}
+  // @Public()
+  // @Get('google')
+  // @UseGuards(AuthGuard('google'))
+  // googleAuth(@Req() req) {}
 
   @Public()
   @Get('google/callback')

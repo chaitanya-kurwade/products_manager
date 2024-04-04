@@ -12,12 +12,10 @@ import { UserResponse } from './responses/user-response.entity';
 import { CreateUserViaGoogleInput } from './inputs/create-user-via-google.input';
 import { EmailserviceService } from 'apps/emailservice/src/emailservice.service';
 import { ConfigService } from '@nestjs/config';
-import { Twilio } from 'twilio';
 
 @Injectable()
 export class UsersService {
   private transporter: nodemailer.Transporter;
-  private readonly client: Twilio;
 
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
@@ -33,10 +31,6 @@ export class UsersService {
         pass: `${this.configService.get('SENDER_SMTP_PASS')}`,
       },
     });
-    this.client = new Twilio(
-      this.configService.get('TWILIO_ACCOUNT_SID'),
-      this.configService.get('TWILIO_AUTH_TOKEN'),
-    );
   }
 
   async createUser(createUserInput: CreateUserInput): Promise<User> {
@@ -174,49 +168,6 @@ export class UsersService {
     return logOutResponse;
   }
 
-  // async forgetPassword(email: string) {
-  //   const user = await this.getUserByEmailId(email);
-  //   if (!user) {
-  //     throw new NotFoundException(
-  //       `user not found with ${email} email id, kindly put valid email id`,
-  //     );
-  //   }
-
-  //   const generateRandomHexString = (length: number): string =>
-  //     crypto.randomBytes(length / 2).toString('hex');
-
-  //   const isHexStringUnique = async (hexString: string): Promise<string> => {
-  //     const isUniqueHex = await this.emailService.checkHexIsUnique(hexString);
-  //     return isUniqueHex;
-  //   };
-
-  //   let hexString: string;
-  //   do {
-  //     hexString = generateRandomHexString(32);
-  //   } while (!isHexStringUnique(hexString));
-  //   console.log(hexString);
-  //   const now = new Date();
-  //   // Get the current time in UTC
-  //   const currentUTCTime = now.getTime() + now.getTimezoneOffset() * 60000;
-  //   // IST is UTC+5:30, so add 5 hours and 30 minutes in milliseconds
-  //   const istOffset = 5 * 60 * 60 * 1000 + 30 * 60 * 1000;
-  //   // Calculate the timestamp for the next hour in IST
-  //   const nextHourTimestamp = currentUTCTime + 60 * 60 * 1000 + istOffset;
-  //   // Create a new Date object for the next hour in IST
-  //   const validTillNextHour = new Date(nextHourTimestamp);
-  //   this.emailService.sendEmailToClient(email, hexString);
-  //   console.log({ email, hexString, validTillNextHour });
-
-  //   return { email, hexString, validTillNextHour };
-  // }
-
-  // async receiveForgetPasswordToken(newPassword: string, reset_token: string) {
-  //   return await this.emailService.receiveForgetPasswordToken(
-  //     newPassword,
-  //     reset_token,
-  //   );
-  // }
-
   async enterUsernameOrEmailOrPhoneNumberToLogin(credential: string): Promise<User> {
     const user = await this.userModel.findOne({
       $or: [{ email: credential }, { phoneNumber: credential }, { username: credential }],
@@ -280,47 +231,6 @@ export class UsersService {
         domain.length - visibleCharsDomain,
       )} sucessfully`;
     }
-
-    // - send sms
-    const userByPhoneNumber = await this.userModel
-      .findOne({ phoneNumber: phoneNumberOrEmailOrUsername })
-      .exec();
-
-    if (userByPhoneNumber) {
-      const timeInMiliSeconds = this.configService.get('OTP_TIME_IN_MINUTES') * 60000;
-      const phoneOtpExpiry = Date.now() + timeInMiliSeconds;
-      const phoneNumber = userByPhoneNumber.phoneNumber;
-      console.log(phoneNumber, phoneOtpExpiry, '<- phoneOtpExpiry');
-
-      const info = await this.client.messages.create({
-        to: '9011248626',
-        from: '9011248626',
-        body: `Hello, This is a message to login via otp, and here is your otp: "${otp}" and it is valid for ${this.configService.get(
-          'OTP_TIME_IN_MINUTES',
-        )} minutes.`,
-      });
-      await this.client.messages.create(info);
-      await this.userModel.findOneAndUpdate(
-        {
-          phoneNumber: phoneNumber,
-        },
-        {
-          phoneOtp: otp,
-          phoneOtpExpiryTime: phoneOtpExpiry,
-        },
-      );
-
-      const visibleDigits = 2;
-      const maskedDigits = phoneNumber.length - visibleDigits - 2;
-      const maskedPart = '*'.repeat(maskedDigits);
-
-      return `otp sent on phone number: ${phoneNumber.substring(
-        0,
-        visibleDigits,
-      )}${maskedPart}${phoneNumber.substring(
-        phoneNumber.length - 2,
-      )} sucessfully, and valid for ${this.configService.get('OTP_TIME_IN_MINUTES')} minutes`;
-    }
   }
 
   async createUserViaGoogle(
@@ -339,9 +249,13 @@ export class UsersService {
     return user;
   }
 
-  async getUserByPhoneOrEmailOrUsername(phoneOrEmail: string): Promise<User> {
+  async getUserByPhoneOrEmailOrUsername(phoneOrEmailOrUsername: string): Promise<User> {
     const user = await this.userModel.findOne({
-      $or: [{ phoneNumber: phoneOrEmail }, { email: phoneOrEmail }, { username: phoneOrEmail }],
+      $or: [
+        { phoneNumber: phoneOrEmailOrUsername },
+        { email: phoneOrEmailOrUsername },
+        { username: phoneOrEmailOrUsername },
+      ],
     });
     return user;
   }
