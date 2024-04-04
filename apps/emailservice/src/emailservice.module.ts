@@ -1,10 +1,7 @@
 import { Module } from '@nestjs/common';
 import { EmailserviceService } from './emailservice.service';
 import { GraphQLModule } from '@nestjs/graphql';
-import {
-  ApolloFederationDriver,
-  ApolloFederationDriverConfig,
-} from '@nestjs/apollo';
+import { ApolloFederationDriver, ApolloFederationDriverConfig } from '@nestjs/apollo';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';

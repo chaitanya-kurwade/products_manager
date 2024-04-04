@@ -49,24 +49,25 @@ export class AuthResolver {
   @Mutation(() => String, { name: 'RefreshToken' })
   @Public()
   async refreshAccessToken(@Context() context: { req: Request }) {
-    const refreshToken =
-      context.req.headers['authorization']?.split(' ')[1] || null;
+    const refreshToken = context.req.headers['authorization']?.split(' ')[1] || null;
     if (!refreshToken) {
       throw new BadRequestException('token not found');
     }
-    const access_token =
-      await this.authService.refreshAccessToken(refreshToken);
+    const access_token = await this.authService.refreshAccessToken(refreshToken);
     return access_token;
   }
 
   @Mutation(() => UserResponse, { name: 'getUserByAccessToken' })
-  async getUserByAccessToken(
-    @Context() context: { req: Request },
-  ): Promise<User> {
-    const access_token =
-      context.req.headers['authorization']?.split(' ')[1] || null;
+  async getUserByAccessToken(@Context() context: { req: Request }): Promise<User> {
+    const access_token = context.req.headers['authorization']?.split(' ')[1] || null;
 
     const user = await this.authService.getUserByAccessToken(access_token);
     return user;
+  }
+
+  @Public()
+  @Mutation(() => LoginResponse, { name: 'validateOtp' })
+  async validateOtp(@Args('otp') otp: number) {
+    return await this.authService.validateOtp(otp);
   }
 }

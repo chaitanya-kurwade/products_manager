@@ -41,8 +41,7 @@ export class SubProductService {
     categoryIds?: string[],
     userRole?: string,
   ): Promise<SubProductList> {
-    const { page, limit, search, sortOrder, minPrice, maxPrice } =
-      paginationInput;
+    const { page, limit, search, sortOrder, minPrice, maxPrice } = paginationInput;
 
     let query = this.subProductModel.find({ status: 'PUBLISHED' });
     let totalCountQuery = this.subProductModel.find({ status: 'PUBLISHED' });
@@ -78,17 +77,11 @@ export class SubProductService {
       (minPrice === null && maxPrice === null) ||
       (minPrice === undefined && maxPrice === undefined)
     ) {
-      getMinMaxPrices = await this.getMinMaxPricesForSubProducts(
-        minPrice,
-        maxPrice,
-      );
+      getMinMaxPrices = await this.getMinMaxPricesForSubProducts(minPrice, maxPrice);
       getMinMaxPrices.minPrice;
       getMinMaxPrices.maxPrice;
     } else if (minPrice !== 0 && maxPrice !== 0) {
-      getMinMaxPrices = await this.getMinMaxPricesForSubProducts(
-        minPrice,
-        maxPrice,
-      );
+      getMinMaxPrices = await this.getMinMaxPricesForSubProducts(minPrice, maxPrice);
       minPrice;
       maxPrice;
       fetched_ids = getMinMaxPrices._ids;
@@ -128,9 +121,7 @@ export class SubProductService {
     // Filter by masterProductIds
     if (masterProductIds && masterProductIds.length !== 0) {
       query = query.where('masterProductId').in(masterProductIds);
-      totalCountQuery = totalCountQuery
-        .where('masterProductId')
-        .in(masterProductIds);
+      totalCountQuery = totalCountQuery.where('masterProductId').in(masterProductIds);
     }
 
     // Sort options
@@ -217,14 +208,10 @@ export class SubProductService {
         },
       ];
 
-      const minMaxPrices = await this.subProductModel
-        .aggregate(minMaxPricePipeline)
-        .exec();
+      const minMaxPrices = await this.subProductModel.aggregate(minMaxPricePipeline).exec();
 
-      const minPriceValue =
-        minMaxPrices.length !== 0 ? minMaxPrices[0].minPrice : null;
-      const maxPriceValue =
-        minMaxPrices.length !== 0 ? minMaxPrices[0].maxPrice : null;
+      const minPriceValue = minMaxPrices.length !== 0 ? minMaxPrices[0].minPrice : null;
+      const maxPriceValue = minMaxPrices.length !== 0 ? minMaxPrices[0].maxPrice : null;
       const _ids = minMaxPrices.length !== 0 ? minMaxPrices[0]._id : [];
 
       return {
@@ -255,14 +242,11 @@ export class SubProductService {
         },
       ];
 
-      const minMaxPrices = await this.subProductModel
-        .aggregate(minMaxPricePipeline)
-        .exec();
+      const minMaxPrices = await this.subProductModel.aggregate(minMaxPricePipeline).exec();
 
       // minMaxPrices.length !== 0 ? minMaxPrices[0].minPrice : null;
       // minMaxPrices.length !== 0 ? minMaxPrices[0].maxPrice : null;
-      const _ids =
-        minMaxPrices.length !== 0 ? minMaxPrices[0].masterProductId : [];
+      const _ids = minMaxPrices.length !== 0 ? minMaxPrices[0].masterProductId : [];
 
       return {
         minPrice: minPrice,
@@ -300,16 +284,11 @@ export class SubProductService {
         },
       ];
 
-      const minMaxPrices = await this.subProductModel
-        .aggregate(minMaxPricePipeline)
-        .exec();
+      const minMaxPrices = await this.subProductModel.aggregate(minMaxPricePipeline).exec();
 
-      const minPriceValue =
-        minMaxPrices.length !== 0 ? minMaxPrices[0].minPrice : null;
-      const maxPriceValue =
-        minMaxPrices.length !== 0 ? minMaxPrices[0].maxPrice : null;
-      const masterProductIds =
-        minMaxPrices.length !== 0 ? minMaxPrices[0].masterProductId : [];
+      const minPriceValue = minMaxPrices.length !== 0 ? minMaxPrices[0].minPrice : null;
+      const maxPriceValue = minMaxPrices.length !== 0 ? minMaxPrices[0].maxPrice : null;
+      const masterProductIds = minMaxPrices.length !== 0 ? minMaxPrices[0].masterProductId : [];
 
       return {
         minPrice: minPriceValue,
@@ -337,12 +316,9 @@ export class SubProductService {
         },
       ];
 
-      const minMaxPrices = await this.subProductModel
-        .aggregate(minMaxPricePipeline)
-        .exec();
+      const minMaxPrices = await this.subProductModel.aggregate(minMaxPricePipeline).exec();
 
-      const masterProductIds =
-        minMaxPrices.length !== 0 ? minMaxPrices[0].masterProductId : [];
+      const masterProductIds = minMaxPrices.length !== 0 ? minMaxPrices[0].masterProductId : [];
 
       return {
         minPrice: minPrice,
@@ -359,9 +335,7 @@ export class SubProductService {
     }
     if (!product || product.status !== 'PUBLISHED') {
       throw new NotFoundException(
-        'SubProduct not available with _id: ' +
-          _id +
-          ', or it is not published',
+        'SubProduct not available with _id: ' + _id + ', or it is not published',
       );
     }
     return product;
@@ -388,13 +362,8 @@ export class SubProductService {
   //   return subProducts;
   // }
 
-  async getSubProductsByMasterProductId(
-    masterProductId: string,
-    role?: string,
-  ) {
-    const subProducts = await this.subProductModel
-      .find({ masterProductId })
-      .exec();
+  async getSubProductsByMasterProductId(masterProductId: string, role?: string) {
+    const subProducts = await this.subProductModel.find({ masterProductId }).exec();
     console.log(subProducts);
 
     if (!subProducts || subProducts.length === 0) {
@@ -409,15 +378,11 @@ export class SubProductService {
       return subProducts;
     }
 
-    const publishedProducts = subProducts.filter(
-      (products) => products.status === 'PUBLISHED',
-    );
+    const publishedProducts = subProducts.filter((products) => products.status === 'PUBLISHED');
 
     if (!publishedProducts || publishedProducts.length === 0) {
       throw new NotFoundException(
-        'SubProducts not available with ' +
-          masterProductId +
-          ' masterProductId',
+        'SubProducts not available with ' + masterProductId + ' masterProductId',
       );
     }
     return publishedProducts;
@@ -498,11 +463,9 @@ export class SubProductService {
       if (uniqueSkuSubProduct && uniqueSkuSubProduct._id.toString() !== _id) {
         throw new BadGatewayException('SKU should be unique');
       }
-      return await this.subProductModel.findByIdAndUpdate(
-        _id,
-        updateSubProductInput,
-        { new: true },
-      );
+      return await this.subProductModel.findByIdAndUpdate(_id, updateSubProductInput, {
+        new: true,
+      });
     } else if (role !== 'SUPER_ADMIN') {
       const subProduct = await this.subProductModel.findById(_id);
       if (!subProduct || subProduct.status !== 'PUBLISHED') {
@@ -515,17 +478,13 @@ export class SubProductService {
       if (uniqueSkuSubProduct && uniqueSkuSubProduct._id.toString() !== _id) {
         throw new BadGatewayException('SKU should be unique');
       }
-      return await this.subProductModel.findByIdAndUpdate(
-        _id,
-        updateSubProductInput,
-        { new: true },
-      );
+      return await this.subProductModel.findByIdAndUpdate(_id, updateSubProductInput, {
+        new: true,
+      });
     }
   }
 
-  async deleteSubProductsByMasterProductId(
-    masterProductId: string,
-  ): Promise<string> {
+  async deleteSubProductsByMasterProductId(masterProductId: string): Promise<string> {
     const subProductsByMasterProductId = await this.subProductModel.find({
       masterProductId,
     });

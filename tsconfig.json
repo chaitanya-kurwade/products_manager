@@ -7,9 +7,7 @@
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "target": "ES2021",
     "sourceMap": true,
     "outDir": "./dist",
@@ -22,18 +20,10 @@
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
-      "libs/common": [
-        "libs/common/src"
-      ],
-      "libs/common/*": [
-        "libs/common/src/*"
-      ],
-      "common/library": [
-        "libs/library/src"
-      ],
-      "common/library/*": [
-        "libs/library/src/*"
-      ]
+      "libs/common": ["libs/common/src"],
+      "libs/common/*": ["libs/common/src/*"],
+      "common/library": ["libs/library/src"],
+      "common/library/*": ["libs/library/src/*"]
     }
   }
 }

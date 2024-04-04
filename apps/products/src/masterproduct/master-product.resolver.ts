@@ -20,9 +20,7 @@ export class MasterProductResolver {
     @Args('createMasterProductInput')
     createMasterProductInput: CreateMasterProductInput,
   ) {
-    return this.masterProductService.createMasterProduct(
-      createMasterProductInput,
-    );
+    return this.masterProductService.createMasterProduct(createMasterProductInput);
   }
 
   @Roles(ROLES.ADMIN, ROLES.SUPERADMIN, ROLES.MANAGER)
@@ -49,14 +47,10 @@ export class MasterProductResolver {
 
   @Roles(ROLES.ADMIN, ROLES.SUPERADMIN, ROLES.MANAGER)
   @Query(() => MasterProduct, { name: 'getMasterProduct' })
-  async getOneMasterProductById(
-    @Args('_id') _id: string,
-    @Context() context: { req: Request },
-  ) {
+  async getOneMasterProductById(@Args('_id') _id: string, @Context() context: { req: Request }) {
     const { role } = await new ContextService().getContextInfo(context.req);
 
-    const masterProduct =
-      await this.masterProductService.getOneMasterProductById(_id, role);
+    const masterProduct = await this.masterProductService.getOneMasterProductById(_id, role);
     return masterProduct;
   }
 
@@ -69,12 +63,11 @@ export class MasterProductResolver {
   ) {
     const { role } = await new ContextService().getContextInfo(context.req);
 
-    const updatedMasterProduct =
-      await this.masterProductService.updateMasterProductById(
-        updateMasterProductInput._id,
-        updateMasterProductInput,
-        role,
-      );
+    const updatedMasterProduct = await this.masterProductService.updateMasterProductById(
+      updateMasterProductInput._id,
+      updateMasterProductInput,
+      role,
+    );
 
     return updatedMasterProduct;
   }
@@ -86,19 +79,13 @@ export class MasterProductResolver {
 
   @Roles(ROLES.ADMIN, ROLES.SUPERADMIN)
   @Mutation(() => String)
-  deleteCategoryById(
-    @Args('categoryId', { type: () => String }) categoryId: string,
-  ) {
+  deleteCategoryById(@Args('categoryId', { type: () => String }) categoryId: string) {
     return this.masterProductService.deleteCategoryAndMasterProduct(categoryId);
   }
 
   @Roles(ROLES.ADMIN, ROLES.SUPERADMIN)
   @Mutation(() => String)
-  deleteMasterProduct(
-    @Args('masterProductId', { type: () => String }) masterProductId: string,
-  ) {
-    return this.masterProductService.deleteMasterProductAndItsSubProducts(
-      masterProductId,
-    );
+  deleteMasterProduct(@Args('masterProductId', { type: () => String }) masterProductId: string) {
+    return this.masterProductService.deleteMasterProductAndItsSubProducts(masterProductId);
   }
 }

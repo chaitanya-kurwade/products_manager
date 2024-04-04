@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Get,
-  Param,
-  Post,
-  Res,
-  UploadedFiles,
-  UseInterceptors,
-} from '@nestjs/common';
+import { Controller, Get, Param, Post, Res, UploadedFiles, UseInterceptors } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 import { join } from 'path';
@@ -26,14 +18,7 @@ export class UploadimageController {
     @Param('imageName') fileName: string,
   ): Promise<string | any> {
     try {
-      const filepath = join(
-        __dirname,
-        '..',
-        '..',
-        '..',
-        'uploads',
-        `${fileName}`,
-      );
+      const filepath = join(__dirname, '..', '..', '..', 'uploads', `${fileName}`);
 
       // const imageBuffer = await new Promise<Buffer>((resolve, reject) => {
       //   fs.readFile(filepath, (err, data) => {
@@ -86,8 +71,7 @@ export class UploadimageController {
       storage: diskStorage({
         destination: './uploads',
         filename: (req, file, cb) => {
-          const uniquePrefix =
-            Date.now() + '_' + Math.round(Math.random() * 1e9);
+          const uniquePrefix = Date.now() + '_' + Math.round(Math.random() * 1e9);
           cb(null, `${uniquePrefix}_${file.originalname}`);
         },
       }),

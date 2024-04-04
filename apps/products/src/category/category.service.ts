@@ -1,9 +1,4 @@
-import {
-  BadGatewayException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-
+import { BadGatewayException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Category, CategoryDocument } from './entities/category.entity';
@@ -130,23 +125,16 @@ export class CategoryService {
       return childCategories;
     } else {
       const categories =
-        childCategories.filter((category) => category.status === 'PUBLISHED') ||
-        [];
+        childCategories.filter((category) => category.status === 'PUBLISHED') || [];
       return categories;
     }
   }
 
-  async updateCategoryById(
-    _id: string,
-    updateCategoryInput: UpdateCategoryInput,
-    role?: string,
-  ) {
+  async updateCategoryById(_id: string, updateCategoryInput: UpdateCategoryInput, role?: string) {
     if (role === 'SUPER_ADMIN') {
-      const category = await this.categoryModel.findByIdAndUpdate(
-        _id,
-        updateCategoryInput,
-        { new: true },
-      );
+      const category = await this.categoryModel.findByIdAndUpdate(_id, updateCategoryInput, {
+        new: true,
+      });
       return category.save();
     }
 
@@ -156,11 +144,9 @@ export class CategoryService {
         `Category not found with id: ${_id} or Category status is not 'PUBLISHED'`,
       );
     }
-    const updatedCategory = await this.categoryModel.findByIdAndUpdate(
-      _id,
-      updateCategoryInput,
-      { new: true },
-    );
+    const updatedCategory = await this.categoryModel.findByIdAndUpdate(_id, updateCategoryInput, {
+      new: true,
+    });
     return updatedCategory;
   }
 

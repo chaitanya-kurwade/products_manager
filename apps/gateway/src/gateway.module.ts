@@ -43,10 +43,7 @@ import configuration from './config/configuration';
           return new RemoteGraphQLDataSource({
             url,
             willSendRequest({ request, context }: any) {
-              request.http.headers.set(
-                'authorization',
-                context?.headers?.authorization,
-              );
+              request.http.headers.set('authorization', context?.headers?.authorization);
               request.http.headers.set(
                 'apollo-require-preflight',
                 context?.headers?.apollo_require_preflight,

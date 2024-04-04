@@ -8,6 +8,10 @@ import { JwtStrategy } from 'common/library/strategies/jwt-strategy';
 import { JwtAuthGuard } from 'common/library/guards/jwt-auth.guard';
 import { APP_GUARD } from '@nestjs/core';
 import { EmailserviceModule } from 'apps/emailservice/src/emailservice.module';
+
+import { AuthController } from './auth.controller';
+import { GoogleStrategy } from 'common/library/strategies/google-strategy';
+import { VerificationModule } from './verification/verification.module';
 import { RolesGuard } from 'common/library/guards/roles.guard';
 
 @Module({
@@ -27,14 +31,16 @@ import { RolesGuard } from 'common/library/guards/roles.guard';
         },
       }),
     }),
+    VerificationModule,
   ],
-  controllers: [],
+  controllers: [AuthController],
   providers: [
     AuthService,
     AuthResolver,
     JwtService,
     JwtStrategy,
     { provide: APP_GUARD, useClass: JwtAuthGuard },
+    GoogleStrategy,
     { provide: APP_GUARD, useClass: RolesGuard },
   ],
 })
