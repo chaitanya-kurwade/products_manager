@@ -39,6 +39,12 @@ export class CreateSubProductInput {
   masterProductId: string; //{ type: ObjectId, ref: "MasterProduct" },
 
   @Field({ nullable: true })
+  categoryId: string;
+
+  @Field({ nullable: true })
+  isSameAsAMasterProductImage: boolean;
+
+  @Field({ nullable: true })
   barcode: string; //, # Barcode or QRCode
 
   @Field({ nullable: false })

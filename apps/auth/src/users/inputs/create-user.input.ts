@@ -1,5 +1,7 @@
 import { InputType, Field } from '@nestjs/graphql';
 import { IsEmail, IsPhoneNumber, IsStrongPassword } from 'class-validator';
+import { ROLES } from '../enums/role.enum';
+
 
 @InputType()
 export class CreateUserInput {
@@ -26,4 +28,8 @@ export class CreateUserInput {
 
   // @Field({ nullable: true, defaultValue: false })
   // isEmailVerified?: boolean;
+
+  @Field(() => String, { nullable: true, defaultValue: ROLES.USER })
+  role?: ROLES;
+
 }

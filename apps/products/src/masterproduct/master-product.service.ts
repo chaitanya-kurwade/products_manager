@@ -51,87 +51,72 @@ export class MasterProductService {
   async getAllMasterProducts(
     paginationInput: PaginationInput,
     searchFields?: string[],
+    categoryIds?: string[],
+    userRole?: string,
   ): Promise<MasterProductList> {
-    // const { page, limit, search, sortField, sortOrder } = paginationInput;
-    // // let allDocumentsCount = await this.masterProductModel.countDocuments().exec();
-    // // console.log(totalCount);
-    // let query = this.masterProductModel.find();
-    // if (searchFields == null || !searchFields.length) {
-    //   if (sortField && !['ASC', 'DESC'].includes(sortOrder)) {
-    //     throw new BadRequestException(
-    //       'Invalid sortOrder. It must be either ASC or DESC.',
-    //     );
-    //   }
-    //   if (search) {
-    //     query = query.where('masterProductName').regex(new RegExp(search, 'i'));
-    //   }
-    //   if (sortField && !['ASC', 'DESC'].includes(sortOrder)) {
-    //     throw new BadRequestException(
-    //       'Invalid sortOrder. It must be either ASC or DESC.',
-    //     );
-    //   }
-    //   if (sortField && sortOrder) {
-    //     // console.log(sortOrder, 'single', sortField);
-    //     const sortOptions: { [key: string]: SortOrder } = {};
-    //     sortOptions[sortField] = sortOrder.toLowerCase() as SortOrder;
-    //     query = query.sort(sortOptions);
-    //   }
-    //   if (!page && !limit && !sortField && !sortOrder) {
-    //     const masterProducts = await query.sort({ createdAt: -1 }).exec();
-    //     const totalCount = masterProducts.length;
-    //     return { masterProducts, totalCount };
-    //   }
-    //   const skip = (page - 1) * limit;
-    //   const masterProducts = await query.skip(skip).limit(limit).exec();
-    //   if (!masterProducts && masterProducts.length === 0) {
-    //     throw new NotFoundException('masterProducts not found');
-    //   }
-    //   const totalCount = masterProducts.length;
-    //   return { masterProducts, totalCount };
-    // } else {
-    //   query = this.buildQuery(search, searchFields);
-    //   // console.log(query);
-    //   if (!page && !limit && !sortField && !sortOrder) {
-    //     const masterProducts = await query.sort({ createdAt: -1 }).exec();
-    //     const totalCount = masterProducts.length;
-    //     return { masterProducts, totalCount };
-    //   }
-    //   if (sortField && !['ASC', 'DESC'].includes(sortOrder)) {
-    //     // console.log(sortOrder, 'sortOrder', sortField);
-    //     throw new BadRequestException(
-    //       'Invalid sortOrder. It must be either ASC or DESC.',
-    //     );
-    //   }
-    //   if (sortField && sortOrder) {
-    //     // console.log(sortOrder, 'all', sortField);
-    //     const sortOptions: { [key: string]: SortOrder } = {};
-    //     sortOptions[sortField] = sortOrder.toLowerCase() as SortOrder;
-    //     query = query.sort(sortOptions);
-    //   }
-    //   const skip = (page - 1) * limit;
-    //   const masterProducts = await query.skip(skip).limit(limit).exec();
-    //   if (!masterProducts && masterProducts.length == 0) {
-    //     throw new NotFoundException('masterProducts not found');
-    //   }
-    //   const totalCount = masterProducts.length;
-    //   return { masterProducts, totalCount };
-    // }
-    const { page, limit, search, sortOrder } = paginationInput;
+    const { page, limit, search, sortOrder, minPrice, maxPrice } =
+      paginationInput;
 
-    let query = this.masterProductModel.find();
-    let totalCountQuery = this.masterProductModel.find();
+    // query starts form here
+    let query = this.masterProductModel.find({ status: 'PUBLISHED' });
+    let totalCountQuery = this.masterProductModel.find({ status: 'PUBLISHED' });
 
-    // Apply search if search term is provided
-    // if (search && searchFields.length >= 0) {
-    //   console.log(search);
-    //   const searchQuery = {};
-    //   searchFields.forEach((field) => {
-    //     searchQuery[field] = { $regex: search, $options: 'i' };
-    //   });
-    //   query = query.find({ $or: [searchQuery] });
-    //   totalCountQuery = totalCountQuery.find({ $or: [searchQuery] });
-    // }
-    if (search && searchFields.length > 0) {
+    if (userRole === 'SUPER_ADMIN') {
+      query = query.where('status').in(['PUBLISHED', 'ARCHIVED']);
+      totalCountQuery = totalCountQuery
+        .where('status')
+        .in(['PUBLISHED', 'ARCHIVED']);
+    } else {
+      query = query.where('status').equals('PUBLISHED');
+      totalCountQuery = totalCountQuery.where('status').equals('PUBLISHED');
+    }
+    // getMinMaxPrices
+    let fetchedMasterProductIds: string[];
+    let getMinMaxPrices: {
+      minPrice: number;
+      maxPrice: number;
+      masterProductId: string[];
+    };
+    if (minPrice !== 0 && maxPrice !== 0) {
+      getMinMaxPrices =
+        await this.subProductService.getMinMaxPricesForMasterProducts(
+          minPrice,
+          maxPrice,
+        );
+      getMinMaxPrices.minPrice;
+      getMinMaxPrices.maxPrice;
+      fetchedMasterProductIds = getMinMaxPrices.masterProductId;
+    } else if (
+      (minPrice === null && maxPrice === null) ||
+      (minPrice === undefined && maxPrice === undefined)
+    ) {
+      getMinMaxPrices =
+        await this.subProductService.getMinMaxPricesForMasterProducts(
+          minPrice,
+          maxPrice,
+        );
+      getMinMaxPrices.minPrice;
+      getMinMaxPrices.maxPrice;
+    }
+    // getting masterProducts as per subProduct's price
+    if (
+      minPrice !== undefined &&
+      maxPrice !== undefined &&
+      fetchedMasterProductIds
+    ) {
+      query = query.where('_id').in(fetchedMasterProductIds);
+      totalCountQuery = totalCountQuery
+        .where('_id')
+        .in(fetchedMasterProductIds);
+    }
+    // categoryIds[] wise search
+    if (categoryIds && categoryIds.length !== 0) {
+      query = query.where('category._id').in(categoryIds);
+      totalCountQuery = totalCountQuery.where('category._id').in(categoryIds);
+    }
+
+    // search
+    if (search && searchFields && searchFields.length !== 0) {
       const searchQueries = searchFields.map((field) => ({
         [field]: { $regex: search, $options: 'i' },
       }));
@@ -151,46 +136,63 @@ export class MasterProductService {
 
     // Execute the query
     const masterProducts = await query.exec();
+    const totalCount = await totalCountQuery.countDocuments().exec();
+    const minPriceFromDb = await (
+      await this.subProductService.getMinMaxPricesFromDB()
+    ).minPrice;
+    const maxPriceFromDb = await (
+      await this.subProductService.getMinMaxPricesFromDB()
+    ).maxPrice;
 
-    // Count total filtered documents
-    const totalCount = await totalCountQuery.countDocuments();
-
-    return { masterProducts, totalCount };
+    return {
+      masterProducts,
+      totalCount,
+      minPrice: minPriceFromDb,
+      maxPrice: maxPriceFromDb,
+    };
   }
 
-  private buildQuery(search: string, searchFields?: string[]): any {
-    let query = this.masterProductModel.find();
-    if (search) {
-      const orConditions = searchFields.map((field) => ({
-        [field]: { $regex: new RegExp(search, 'i') },
-      }));
-      query = query.or(orConditions);
+  async getOneMasterProductById(_id: string, role: string) {
+    const masterProduct = await this.masterProductModel.findById(_id);
+    if (role === 'SUPER_ADMIN') {
+      return masterProduct;
     }
-    return query;
-  }
+    if (!masterProduct || masterProduct.status !== 'PUBLISHED') {
 
-  async getOneMasterProductById(_id: string) {
-    const product = await this.masterProductModel.findById(_id);
-    if (!product) {
       throw new NotFoundException(
         'MasterProduct not available with Id: ' + _id,
       );
     }
-    return product;
+    return masterProduct;
   }
 
   async updateMasterProductById(
     _id: string,
     updateMasterProductInput: UpdateMasterProductInput,
+    role?: string,
   ) {
-    const product = await this.masterProductModel.findByIdAndUpdate(
-      _id,
-      updateMasterProductInput,
-    );
-    if (!product) {
-      throw new BadRequestException('MasterProduct not updated, _id: ' + _id);
+    if (role === 'SUPER_ADMIN') {
+      const product = await this.masterProductModel.findByIdAndUpdate(
+        _id,
+        updateMasterProductInput,
+        { new: true },
+      );
+      return product;
     }
-    return product;
+
+    const product = await this.masterProductModel.findById(_id);
+    if (!product || product.status !== 'PUBLISHED') {
+      throw new BadRequestException(
+        `MasterProduct not found with id: ${_id} or MasterProduct status is not 'PUBLISHED'`,
+      );
+    }
+    const updatedMasterProduct =
+      await this.masterProductModel.findByIdAndUpdate(
+        _id,
+        updateMasterProductInput,
+        { new: true },
+      );
+    return updatedMasterProduct;
   }
 
   async deleteMasterProductById(_id: string) {
@@ -198,6 +200,79 @@ export class MasterProductService {
     if (!product) {
       throw new NotFoundException('MasterProduct not deleted, _id: ' + _id);
     }
-    return product;
+
+    product.status = 'ARCHIVED';
+    return product.save();
   }
+
+  async deleteMasterProductAndItsSubProducts(
+    masterProductId: string,
+  ): Promise<string> {
+    await this.subProductService.deleteSubProductsByMasterProductId(
+      masterProductId,
+    );
+    await this.deleteMasterProductById(masterProductId);
+    console.log(masterProductId);
+    return 'master product and its sub-products are deleted successfully';
+  }
+
+  async deleteCategoryAndMasterProduct(categoryId: string): Promise<string> {
+    const category = await this.categoryService.getCategoryById(categoryId);
+    if (!category) {
+      throw new NotFoundException(
+        'category not found for this id: ' + categoryId,
+      );
+    }
+
+    if (category) {
+      const childCategories =
+        await this.categoryService.getChildCategoryByCategoryId(categoryId);
+
+      const masterProducts = await Promise.all(
+        childCategories.map((childCategory) => {
+          return this.masterProductModel.find({
+            'category._id': childCategory._id,
+            status: 'PUBLISHED',
+          });
+        }),
+      );
+
+      await Promise.all(
+        masterProducts.flat().map(async (masterProduct) => {
+          await this.deleteMasterProductAndItsSubProducts(masterProduct._id);
+        }),
+      );
+
+      await Promise.all(
+        childCategories.map(async (childCategory) => {
+          await this.deleteCategoryAndMasterProduct(childCategory._id);
+        }),
+      );
+    }
+    const masterProduct = await this.masterProductModel.find({
+      'category._id': categoryId,
+      status: 'PUBLISHED',
+    });
+
+    if (!masterProduct) {
+      throw new NotFoundException('master product not found for this category');
+    }
+    await Promise.all(
+      masterProduct.map(
+        async (product) =>
+          await this.deleteMasterProductAndItsSubProducts(product._id),
+      ),
+    );
+    await this.categoryService.remove(categoryId);
+    return 'category, master product and its sub-products are deleted successfully';
+  }
+
+  // async getAllCategoriesInMasterProduct(categoryIds: string[]) {
+  //   console.log(categoryIds);
+  //   const masterProds = await this.masterProductModel.find({
+  //     'category._id': { $in: categoryIds },
+  //   });
+
+  //   return masterProds.map((prduct) => prduct.category._id.toString());
+  // }
 }

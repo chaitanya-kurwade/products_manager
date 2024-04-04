@@ -1,9 +1,17 @@
-import { Resolver, Query, Mutation, Args } from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args, Context } from '@nestjs/graphql';
 import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
 import { UpdateUserInput } from './inputs/update-user.input';
 import { UserResponse } from './responses/user-response.entity';
-import { PaginationInput } from 'common/library';
+import { PaginationInput, Public } from 'common/library';
+import { NotFoundException } from '@nestjs/common';
+import { SendEmail } from './entities/send-email.entity';
+import { ROLES } from './enums/role.enum';
+import { Roles } from 'common/library/decorators/roles.decorator';
+import { ContextService } from 'common/library/service/context.service';
+import { Request } from 'express';
+import { UsersList } from './responses/user-list.response';
+
 
 @Resolver(() => User)
 export class UsersResolver {
@@ -14,14 +22,25 @@ export class UsersResolver {
   //   return this.usersService.create(createUserInput);
   // }
 
-  @Query(() => [UserResponse], { name: 'getAllUsers' })
+
+  @Roles(ROLES.ADMIN, ROLES.MANAGER, ROLES.SUPERADMIN)
+  @Query(() => UsersList, { name: 'getAllUsers' })
   async getAllUsers(
+    @Context() context: { req: Request },
     @Args('paginationInput', { nullable: true })
     paginationInput: PaginationInput,
     @Args('searchFields', { type: () => [String], nullable: true })
     searchFields?: string[],
-  ) {
-    return await this.usersService.getAllUsers(paginationInput, searchFields ?? []);
+
+  ): Promise<UsersList> {
+    const { role } = await new ContextService().getContextInfo(context.req);
+
+    const usersList = await this.usersService.getAllUsers(
+      paginationInput,
+      searchFields ?? [],
+      role,
+    );
+    return usersList;
   }
 
   // @Query(() => User, { name: 'user' })
@@ -29,9 +48,20 @@ export class UsersResolver {
   //   return this.usersService.findOne(_id);
   // }
 
+  @Roles(ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.MANAGER)
   @Mutation(() => UserResponse)
-  updateUser(@Args('updateUserInput') updateUserInput: UpdateUserInput) {
-    return this.usersService.update(updateUserInput._id, updateUserInput);
+  async updateUser(
+    @Context() context: { req: Request },
+    @Args('updateUserInput') updateUserInput: UpdateUserInput,
+  ) {
+    const { role } = await new ContextService().getContextInfo(context.req);
+
+    const user = await this.usersService.updateUser(
+      updateUserInput._id,
+      updateUserInput,
+      role,
+    );
+    return user;
   }
 
   // @Mutation(() => User)
@@ -39,11 +69,18 @@ export class UsersResolver {
   //   return this.usersService.remove(_id);
   // }
 
+  @Roles(ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.MANAGER)
   @Query(() => UserResponse, { name: 'userByEmail' })
-  getUserByEmailId(@Args('email') email: string) {
-    return this.usersService.getUserByEmailId(email);
+  async getUserByEmailId(
+    @Args('email') email: string,
+    @Context() context: { req: Request },
+  ) {
+    const { role } = await new ContextService().getContextInfo(context.req);
+    const user = await this.usersService.getUserByEmailId(email, role);
+    return user;
   }
 
+  @Roles(ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.MANAGER)
   @Mutation(() => String, { name: 'userLogout' })
   userLogout(@Args('email') email: string) {
     return this.usersService.userLogout(email);

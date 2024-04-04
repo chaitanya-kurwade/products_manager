@@ -2,11 +2,16 @@ import { Args, Context, Mutation, Resolver } from '@nestjs/graphql';
 import { AuthService } from './auth.service';
 import { UserLoginInput } from './users/inputs/user-login.input';
 import { LoginResponse } from './users/responses/user-login.response.entity';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { CreateUserInput } from './users/inputs/create-user.input';
 import { Public } from 'common/library/decorators/public.decorator';
 import { UserResponse } from './users/responses/user-response.entity';
 import { User } from './users/entities/user.entity';
+import { ContextService } from 'common/library/service/context.service';
+import { Request } from 'express';
+import { Roles } from 'common/library/decorators/roles.decorator';
+import { ROLES } from './users/enums/role.enum';
+
 @Resolver()
 export class AuthResolver {
   constructor(private readonly authService: AuthService) {}
@@ -23,10 +28,15 @@ export class AuthResolver {
     return userLogin;
   }
 
+  @Roles(ROLES.ADMIN, ROLES.MANAGER, ROLES.SUPERADMIN)
   @Mutation(() => UserResponse)
   @Public()
-  signup(@Args('createUserInput') createUserInput: CreateUserInput): Promise<UserResponse> {
-    const user = this.authService.signup(createUserInput);
+  async signup(
+    @Context() context: { req: Request },
+    @Args('signupUserInput') signupUserInput: CreateUserInput,
+  ) {
+    const { role } = await new ContextService().getContextInfo(context.req);
+    const user = await this.authService.signup(signupUserInput, role);
     return user;
   }
 

@@ -53,6 +53,14 @@ export class SubProduct {
 
   @Prop()
   @Field({ nullable: true })
+  categoryId: string;
+
+  @Prop()
+  @Field({ nullable: true })
+  isSameAsAMasterProductImage: boolean;
+
+  @Prop()
+  @Field({ nullable: true })
   barcode: string; //, # Barcode or QRCode
 
   @Prop()

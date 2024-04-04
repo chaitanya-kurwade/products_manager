@@ -13,6 +13,8 @@ import { ConfigService } from '@nestjs/config';
 import { LoginResponse } from './users/responses/user-login.response.entity';
 import { EmailserviceService } from 'apps/emailservice/src/emailservice.service';
 import { VerificationService } from './verification/verification.service';
+import { UserResponse } from './users/responses/user-response.entity';
+import { ROLES } from './users/enums/role.enum';
 
 @Injectable()
 export class AuthService {
@@ -46,6 +48,7 @@ export class AuthService {
 
   async login(email: string, password: string): Promise<LoginResponse> {
     const user = await this.userService.getUserByEmailId(email);
+
     if (!user) {
       throw new UnauthorizedException('Invalid credentials : email not found');
     }
@@ -64,11 +67,94 @@ export class AuthService {
 
   async signup(signupUserInput: CreateUserInput): Promise<User> {
     const user = await this.userService.getUserToSignUp(signupUserInput.email);
+      const { access_token, refresh_token } = await this.createTokens(
+        user._id,
+        user.email,
+        user.role,
+      );
+
+      const _id = user._id;
+      const email = user.email;
+      const firstName = user.firstName;
+      const lastName = user.lastName;
+      const role = user.role;
+      const createdAt = user.createdAt;
+      const updatedAt = user.updatedAt;
+
+      const userResponse: UserResponse = {
+        _id,
+        email,
+        firstName,
+        lastName,
+        role,
+        createdAt,
+        updatedAt,
+      };
+
+      return { access_token, refresh_token, userResponse };
+    }
+  }
+
+  async signup(
+    signupUserInput: CreateUserInput,
+    role?: string,
+  ): Promise<UserResponse> {
+    const user = await this.userService.findOne(
+      null,
+      signupUserInput.email,
+      null,
+    );
+
     if (user) {
       throw new BadRequestException('User email id already exists, kindly login');
     }
-    const createUserInput = { ...signupUserInput, hashedRefreshToken: '' };
-    return this.userService.createUser(createUserInput);
+    // if (
+    //   signupUserInput.role === undefined ||
+    //   signupUserInput.role === null ||
+    //   signupUserInput.role.length === 0
+    // ) {
+    const newRole = signupUserInput.role || ROLES.USER;
+
+    const createUserInput = {
+      ...signupUserInput,
+      hashedRefreshToken: '',
+      newRole,
+    };
+    if (role) {
+      if (
+        signupUserInput.role !== ROLES.SUPERADMIN &&
+        signupUserInput.role !== ROLES.ADMIN &&
+        signupUserInput.role !== ROLES.MANAGER &&
+        signupUserInput.role !== ROLES.USER
+      ) {
+        throw new BadRequestException(
+          `Please check the spelling ${signupUserInput.role}`,
+        );
+      }
+      if (role === ROLES.SUPERADMIN) {
+        return await this.userService.createUser(createUserInput);
+      } else if (role === ROLES.ADMIN) {
+        if (newRole !== ROLES.MANAGER && newRole !== ROLES.USER) {
+          console.log(newRole);
+          throw new BadRequestException(`You cannot create ${newRole}`);
+        }
+        return await this.userService.createUser(createUserInput);
+      } else if (role === ROLES.MANAGER) {
+        if (newRole !== 'USER') {
+          throw new BadRequestException(`You cannot create ${newRole}`);
+        }
+        return await this.userService.createUser(createUserInput);
+      } else if (role === ROLES.USER) {
+        throw new BadRequestException(
+          `You dont have access to create ${newRole}`,
+        );
+      }
+    }
+    // else {
+    //   return await this.userService.createUser(createUserInput);
+    // }
+
+    // }
   }
 
   async getUserByAccessToken(access_token: string): Promise<User> {
@@ -83,8 +169,9 @@ export class AuthService {
     return user;
   }
 
-  async createTokens(_id: string, email: string): Promise<LoginResponse> {
-    const payload = { email: email, _id: _id };
+
+  async createTokens(_id: string, email: string, role: string) {
+    const payload = { email: email, _id: _id, role: role };
     const access_token = this.jwtService.sign(payload, {
       secret: this.configService.get('JWT_SECRET'),
       expiresIn: `${this.configService.get('JWT_EXPIRATION')}s`,
@@ -115,7 +202,7 @@ export class AuthService {
     const refreshToken = await bcrypt.compare(refresh_token, user.hashedRefreshToken);
     console.log(refreshToken);
     if (refreshToken) {
-      const payload = { email: user.email, _id: user._id };
+      const payload = { email: user.email, _id: user._id, role: user.role };
       const access_token = this.jwtService.sign(payload, {
         secret: this.configService.get('JWT_SECRET'),
         expiresIn: `${this.configService.get('JWT_EXPIRATION')}s`,

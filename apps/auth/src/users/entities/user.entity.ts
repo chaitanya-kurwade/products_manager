@@ -1,6 +1,8 @@
 import { ObjectType, Field, GraphQLISODateTime } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { IsEmail, IsPhoneNumber, IsStrongPassword } from 'class-validator';
+import { ROLES } from '../enums/role.enum';
+
 
 @ObjectType()
 @Schema({ timestamps: true })
@@ -41,6 +43,10 @@ export class User {
   @Prop()
   @Field()
   password: string;
+
+  // @Prop({ type: String, enum: ROLES })
+  @Prop({ enum: ROLES, default: ROLES.USER, type: String })
+  role?: ROLES;
 
   // @Prop({ type: Date, required: false, default: new Date() })
   @Field(() => GraphQLISODateTime, { nullable: false })

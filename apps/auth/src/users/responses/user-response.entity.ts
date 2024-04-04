@@ -25,6 +25,10 @@ export class UserResponse {
   @Field({ nullable: true })
   phoneNumber?: string;
 
+  
+  role?: string;
+
+
   // @Prop({ type: Date, required: true, default: new Date() })
   @Field(() => GraphQLISODateTime, { nullable: false })
   createdAt: Date;

@@ -5,11 +5,11 @@ export class UpdateUserInput {
   @Field()
   _id: string;
 
-  @Field()
-  email: string;
+  @Field(() => String, { nullable: true })
+  firstName?: string;
 
-  @Field()
-  firstName: string;
+  @Field(() => String, { nullable: true })
+  lastName?: string;
 
   @Field()
   lastName: string;
@@ -19,4 +19,8 @@ export class UpdateUserInput {
 
   @Field({ nullable: true, defaultValue: false })
   isEmailVerified?: boolean;
+
+  @Field(() => String, { nullable: true })
+  role?: string;
+
 }

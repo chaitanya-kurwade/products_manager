@@ -25,28 +25,7 @@ export class CategoryService {
     if (existingCategory) {
       throw new BadGatewayException('Category already exists');
     }
-    // const parentCategory = await this.categoryModel.findOne({
-    //   _id: createCategoryInput.immediateParentId,
-    // });
-    // const ancestors = parentCategory.ancestors;
-    // if (ancestors) {
-    //   if (
-    //     createCategoryInput.immediateParentId !== null &&
-    //     createCategoryInput.immediateParentId !== undefined &&
-    //     createCategoryInput.immediateParentId.length === 0
-    //   ) {
-    //     // if (!ancestors.includes(createCategoryInput.immediateParentId)) {
-    //     //   ancestors.unshift(createCategoryInput.immediateParentId);
-    //     // }
-    //     const ancestor = new CategoryAncestor();
-    //     if (!(ancestor.ancestorId === parentCategory._id)) {
-    //       ancestor.ancestorName = parentCategory.categoryName.toString();
-    //       ancestor.ancestorId = parentCategory._id.toString();
-    //       ancestors.unshift(ancestor);
-    //     }
-    //   }
-    // }
-    //////////////////////////
+
     let ancestors = [];
     if (createCategoryInput.immediateParentId) {
       const parentCategory = await this.categoryModel.findById(
@@ -77,14 +56,25 @@ export class CategoryService {
     return newCategory;
   }
 
-  async findAll(
+  async getAllCategories(
     paginationInput: PaginationInput,
     searchFields?: string[],
+    userRole?: string,
   ): Promise<CategoryList> {
     const { page, limit, search, sortOrder } = paginationInput;
 
-    let query = this.categoryModel.find();
-    let totalCountQuery = this.categoryModel.find();
+    let query = this.categoryModel.find({ status: 'PUBLISHED' });
+    let totalCountQuery = this.categoryModel.find({ status: 'PUBLISHED' });
+
+    if (userRole === 'SUPER_ADMIN') {
+      query = query.where('status').in(['PUBLISHED', 'ARCHIVED']);
+      totalCountQuery = totalCountQuery
+        .where('status')
+        .in(['PUBLISHED', 'ARCHIVED']);
+    } else {
+      query = query.where('status').equals('PUBLISHED');
+      totalCountQuery = totalCountQuery.where('status').equals('PUBLISHED');
+    }
 
     // Apply search if search term is provided
     // if (search && searchFields.length >= 0) {
@@ -123,24 +113,124 @@ export class CategoryService {
     return { categories, totalCount };
   }
 
-  async getCategoryById(_id: string) {
+  async getCategoryById(_id: string, role?: string) {
     const category = await this.categoryModel.findById(_id);
-    if (!category) {
-      throw new NotFoundException('category not found with _id: ' + _id);
+    if (role === 'SUPER_ADMIN') {
+      return category;
+    }
+    if (!category || category.status !== 'PUBLISHED') {
+      throw new NotFoundException(
+        'category not available with _id: ' + _id + ', or it is not published',
+      );
     }
     return category;
   }
 
-  async update(_id: string, updateCategoryInput: UpdateCategoryInput) {
-    const category = await this.categoryModel.findByIdAndUpdate(
+  async getChildCategoryByCategoryId(categoryId: string, role?: string) {
+    const childCategories = await this.categoryModel.find({
+      immediateParentId: categoryId,
+    });
+    // if (!childCategories || childCategories.length === 0) {
+    //   throw new NotFoundException('Child category not found');
+    // }
+    if (role === 'SUPER_ADMIN') {
+      return childCategories;
+    } else {
+      const categories =
+        childCategories.filter((category) => category.status === 'PUBLISHED') ||
+        [];
+      return categories;
+    }
+  }
+
+  async updateCategoryById(
+    _id: string,
+    updateCategoryInput: UpdateCategoryInput,
+    role?: string,
+  ) {
+    if (role === 'SUPER_ADMIN') {
+      const category = await this.categoryModel.findByIdAndUpdate(
+        _id,
+        updateCategoryInput,
+        { new: true },
+      );
+      return category.save();
+    }
+
+    const category = await this.categoryModel.findById(_id);
+    if (!category || category.status !== 'PUBLISHED') {
+      throw new BadGatewayException(
+        `Category not found with id: ${_id} or Category status is not 'PUBLISHED'`,
+      );
+    }
+    const updatedCategory = await this.categoryModel.findByIdAndUpdate(
       _id,
       updateCategoryInput,
+      { new: true },
     );
-    if (!category) {
-      throw new BadGatewayException('category not updated, _id: ' + _id);
-    }
-    return category;
+
+    return updatedCategory;
   }
+
+  /*
+   
+  async updateCategoryById(
+    _id: string,
+    updateCategoryInput: UpdateCategoryInput,
+    role?: string,
+  ) {
+    if (role === 'SUPER_ADMIN') {
+      const category = await this.categoryModel.findByIdAndUpdate(
+        _id,
+        updateCategoryInput,
+        { new: true },
+      );
+      if (updateCategoryInput.immediateParentId) {
+        const immediateParentId = updateCategoryInput.immediateParentId;
+        const immediateParent =
+          await this.categoryModel.findById(immediateParentId);
+        // category.ancestors. map((cats) => {
+        //   cats.id === immediateParent._id,
+        //     cats.categoryName === immediateParent.categoryName;
+        // });
+
+        const categoryName = immediateParent.categoryName;
+        const id = immediateParent._id;
+        // const sortingOrder = immediateParent.
+        const ancestor = { id, categoryName };
+        category.ancestors?.unshift(ancestor);
+      }
+      return category;
+    }
+
+    const category = await this.categoryModel.findById(updateCategoryInput._id);
+    if (!category || category.status !== 'PUBLISHED') {
+      throw new BadGatewayException(
+        `Category not found with id: ${_id} or Category status is not 'PUBLISHED'`,
+      );
+    }
+
+    const updatedCategory = await this.categoryModel.findByIdAndUpdate(
+      _id,
+      updateCategoryInput,
+      { new: true },
+    );
+
+    if (updateCategoryInput.immediateParentId) {
+      const immediateParentId = updateCategoryInput.immediateParentId;
+      const immediateParent =
+        await this.categoryModel.findById(immediateParentId);
+      const categoryName = immediateParent.categoryName;
+      const id = immediateParent._id;
+      // const sortingOrder = immediateParent.
+      const ancestor = { id, categoryName };
+      updatedCategory.ancestors?.unshift(ancestor);
+    }
+    return updatedCategory;
+  }
+    
+    
+  */
 
   async remove(_id: string) {
     const category = await this.categoryModel.findByIdAndDelete(_id);
@@ -148,5 +238,11 @@ export class CategoryService {
       throw new NotFoundException('Catogory not deleted, _id: ' + _id);
     }
     return category;
+  }
+
+  async convertPublishedToArchive(_id: string) {
+    return this.categoryModel.findByIdAndUpdate(_id, {
+      $set: { status: 'ARCHIVED' },
+    });
   }
 }
