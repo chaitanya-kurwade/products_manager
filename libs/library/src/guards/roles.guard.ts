@@ -25,9 +25,7 @@ export class RolesGuard implements CanActivate {
 
     const ctx = GqlExecutionContext.create(context);
 
-    const token = await ctx
-      .getContext()
-      .req.headers['authorization']?.split(' ')[1];
+    const token = await ctx.getContext().req.headers['authorization']?.split(' ')[1];
     // console.log(token, 'token');
 
     if (!token) {

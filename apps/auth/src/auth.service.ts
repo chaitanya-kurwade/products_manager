@@ -14,6 +14,7 @@ import { EmailserviceService } from 'apps/emailservice/src/emailservice.service'
 import { LoginResponse } from './users/responses/user-login.response.entity';
 import { UserResponse } from './users/responses/user-response.entity';
 import { ROLES } from './users/enums/role.enum';
+import { VerificationService } from './verification/verification.service';
 
 @Injectable()
 export class AuthService {
@@ -22,6 +23,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly emailService: EmailserviceService,
+    private readonly verificationService: VerificationService,
   ) {}
 
   async validate(email: string, password: string) {
@@ -33,16 +35,26 @@ export class AuthService {
     return pass ? user : null;
   }
 
-  async login(email: string, password: string): Promise<LoginResponse> {
-    const user = await this.userService.getUserByEmailId(email);
+  async findOneUser(email?: string, username?: string, phoneNumber?: string): Promise<User | null> {
+    const user = await this.userService.findOneUser(email, username, phoneNumber);
+    return user;
+  }
 
+  async login(credential: string, password: string): Promise<LoginResponse> {
+    const user = await this.userService.getByUsernameOrPhoneOrEmail(credential);
     if (!user) {
-      throw new UnauthorizedException('Invalid credentials : email not found');
+      throw new UnauthorizedException(`Invalid credentials : ${credential} not found`);
     }
     if (user) {
       const isPasswordValid = await bcrypt.compare(password, user.password);
+      console.log({ user });
+
       if (!isPasswordValid) {
         throw new UnauthorizedException('Invalid credentials : wrong password');
+      }
+      if (!user.isEmailVerified) {
+        this.verificationService.sendEmailToVerifyEmail(user.email);
+        throw new BadRequestException('please verify your email');
       }
       const { access_token, refresh_token } = await this.createTokens(
         user._id,
@@ -57,6 +69,7 @@ export class AuthService {
       const role = user.role;
       const createdAt = user.createdAt;
       const updatedAt = user.updatedAt;
+      const isEmailVerified = user.isEmailVerified;
 
       const userResponse: UserResponse = {
         _id,
@@ -66,21 +79,18 @@ export class AuthService {
         role,
         createdAt,
         updatedAt,
+        isEmailVerified,
       };
 
       return { access_token, refresh_token, userResponse };
     }
   }
 
-  async signup(
-    signupUserInput: CreateUserInput,
-    role?: string,
-  ): Promise<UserResponse> {
-    const user = await this.userService.findOne(
-      null,
-      signupUserInput.email,
-      null,
-    );
+  async signup(signupUserInput: CreateUserInput, role?: string): Promise<UserResponse> {
+    console.log({signupUserInput});
+    
+    const user = await this.userService.getByUsernameOrPhoneOrEmail(signupUserInput?.email);
+    // console.log({ signupUserInput });
 
     if (user) {
       throw new BadRequestException('User already exists');
@@ -97,6 +107,8 @@ export class AuthService {
       hashedRefreshToken: '',
       newRole,
     };
+    console.log({createUserInput});
+    
     if (role) {
       if (
         signupUserInput.role !== ROLES.SUPERADMIN &&
@@ -104,9 +116,7 @@ export class AuthService {
         signupUserInput.role !== ROLES.MANAGER &&
         signupUserInput.role !== ROLES.USER
       ) {
-        throw new BadRequestException(
-          `Please check the spelling ${signupUserInput.role}`,
-        );
+        throw new BadRequestException(`Please check the spelling ${signupUserInput.role}`);
       }
       if (role === ROLES.SUPERADMIN) {
         return await this.userService.createUser(createUserInput);
@@ -122,9 +132,7 @@ export class AuthService {
         }
         return await this.userService.createUser(createUserInput);
       } else if (role === ROLES.USER) {
-        throw new BadRequestException(
-          `You dont have access to create ${newRole}`,
-        );
+        throw new BadRequestException(`You dont have access to create ${newRole}`);
       }
     }
     // else {
@@ -168,20 +176,14 @@ export class AuthService {
     const salt = await bcrypt.genSalt(saltRounds);
     const hashedRefreshToken = await bcrypt.hash(refreshToken, salt);
     const user = await this.userService.getUserByEmailId(email);
-    return await this.userService.updateRefreshTokenFromUser(
-      user.email,
-      hashedRefreshToken,
-    );
+    return await this.userService.updateRefreshTokenFromUser(user.email, hashedRefreshToken);
   }
 
   async refreshAccessToken(refresh_token: string): Promise<string> {
     const payload = this.jwtService.decode(refresh_token);
     const { email } = payload;
     const user = await this.userService.getUserByEmailId(email);
-    const refreshToken = await bcrypt.compare(
-      refresh_token,
-      user.hashedRefreshToken,
-    );
+    const refreshToken = await bcrypt.compare(refresh_token, user.hashedRefreshToken);
     console.log(refreshToken);
     if (refreshToken) {
       const payload = { email: user.email, _id: user._id, role: user.role };
@@ -209,4 +211,86 @@ export class AuthService {
 
   //   this.emailService.sendEmailToClient(email, reset_token);
   // }
+
+  // google login
+  async googleLogin(req: { user: any }): Promise<any> {
+    if (!req.user) {
+      throw new Error('User not found!!!');
+    }
+
+    const payload = {
+      email: req.user.email,
+      firstName: req.user.firstName,
+    };
+
+    const access_token = this.jwtService.sign(payload, {
+      secret: this.configService.get('JWT_SECRET'),
+      expiresIn: `${this.configService.get('JWT_EXPIRATION')}s`,
+    });
+    console.log('access_token', access_token, '\n\n');
+
+    const refresh_token = this.jwtService.sign(
+      { ...payload, access_token },
+      {
+        secret: this.configService.get('REFRESH_TOKEN_SECRET'),
+        expiresIn: `${this.configService.get('JWT_REFRESH_EXPIRATION')}d`,
+      },
+    );
+    console.log('refresh_token', refresh_token);
+    const user = await this.userService.createUserViaGoogle({
+      email: req.user.email,
+      firstName: req.user.firstName,
+      lastName: req.user.lastName,
+    });
+    await this.storeRefreshToken(user.email, refresh_token);
+    if (user) {
+      return { user, access_token, refresh_token };
+    } else {
+      throw new NotFoundException('somthing is not good');
+    }
+  }
+
+  // login with otp
+  async loginViaOtpAndPhoneOrEmail(phoneOrEmail: string): Promise<string> {
+    const user = await this.userService.getUserByPhoneOrEmailOrUsername(phoneOrEmail);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return await this.userService.sendOtpToLogin(phoneOrEmail);
+  }
+
+  async validateOtp(otp: number): Promise<LoginResponse> {
+    const user = await this.userService.validateOtp(otp);
+    const tokens = await this.createTokens(user._id, user.email, user.role);
+    // console.log(user.email);
+
+    const access_token = tokens.access_token;
+    const refresh_token = tokens.refresh_token;
+    const _id = user._id;
+    const email = user.email;
+    const firstName = user.firstName;
+    const lastName = user.lastName;
+    const role = user.role;
+    const createdAt = user.createdAt;
+    const updatedAt = user.updatedAt;
+    const isEmailVerified = user.isEmailVerified;
+
+    const userResponse: UserResponse = {
+      _id,
+      email,
+      firstName,
+      lastName,
+      role,
+      createdAt,
+      updatedAt,
+      isEmailVerified,
+    };
+
+    return { access_token, refresh_token, userResponse };
+  }
+
+  // verify email
+  async verifyEmail(token: string): Promise<string> {
+    return this.verificationService.verifyEmail(token);
+  }
 }

@@ -3,10 +3,7 @@ import { UploadimageController } from './upload-image.controller';
 import { UploadimageService } from './upload-image.service';
 import { ConfigModule } from '@nestjs/config';
 import { GraphQLModule } from '@nestjs/graphql';
-import {
-  ApolloFederationDriver,
-  ApolloFederationDriverConfig,
-} from '@nestjs/apollo';
+import { ApolloFederationDriver, ApolloFederationDriverConfig } from '@nestjs/apollo';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 import { MulterModule } from '@nestjs/platform-express';
 import { JwtAuthGuard, JwtStrategy } from 'common/library';
@@ -32,10 +29,6 @@ import { APP_GUARD } from '@nestjs/core';
     }),
   ],
   controllers: [UploadimageController],
-  providers: [
-    UploadimageService,
-    JwtStrategy,
-    { provide: APP_GUARD, useClass: JwtAuthGuard },
-  ],
+  providers: [UploadimageService, JwtStrategy, { provide: APP_GUARD, useClass: JwtAuthGuard }],
 })
 export class UploadimageModule {}

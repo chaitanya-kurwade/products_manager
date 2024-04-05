@@ -9,10 +9,7 @@ import { InjectModel } from '@nestjs/mongoose';
 
 import { CreateMasterProductInput } from './inputs/create-master-product.input';
 import { UpdateMasterProductInput } from './inputs/update-masterproduct.input';
-import {
-  MasterProduct,
-  MasterProductDocument,
-} from './entities/master-product.entity';
+import { MasterProduct, MasterProductDocument } from './entities/master-product.entity';
 import { PaginationInput } from 'common/library';
 import { CategoryService } from '../category/category.service';
 import { MasterProductList } from './responses/master-products-list.response.entity';
@@ -27,9 +24,7 @@ export class MasterProductService {
     private readonly subProductService: SubProductService,
   ) {}
 
-  async createMasterProduct(
-    createMasterProductInput: CreateMasterProductInput,
-  ) {
+  async createMasterProduct(createMasterProductInput: CreateMasterProductInput) {
     const category = await this.categoryService.getCategoryById(
       createMasterProductInput.categoryId,
     );
@@ -45,9 +40,7 @@ export class MasterProductService {
       sku: createMasterProductInput.sku,
     });
     if (existingSku) {
-      throw new BadGatewayException(
-        'Master product already exists with this sku:' + existingSku,
-      );
+      throw new BadGatewayException('Master product already exists with this sku:' + existingSku);
     }
     try {
       const product = await this.masterProductModel.create({
@@ -66,8 +59,7 @@ export class MasterProductService {
     categoryIds?: string[],
     userRole?: string,
   ): Promise<MasterProductList> {
-    const { page, limit, search, sortOrder, minPrice, maxPrice } =
-      paginationInput;
+    const { page, limit, search, sortOrder, minPrice, maxPrice } = paginationInput;
 
     // query starts form here
     let query = this.masterProductModel.find({ status: 'PUBLISHED' });
@@ -75,9 +67,7 @@ export class MasterProductService {
 
     if (userRole === 'SUPER_ADMIN') {
       query = query.where('status').in(['PUBLISHED', 'ARCHIVED']);
-      totalCountQuery = totalCountQuery
-        .where('status')
-        .in(['PUBLISHED', 'ARCHIVED']);
+      totalCountQuery = totalCountQuery.where('status').in(['PUBLISHED', 'ARCHIVED']);
     } else {
       query = query.where('status').equals('PUBLISHED');
       totalCountQuery = totalCountQuery.where('status').equals('PUBLISHED');
@@ -90,11 +80,10 @@ export class MasterProductService {
       masterProductId: string[];
     };
     if (minPrice !== 0 && maxPrice !== 0) {
-      getMinMaxPrices =
-        await this.subProductService.getMinMaxPricesForMasterProducts(
-          minPrice,
-          maxPrice,
-        );
+      getMinMaxPrices = await this.subProductService.getMinMaxPricesForMasterProducts(
+        minPrice,
+        maxPrice,
+      );
       getMinMaxPrices.minPrice;
       getMinMaxPrices.maxPrice;
       fetchedMasterProductIds = getMinMaxPrices.masterProductId;
@@ -102,24 +91,17 @@ export class MasterProductService {
       (minPrice === null && maxPrice === null) ||
       (minPrice === undefined && maxPrice === undefined)
     ) {
-      getMinMaxPrices =
-        await this.subProductService.getMinMaxPricesForMasterProducts(
-          minPrice,
-          maxPrice,
-        );
+      getMinMaxPrices = await this.subProductService.getMinMaxPricesForMasterProducts(
+        minPrice,
+        maxPrice,
+      );
       getMinMaxPrices.minPrice;
       getMinMaxPrices.maxPrice;
     }
     // getting masterProducts as per subProduct's price
-    if (
-      minPrice !== undefined &&
-      maxPrice !== undefined &&
-      fetchedMasterProductIds
-    ) {
+    if (minPrice !== undefined && maxPrice !== undefined && fetchedMasterProductIds) {
       query = query.where('_id').in(fetchedMasterProductIds);
-      totalCountQuery = totalCountQuery
-        .where('_id')
-        .in(fetchedMasterProductIds);
+      totalCountQuery = totalCountQuery.where('_id').in(fetchedMasterProductIds);
     }
     // categoryIds[] wise search
     if (categoryIds && categoryIds.length !== 0) {
@@ -156,12 +138,8 @@ export class MasterProductService {
 
     const masterProducts = await query.exec();
     const totalCount = await totalCountQuery.countDocuments().exec();
-    const minPriceFromDb = await (
-      await this.subProductService.getMinMaxPricesFromDB()
-    ).minPrice;
-    const maxPriceFromDb = await (
-      await this.subProductService.getMinMaxPricesFromDB()
-    ).maxPrice;
+    const minPriceFromDb = await (await this.subProductService.getMinMaxPricesFromDB()).minPrice;
+    const maxPriceFromDb = await (await this.subProductService.getMinMaxPricesFromDB()).maxPrice;
 
     return {
       masterProducts,
@@ -204,12 +182,11 @@ export class MasterProductService {
         `MasterProduct not found with id: ${_id} or MasterProduct status is not 'PUBLISHED'`,
       );
     }
-    const updatedMasterProduct =
-      await this.masterProductModel.findByIdAndUpdate(
-        _id,
-        updateMasterProductInput,
-        { new: true },
-      );
+    const updatedMasterProduct = await this.masterProductModel.findByIdAndUpdate(
+      _id,
+      updateMasterProductInput,
+      { new: true },
+    );
     return updatedMasterProduct;
   }
 
@@ -225,12 +202,8 @@ export class MasterProductService {
     return product.save();
   }
 
-  async deleteMasterProductAndItsSubProducts(
-    masterProductId: string,
-  ): Promise<string> {
-    await this.subProductService.deleteSubProductsByMasterProductId(
-      masterProductId,
-    );
+  async deleteMasterProductAndItsSubProducts(masterProductId: string): Promise<string> {
+    await this.subProductService.deleteSubProductsByMasterProductId(masterProductId);
     await this.deleteMasterProductById(masterProductId);
     console.log(masterProductId);
     return 'master product and its sub-products are deleted successfully';
@@ -239,14 +212,11 @@ export class MasterProductService {
   async deleteCategoryAndMasterProduct(categoryId: string): Promise<string> {
     const category = await this.categoryService.getCategoryById(categoryId);
     if (!category) {
-      throw new NotFoundException(
-        'category not found for this id: ' + categoryId,
-      );
+      throw new NotFoundException('category not found for this id: ' + categoryId);
     }
 
     if (category) {
-      const childCategories =
-        await this.categoryService.getChildCategoryByCategoryId(categoryId);
+      const childCategories = await this.categoryService.getChildCategoryByCategoryId(categoryId);
 
       const masterProducts = await Promise.all(
         childCategories.map((childCategory) => {
@@ -279,8 +249,7 @@ export class MasterProductService {
     }
     await Promise.all(
       masterProduct.map(
-        async (product) =>
-          await this.deleteMasterProductAndItsSubProducts(product._id),
+        async (product) => await this.deleteMasterProductAndItsSubProducts(product._id),
       ),
     );
     await this.categoryService.remove(categoryId);

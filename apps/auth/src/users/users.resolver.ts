@@ -12,6 +12,7 @@ import { ContextService } from 'common/library/service/context.service';
 import { Request } from 'express';
 import { UsersList } from './responses/user-list.response';
 
+
 @Resolver(() => User)
 export class UsersResolver {
   constructor(private readonly usersService: UsersService) {}
@@ -21,6 +22,7 @@ export class UsersResolver {
   //   return this.usersService.create(createUserInput);
   // }
 
+
   @Roles(ROLES.ADMIN, ROLES.MANAGER, ROLES.SUPERADMIN)
   @Query(() => UsersList, { name: 'getAllUsers' })
   async getAllUsers(
@@ -29,6 +31,7 @@ export class UsersResolver {
     paginationInput: PaginationInput,
     @Args('searchFields', { type: () => [String], nullable: true })
     searchFields?: string[],
+
   ): Promise<UsersList> {
     const { role } = await new ContextService().getContextInfo(context.req);
 
@@ -79,19 +82,19 @@ export class UsersResolver {
 
   @Roles(ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.MANAGER)
   @Mutation(() => String, { name: 'userLogout' })
-  userLogout(@Args('email') email: string) {
-    return this.usersService.userLogout(email);
+  async userLogout(@Args('email') email: string) {
+    return await this.usersService.userLogout(email);
   }
 
-  @Public()
-  @Mutation(() => SendEmail, { name: 'forgetPasswordSendEmail' })
-  async forgetPasswordSendEmail(@Args('email') email: string) {
-    const user = await this.usersService.getUserByEmailId(email);
-    if (!user) {
-      throw new NotFoundException(' user not found ');
-    }
-    return await this.usersService.forgetPassword(user.email);
-  }
+  // @Public()
+  // @Mutation(() => String, { name: 'forgetPassword' })
+  // async forgetPasswordSendEmail(@Args('email') email: string) {
+  //   const user = await this.usersService.getUserByEmailId(email);
+  //   if (!user) {
+  //     throw new NotFoundException('user not found');
+  //   }
+  //   return await this.usersService.forgetPassword(user.email);
+  // }
 
   // @Mutation(() => String, { name: 'receiveForgetPasswordToken' })
   // async receiveForgetPasswordToken(newPassword: string, reset_token: string) {

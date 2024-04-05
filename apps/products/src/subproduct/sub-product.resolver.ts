@@ -16,9 +16,7 @@ export class SubProductResolver {
 
   @Roles(ROLES.ADMIN, ROLES.SUPERADMIN)
   @Mutation(() => SubProduct)
-  createSubProduct(
-    @Args('createSubProductInput') createSubProductInput: CreateSubProductInput,
-  ) {
+  createSubProduct(@Args('createSubProductInput') createSubProductInput: CreateSubProductInput) {
     return this.subProductService.createSubProduct(createSubProductInput);
   }
 
@@ -48,15 +46,9 @@ export class SubProductResolver {
 
   @Roles(ROLES.ADMIN, ROLES.SUPERADMIN, ROLES.MANAGER)
   @Query(() => SubProduct, { name: 'getOneSubProductById' })
-  async getOneSubProductById(
-    @Context() context: { req: Request },
-    @Args('_id') _id: string,
-  ) {
+  async getOneSubProductById(@Context() context: { req: Request }, @Args('_id') _id: string) {
     const { role } = await new ContextService().getContextInfo(context.req);
-    const subProduct = await this.subProductService.getOneSubProductById(
-      _id,
-      role,
-    );
+    const subProduct = await this.subProductService.getOneSubProductById(_id, role);
     return subProduct;
   }
 
@@ -68,10 +60,7 @@ export class SubProductResolver {
   ) {
     const { role } = await new ContextService().getContextInfo(context.req);
     const subProductsByMasterProductId =
-      await this.subProductService.getSubProductsByMasterProductId(
-        masterProductId,
-        role,
-      );
+      await this.subProductService.getSubProductsByMasterProductId(masterProductId, role);
 
     return subProductsByMasterProductId;
   }
