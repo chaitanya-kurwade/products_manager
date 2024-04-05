@@ -362,9 +362,22 @@ export class UsersService {
     return user;
   }
 
-  async findOneUser(email?: string, username?: string, phoneNumber?: string): Promise<User | null> {
-    console.log(email, phoneNumber, username);
+  async findOneUserForLogin(userCredential?: string): Promise<User | null> {
+    const user = await this.userModel.findOne({
+      // ...(email && { email }),
+      // ...(username && { username }),
+      // ...(phoneNumber && { phoneNumber }),
+      $or: [
+        { email: userCredential },
+        { phoneNumber: userCredential },
+        { username: userCredential },
+      ],
+    });
+    console.log('findOneUser', { user });
+    return user;
+  }
 
+  async findOneUserForSignup(email?: string, username?: string, phoneNumber?: string): Promise<User | null> {
     const user = await this.userModel.findOne({
       // ...(email && { email }),
       // ...(username && { username }),

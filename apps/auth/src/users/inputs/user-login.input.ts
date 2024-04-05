@@ -3,15 +3,15 @@ import { IsStrongPassword } from 'class-validator';
 
 @InputType()
 export class UserLoginInput {
-  @Field({ nullable: true })
-  email?: string;
+  @Field()
+  userCredential?: string;
 
-  @Field({ nullable: true })
-  username?: string;
+  // @Field({ nullable: true })
+  // username?: string;
 
-  @Field({ nullable: true })
-  // @IsPhoneNumber('IN')
-  phoneNumber?: string;
+  // @Field({ nullable: true })
+  // // @IsPhoneNumber('IN')
+  // phoneNumber?: string;
 
   @Field()
   @IsStrongPassword()

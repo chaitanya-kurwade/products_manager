@@ -19,11 +19,7 @@ export class AuthResolver {
   @Mutation(() => LoginResponse)
   @Public()
   async login(@Args('userLoginInput') userLoginInput: UserLoginInput): Promise<LoginResponse> {
-    const user = await this.authService.findOneUser(
-      userLoginInput.email,
-      userLoginInput.username,
-      userLoginInput.phoneNumber,
-    );
+    const user = await this.authService.findOneUserForLogin(userLoginInput.userCredential);
 
     if (!user) {
       throw new NotFoundException('User not found');
@@ -45,9 +41,9 @@ export class AuthResolver {
     // if (!signupUserInput?.email) {
     //   throw new BadGatewayException('The email already exists');
     // }
-    const existingUser = await this.authService.findOneUser(
-      signupUserInput.email,
+    const existingUser = await this.authService.findOneUserForSignup(
       signupUserInput.username,
+      signupUserInput.email,
       signupUserInput.phoneNumber,
     );
     console.log({ existingUser });

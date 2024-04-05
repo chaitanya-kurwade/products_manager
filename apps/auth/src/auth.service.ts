@@ -35,8 +35,13 @@ export class AuthService {
     return pass ? user : null;
   }
 
-  async findOneUser(email?: string, username?: string, phoneNumber?: string): Promise<User | null> {
-    const user = await this.userService.findOneUser(email, username, phoneNumber);
+  async findOneUserForLogin(userCredential?: string): Promise<User | null> {
+    const user = await this.userService.findOneUserForLogin(userCredential);
+    return user;
+  }
+
+  async findOneUserForSignup(email?: string, username?: string, phoneNumber?: string): Promise<User | null> {
+    const user = await this.userService.findOneUserForSignup(email, username, phoneNumber);
     return user;
   }
 

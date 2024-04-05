@@ -3,7 +3,6 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { IsEmail, IsPhoneNumber, IsStrongPassword } from 'class-validator';
 import { ROLES } from '../enums/role.enum';
 
-
 @ObjectType()
 @Schema({ timestamps: true })
 export class User {
@@ -40,6 +39,39 @@ export class User {
   @Prop()
   @Field()
   password: string;
+
+  @Prop()
+  @Field({ nullable: true })
+  addLineOne?: string;
+
+  @Prop()
+  @Field({ nullable: true })
+  addLineTwo?: string;
+
+  @Prop()
+  @Field({ nullable: true })
+  pin?: string;
+
+  @Prop()
+  @Field({ nullable: true })
+  state?: string;
+
+  @Prop()
+  @Field({ nullable: true })
+  city?: string;
+
+  @Prop()
+  @Field({ nullable: true })
+  country?: string;
+
+  @Prop()
+  @Field({ nullable: true })
+  landMark?: string;
+
+  //image
+  @Prop()
+  @Field({ nullable: true })
+  avatarUrl?: string;
 
   // @Prop({ type: String, enum: ROLES })
   @Prop({ enum: ROLES, default: ROLES.USER, type: String })
