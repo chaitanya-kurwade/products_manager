@@ -9,7 +9,7 @@ export class SubProductImage {
   altText: string;
 
   @Field({ nullable: false })
-  order: string;
+  order: number;
 
   @Field({ nullable: false })
   img: string;
