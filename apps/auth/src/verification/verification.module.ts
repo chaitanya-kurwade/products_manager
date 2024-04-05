@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { VerificationService } from './verification.service';
 import { VerificationResolver } from './verification.resolver';
 import {
@@ -11,7 +11,7 @@ import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
-    UsersModule,
+    forwardRef(() => UsersModule),
     ConfigModule.forRoot({ isGlobal: true }),
     MongooseModule.forFeature([
       {

@@ -1,4 +1,10 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+  forwardRef,
+} from '@nestjs/common';
 import { CreateUserInput } from './inputs/create-user.input';
 import { UpdateUserInput } from './inputs/update-user.input';
 import { User, UserDocument } from './entities/user.entity';
@@ -13,6 +19,7 @@ import { CreateUserViaGoogleInput } from './inputs/create-user-via-google.input'
 import { EmailserviceService } from 'apps/emailservice/src/emailservice.service';
 import { ConfigService } from '@nestjs/config';
 import { ROLES } from './enums/role.enum';
+import { VerificationService } from '../verification/verification.service';
 
 @Injectable()
 export class UsersService {
@@ -22,6 +29,8 @@ export class UsersService {
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
     private readonly configService: ConfigService,
     private readonly emailService: EmailserviceService,
+    @Inject(forwardRef(() => VerificationService))
+    private readonly verificationService: VerificationService,
   ) {
     this.transporter = nodemailer.createTransport({
       host: `${this.configService.get('SMTP_HOST')}`,
@@ -35,27 +44,29 @@ export class UsersService {
   }
 
   async createUser(createUserInput: CreateUserInput): Promise<User> {
-    if (!createUserInput.email) {
+    if (!createUserInput?.email) {
       throw new BadRequestException('user not created');
     }
     // const { email, username, phoneNumber } = createUserInput;
     const email = createUserInput.email;
     const username = createUserInput.username;
     const phoneNumber = createUserInput.phoneNumber;
-    // console.log({ createUserInput });
+    console.log({ createUserInput1: createUserInput });
 
     const user = await this.userModel.findOne({
-      $and: [{ email: email }, { phoneNumber: phoneNumber }, { username: username }],
+      $or: [{ email: email }, { phoneNumber: phoneNumber }, { username: username }],
     });
     if (user) {
       console.log(user.username, user.phoneNumber, user.email);
       throw new BadRequestException('user not created, please pass valid username or phone number');
     }
+
     const password = await bcrypt.hash(createUserInput.password, 10); // 10 = salt
-    return await this.userModel.create({
+    const newUser = await this.userModel.create({
       ...createUserInput,
       password,
     });
+    return newUser;
   }
 
   async getAllUsers(paginationInput?: PaginationInput, searchFields?: string[], role?: string) {
@@ -206,6 +217,8 @@ export class UsersService {
   }
 
   async getByUsernameOrPhoneOrEmail(credential: string) {
+    console.log({ credential });
+
     const user = await this.userModel.findOne({
       $or: [{ email: credential }, { phoneNumber: credential }, { username: credential }],
     });

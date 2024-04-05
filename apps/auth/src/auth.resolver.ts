@@ -50,20 +50,22 @@ export class AuthResolver {
       signupUserInput.username,
       signupUserInput.phoneNumber,
     );
-    console.log(existingUser);
+    console.log({ existingUser });
 
     if (
       signupUserInput?.phoneNumber &&
+      existingUser &&
       signupUserInput?.phoneNumber === existingUser?.phoneNumber
     ) {
       throw new BadGatewayException('The phone number already exists');
     }
-    if (signupUserInput.email === existingUser?.email) {
+    if (signupUserInput?.email === existingUser?.email) {
       throw new BadGatewayException('The email already exists');
     }
     if (signupUserInput?.username && signupUserInput.username === existingUser?.username) {
       throw new BadGatewayException('The username already exists');
     }
+    console.log('here');
 
     const { role } = await new ContextService().getContextInfo(context.req);
     if (existingUser === null) {

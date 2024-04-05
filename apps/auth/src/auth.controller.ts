@@ -4,7 +4,7 @@ import { Public } from 'common/library';
 import { AuthGuard } from '@nestjs/passport';
 import { VerificationService } from './verification/verification.service';
 
-@Controller()
+@Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,

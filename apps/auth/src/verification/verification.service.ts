@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
 // import { CreateVerificationInput } from './dto/create-verification.input';
 // import { UpdateVerificationInput } from './dto/update-verification.input';
 import { InjectModel } from '@nestjs/mongoose';
@@ -17,6 +17,7 @@ export class VerificationService {
   constructor(
     @InjectModel(Verification.name)
     private readonly verificationModel: Model<VerificationDocument>,
+    @Inject(forwardRef(() => UsersService))
     private readonly usersService: UsersService,
     private readonly configService: ConfigService,
   ) {
@@ -55,7 +56,7 @@ export class VerificationService {
 
   async sendEmailToVerifyEmail(email: string): Promise<string> {
     const secretKey = await this.configService.get('VERIFY_EMAIL_SECRET_KEY');
-    const user = await this.usersService.getUserByEmailId(email);
+    const user = await this.usersService.getByUsernameOrPhoneOrEmail(email);
     if (!user) {
       throw new NotFoundException('user not found to verify email');
     }

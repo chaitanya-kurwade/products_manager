@@ -52,6 +52,10 @@ export class AuthService {
       if (!isPasswordValid) {
         throw new UnauthorizedException('Invalid credentials : wrong password');
       }
+      if (!user.isEmailVerified) {
+        this.verificationService.sendEmailToVerifyEmail(user.email);
+        throw new BadRequestException('please verify your email');
+      }
       const { access_token, refresh_token } = await this.createTokens(
         user._id,
         user.email,
@@ -83,7 +87,9 @@ export class AuthService {
   }
 
   async signup(signupUserInput: CreateUserInput, role?: string): Promise<UserResponse> {
-    const user = await this.userService.getByUsernameOrPhoneOrEmail(signupUserInput.email);
+    console.log({signupUserInput});
+    
+    const user = await this.userService.getByUsernameOrPhoneOrEmail(signupUserInput?.email);
     // console.log({ signupUserInput });
 
     if (user) {
@@ -101,6 +107,8 @@ export class AuthService {
       hashedRefreshToken: '',
       newRole,
     };
+    console.log({createUserInput});
+    
     if (role) {
       if (
         signupUserInput.role !== ROLES.SUPERADMIN &&
