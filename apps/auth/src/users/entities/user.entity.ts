@@ -7,9 +7,6 @@ import { ROLES } from '../enums/role.enum';
 @ObjectType()
 @Schema({ timestamps: true })
 export class User {
-  save() {
-    throw new Error('Method not implemented.');
-  }
   @Field()
   _id: string;
 

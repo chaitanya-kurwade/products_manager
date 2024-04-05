@@ -35,25 +35,20 @@ export class AuthService {
     return pass ? user : null;
   }
 
-  async enterUsernameOrEmailOrPhoneNumberToLogin(
-    credential: string,
-    password: string,
-  ): Promise<LoginResponse> {
-    const user = await this.userService.enterUsernameOrEmailOrPhoneNumberToLogin(credential);
-    if (!user) {
-      throw new NotFoundException('user not found, please pass valid credentials');
-    }
-    return this.login(user.email, password);
+  async findOneUser(email?: string, username?: string, phoneNumber?: string): Promise<User | null> {
+    const user = await this.userService.findOneUser(email, username, phoneNumber);
+    return user;
   }
 
-  async login(email: string, password: string): Promise<LoginResponse> {
-    const user = await this.userService.getUserByEmailId(email);
-
+  async login(credential: string, password: string): Promise<LoginResponse> {
+    const user = await this.userService.getByUsernameOrPhoneOrEmail(credential);
     if (!user) {
-      throw new UnauthorizedException('Invalid credentials : email not found');
+      throw new UnauthorizedException(`Invalid credentials : ${credential} not found`);
     }
     if (user) {
       const isPasswordValid = await bcrypt.compare(password, user.password);
+      console.log({ user });
+
       if (!isPasswordValid) {
         throw new UnauthorizedException('Invalid credentials : wrong password');
       }
@@ -88,7 +83,8 @@ export class AuthService {
   }
 
   async signup(signupUserInput: CreateUserInput, role?: string): Promise<UserResponse> {
-    const user = await this.userService.findOne(null, signupUserInput.email, null);
+    const user = await this.userService.getByUsernameOrPhoneOrEmail(signupUserInput.email);
+    // console.log({ signupUserInput });
 
     if (user) {
       throw new BadRequestException('User already exists');

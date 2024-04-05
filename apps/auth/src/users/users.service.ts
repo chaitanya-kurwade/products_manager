@@ -38,14 +38,20 @@ export class UsersService {
     if (!createUserInput.email) {
       throw new BadRequestException('user not created');
     }
-    const { email, username, phoneNumber } = createUserInput;
+    // const { email, username, phoneNumber } = createUserInput;
+    const email = createUserInput.email;
+    const username = createUserInput.username;
+    const phoneNumber = createUserInput.phoneNumber;
+    // console.log({ createUserInput });
+
     const user = await this.userModel.findOne({
-      $or: [{ email: email }, { phoneNumber: phoneNumber }, { username: username }],
+      $and: [{ email: email }, { phoneNumber: phoneNumber }, { username: username }],
     });
     if (user) {
+      console.log(user.username, user.phoneNumber, user.email);
       throw new BadRequestException('user not created, please pass valid username or phone number');
     }
-    const password = await bcrypt.hash(createUserInput.password, 10);
+    const password = await bcrypt.hash(createUserInput.password, 10); // 10 = salt
     return await this.userModel.create({
       ...createUserInput,
       password,
@@ -151,7 +157,7 @@ export class UsersService {
 
   async updateUser(_id: string, updateUserInput: UpdateUserInput, role?: string) {
     // const updateInputDemo = new UpdateUserInput();
-    const user = await this.findOne(_id);
+    const user = await this.getUserById(_id);
 
     if (!user) {
       throw new NotFoundException(`user not updated  with id: ${_id}`);
@@ -199,11 +205,9 @@ export class UsersService {
     return user;
   }
 
-  async findOne(_id?: string, email?: string, phoneNumber?: string) {
+  async getByUsernameOrPhoneOrEmail(credential: string) {
     const user = await this.userModel.findOne({
-      ...(email && { email }),
-      ...(_id && { _id }),
-      ...(phoneNumber && { phoneNumber }),
+      $or: [{ email: credential }, { phoneNumber: credential }, { username: credential }],
     });
     return user;
   }
@@ -264,15 +268,15 @@ export class UsersService {
     return logOutResponse;
   }
 
-  async enterUsernameOrEmailOrPhoneNumberToLogin(credential: string): Promise<User> {
-    const user = await this.userModel.findOne({
-      $or: [{ email: credential }, { phoneNumber: credential }, { username: credential }],
-    });
-    if (!user) {
-      throw new NotFoundException('user not found, please pass valid credentials');
-    }
-    return user;
-  }
+  // async enterUsernameOrEmailOrPhoneNumberToLogin(credential: string): Promise<User> {
+  //   const user = await this.userModel.findOne({
+  //     $or: [{ email: credential }, { phoneNumber: credential }, { username: credential }],
+  //   });
+  //   if (!user) {
+  //     throw new NotFoundException('user not found, please pass valid credentials');
+  //   }
+  //   return user;
+  // }
 
   async sendOtpToLogin(phoneNumberOrEmailOrUsername: string): Promise<string> {
     const otp = Math.floor(Math.random() * 900000) + 100000;
@@ -345,9 +349,26 @@ export class UsersService {
     return user;
   }
 
+  async findOneUser(email?: string, username?: string, phoneNumber?: string): Promise<User | null> {
+    console.log(email, phoneNumber, username);
+
+    const user = await this.userModel.findOne({
+      // ...(email && { email }),
+      // ...(username && { username }),
+      // ...(phoneNumber && { phoneNumber }),
+      $or: [
+        ...(email ? [{ email }] : []),
+        ...(phoneNumber ? [{ phoneNumber }] : []),
+        ...(username ? [{ username }] : []),
+      ],
+    });
+    console.log('findOneUser', { user });
+    return user;
+  }
+
   async getUserByPhoneOrEmailOrUsername(phoneOrEmailOrUsername: string): Promise<User> {
     const user = await this.userModel.findOne({
-      $or: [
+      $and: [
         { phoneNumber: phoneOrEmailOrUsername },
         { email: phoneOrEmailOrUsername },
         { username: phoneOrEmailOrUsername },

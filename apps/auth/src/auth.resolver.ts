@@ -1,8 +1,8 @@
-import { Args, Context, Mutation, Resolver } from '@nestjs/graphql';
+import { Args, Context, Mutation, Resolver, Query } from '@nestjs/graphql';
 import { AuthService } from './auth.service';
 import { UserLoginInput } from './users/inputs/user-login.input';
 import { LoginResponse } from './users/responses/user-login.response.entity';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { BadGatewayException, BadRequestException, NotFoundException } from '@nestjs/common';
 import { CreateUserInput } from './users/inputs/create-user.input';
 import { Public } from 'common/library/decorators/public.decorator';
 import { UserResponse } from './users/responses/user-response.entity';
@@ -18,20 +18,20 @@ export class AuthResolver {
 
   @Mutation(() => LoginResponse)
   @Public()
-  async login(
-    @Args('userLoginInput') userLoginInput: UserLoginInput,
-  ): Promise<{ access_token: string }> {
-    const loginResponse = await this.authService.login(
+  async login(@Args('userLoginInput') userLoginInput: UserLoginInput): Promise<LoginResponse> {
+    const user = await this.authService.findOneUser(
       userLoginInput.email,
-      userLoginInput.password,
+      userLoginInput.username,
+      userLoginInput.phoneNumber,
     );
-    if (!userLoginInput.email) {
-      throw new NotFoundException('Invalid email in auth resolver');
+
+    if (!user) {
+      throw new NotFoundException('User not found');
     }
-    if (!loginResponse) {
-      throw new Error('Invalid response in auth resolver');
+    if (user) {
+      const loginResponse = await this.authService.login(user.email, userLoginInput.password);
+      return loginResponse;
     }
-    return loginResponse;
   }
 
   @Roles(ROLES.ADMIN, ROLES.MANAGER, ROLES.SUPERADMIN)
@@ -41,9 +41,35 @@ export class AuthResolver {
     @Context() context: { req: Request },
     @Args('signupUserInput') signupUserInput: CreateUserInput,
   ) {
+    console.log({ signupUserInput }, 'signupUserInput');
+    // if (!signupUserInput?.email) {
+    //   throw new BadGatewayException('The email already exists');
+    // }
+    const existingUser = await this.authService.findOneUser(
+      signupUserInput.email,
+      signupUserInput.username,
+      signupUserInput.phoneNumber,
+    );
+    console.log(existingUser);
+
+    if (
+      signupUserInput?.phoneNumber &&
+      signupUserInput?.phoneNumber === existingUser?.phoneNumber
+    ) {
+      throw new BadGatewayException('The phone number already exists');
+    }
+    if (signupUserInput.email === existingUser?.email) {
+      throw new BadGatewayException('The email already exists');
+    }
+    if (signupUserInput?.username && signupUserInput.username === existingUser?.username) {
+      throw new BadGatewayException('The username already exists');
+    }
+
     const { role } = await new ContextService().getContextInfo(context.req);
-    const user = await this.authService.signup(signupUserInput, role);
-    return user;
+    if (existingUser === null) {
+      const newUser = await this.authService.signup(signupUserInput, role);
+      return newUser;
+    }
   }
 
   @Mutation(() => String, { name: 'RefreshToken' })
@@ -57,10 +83,9 @@ export class AuthResolver {
     return access_token;
   }
 
-  @Mutation(() => UserResponse, { name: 'getUserByAccessToken' })
+  @Query(() => UserResponse, { name: 'getUserByAccessToken' })
   async getUserByAccessToken(@Context() context: { req: Request }): Promise<User> {
     const access_token = context.req.headers['authorization']?.split(' ')[1] || null;
-
     const user = await this.authService.getUserByAccessToken(access_token);
     return user;
   }

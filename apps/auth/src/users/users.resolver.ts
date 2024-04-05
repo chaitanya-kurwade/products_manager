@@ -82,8 +82,8 @@ export class UsersResolver {
 
   @Roles(ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.MANAGER)
   @Mutation(() => String, { name: 'userLogout' })
-  userLogout(@Args('email') email: string) {
-    return this.usersService.userLogout(email);
+  async userLogout(@Args('email') email: string) {
+    return await this.usersService.userLogout(email);
   }
 
   // @Public()
