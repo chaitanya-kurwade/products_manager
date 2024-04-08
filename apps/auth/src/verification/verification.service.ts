@@ -22,7 +22,7 @@ export class VerificationService {
     private readonly configService: ConfigService,
   ) {
     this.transporter = nodemailer.createTransport({
-      host: `${this.configService.get('SMTP_HOST')}`,
+      host: `${this.configService.get('SMTP_HOSTnewPassword: stringnewPassword: string')}`,
       port: `${this.configService.get('SMTP_PORT')}`,
       secure: false,
       auth: {
@@ -54,7 +54,7 @@ export class VerificationService {
   //   return `This action removes a #${_id} verification`;
   // }
 
-  async sendEmailToVerifyEmail(email: string): Promise<string> {
+  async sendEmailToVerifyEmailAndCreatePassword(email: string): Promise<string> {
     const secretKey = await this.configService.get('VERIFY_EMAIL_SECRET_KEY');
     const user = await this.usersService.getByUsernameOrPhoneOrEmail(email);
     if (!user) {
@@ -70,7 +70,7 @@ export class VerificationService {
       from: `${this.configService.get('SENDER_NAME')} <${this.configService.get('SENDER_EMAIL')}>`,
       to: emailId,
       subject: 'verify your email',
-      html: `<b>Hello, ${emailId}!</b><p>This is an email to verify your email, <a href="${link}">click here to verify your email</a>.`,
+      html: `<b>Hello, ${this.configService.get('SENDER_NAME')}!</b><p>This is an email to verify your email, <a href="${link}">click here to verify your email</a>.`,
     };
     await this.transporter.sendMail(info);
     await this.verificationModel.create({
@@ -84,7 +84,7 @@ export class VerificationService {
     return 'verification link sent on your email';
   }
 
-  async verifyEmail(token: string): Promise<string> {
+  async verifyEmail(token: string, newPassword?: string): Promise<string> {
     const secretKey = await this.configService.get('VERIFY_EMAIL_SECRET_KEY');
     const user: any = await jwt.verify(token, secretKey);
     const userId = user.userId;
@@ -97,6 +97,7 @@ export class VerificationService {
 
     if (comparedToken && verificationProcess.isActiveToken) {
       await this.usersService.updateEmailVerificationStatus(userId);
+      await this.usersService.updatePassword(userId, newPassword);
       const id = verificationProcess._id;
       await this.verificationModel.findByIdAndUpdate(id, {
         isActiveToken: false,

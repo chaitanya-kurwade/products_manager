@@ -25,8 +25,8 @@ export class AuthController {
 
   @Public()
   @Get('token')
-  verifyEmail(@Query('token') token: string) {
+  verifyEmail(@Query('token') token: string, @Query('newPassword') newPassword: string) {
     // console.log('controller');
-    return this.verificationService.verifyEmail(token);
+    return this.verificationService.verifyEmail(token, newPassword);
   }
 }

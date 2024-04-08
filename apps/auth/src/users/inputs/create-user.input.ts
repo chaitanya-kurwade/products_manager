@@ -22,9 +22,9 @@ export class CreateUserInput {
   @Field()
   email: string;
 
-  @IsStrongPassword()
-  @Field()
-  password: string;
+  // @IsStrongPassword()
+  // @Field()
+  // password: string;
 
   // @Field({ nullable: true, defaultValue: false })
   // isEmailVerified?: boolean;
