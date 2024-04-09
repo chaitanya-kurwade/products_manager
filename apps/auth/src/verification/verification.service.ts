@@ -20,7 +20,7 @@ export class VerificationService {
     private readonly configService: ConfigService,
   ) {
     this.transporter = nodemailer.createTransport({
-      host: `${this.configService.get('SMTP_HOSTnewPassword: stringnewPassword: string')}`,
+      host: `${this.configService.get('SMTP_HOST')}`,
       port: `${this.configService.get('SMTP_PORT')}`,
       secure: false,
       auth: {
