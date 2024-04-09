@@ -2,7 +2,7 @@ import { Args, Context, Mutation, Resolver, Query } from '@nestjs/graphql';
 import { AuthService } from './auth.service';
 import { UserLoginInput } from './users/inputs/user-login.input';
 import { LoginResponse } from './users/responses/user-login.response.entity';
-import { BadGatewayException, BadRequestException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { CreateUserInput } from './users/inputs/create-user.input';
 import { Public } from 'common/library/decorators/public.decorator';
 import { UserResponse } from './users/responses/user-response.entity';
@@ -11,6 +11,7 @@ import { ContextService } from 'common/library/service/context.service';
 import { Request } from 'express';
 import { Roles } from 'common/library/decorators/roles.decorator';
 import { ROLES } from './users/enums/role.enum';
+import { CurrentUser } from 'common/library/decorators/current-user.decorator';
 
 @Resolver()
 export class AuthResolver {
@@ -19,60 +20,40 @@ export class AuthResolver {
   @Mutation(() => LoginResponse)
   @Public()
   async login(@Args('userLoginInput') userLoginInput: UserLoginInput): Promise<LoginResponse> {
-    const user = await this.authService.findOneUserForLogin(userLoginInput.userCredential);
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-    if (user) {
-      const loginResponse = await this.authService.login(user.email, userLoginInput.password);
-      return loginResponse;
-    }
+    const loginResponse = await this.authService.login(
+      userLoginInput.userCredential,
+      userLoginInput?.passwordOrOtp,
+    );
+    return loginResponse;
   }
+
+  @Mutation(() => String)
+  @Public()
+  async enterCredentialToLogin(
+    @Args('userLoginInput') userLoginInput: UserLoginInput,
+  ): Promise<string> {
+    return this.authService.enterCredentialToLogin(userLoginInput.userCredential);
+  }
+
+  // @Mutation(() => String)
+  // @Public()
+  // async enterPasswordToLogin(password: string): Promise<LoginResponse> {
+  //   const loginResponse = await this.authService.enterPasswordToLogin(password);
+  //   return loginResponse;
+  // }
 
   @Roles(ROLES.ADMIN, ROLES.MANAGER, ROLES.SUPERADMIN)
   @Mutation(() => UserResponse)
-  @Public()
-  async signup(
-    @Context() context: { req: Request },
-    @Args('signupUserInput') signupUserInput: CreateUserInput,
-  ) {
-    console.log({ signupUserInput }, 'signupUserInput');
-    // if (!signupUserInput?.email) {
-    //   throw new BadGatewayException('The email already exists');
-    // }
-    const existingUser = await this.authService.findOneUserForSignup(
-      signupUserInput.username,
-      signupUserInput.email,
-      signupUserInput.phoneNumber,
-    );
-    console.log({ existingUser });
-
-    if (
-      signupUserInput?.phoneNumber &&
-      existingUser &&
-      signupUserInput?.phoneNumber === existingUser?.phoneNumber
-    ) {
-      throw new BadGatewayException('The phone number already exists');
-    }
-    if (signupUserInput?.email === existingUser?.email) {
-      throw new BadGatewayException('The email already exists');
-    }
-    if (signupUserInput?.username && signupUserInput.username === existingUser?.username) {
-      throw new BadGatewayException('The username already exists');
-    }
-    console.log('here');
-
-    const { role } = await new ContextService().getContextInfo(context.req);
-    if (existingUser === null) {
-      const newUser = await this.authService.signup(signupUserInput, role);
-      return newUser;
-    }
+  async createUser(
+    @Args('createUserInput') createUserInput: CreateUserInput,
+    @CurrentUser('role') role: string,
+  ): Promise<UserResponse | null> {
+    return this.authService.createUser(createUserInput, role);
   }
 
   @Mutation(() => String, { name: 'RefreshToken' })
   @Public()
-  async refreshAccessToken(@Context() context: { req: Request }) {
+  async refreshAccessToken(@Context() context: { req: Request }): Promise<string> {
     const refreshToken = context.req.headers['authorization']?.split(' ')[1] || null;
     if (!refreshToken) {
       throw new BadRequestException('token not found');
@@ -90,7 +71,8 @@ export class AuthResolver {
 
   @Public()
   @Mutation(() => LoginResponse, { name: 'validateOtp' })
-  async validateOtp(@Args('otp') otp: number) {
-    return await this.authService.validateOtp(otp);
+  async validateOtp(@Args('otp') otp: number): Promise<LoginResponse> {
+    const loginResponse = await this.authService.validateOtp(otp);
+    return loginResponse;
   }
 }

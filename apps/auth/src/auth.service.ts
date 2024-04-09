@@ -15,6 +15,7 @@ import { LoginResponse } from './users/responses/user-login.response.entity';
 import { UserResponse } from './users/responses/user-response.entity';
 import { ROLES } from './users/enums/role.enum';
 import { VerificationService } from './verification/verification.service';
+import { UserLoginCredential } from './users/responses/user-login-credential.response.entity';
 
 @Injectable()
 export class AuthService {
@@ -35,122 +36,223 @@ export class AuthService {
     return pass ? user : null;
   }
 
-  async findOneUserForLogin(userCredential?: string): Promise<User | null> {
-    const user = await this.userService.findOneUserForLogin(userCredential);
-    return user;
-  }
+  // login
+  async login(credential: string, passwordOrOtp?: string): Promise<LoginResponse> {
+    const user = await this.findOneUserForLogin(credential);
+    // const user = userWithLoginCredential.user;
+    const userCredential = credential;
+    const isEmail = await this.validateEmail(userCredential);
+    const isPhoneNumber = await this.validatePhoneNumber(userCredential);
 
-  async findOneUserForSignup(email?: string, username?: string, phoneNumber?: string): Promise<User | null> {
-    const user = await this.userService.findOneUserForSignup(email, username, phoneNumber);
-    return user;
-  }
-
-  async login(credential: string, password: string): Promise<LoginResponse> {
-    const user = await this.userService.getByUsernameOrPhoneOrEmail(credential);
     if (!user) {
       throw new UnauthorizedException(`Invalid credentials : ${credential} not found`);
     }
-    if (user) {
-      const isPasswordValid = await bcrypt.compare(password, user.password);
-      console.log({ user });
 
+    if (!user && isPhoneNumber) {
+      throw new NotFoundException('User not found, incorrect phone number: ' + userCredential);
+    }
+
+    if (!user && isEmail) {
+      throw new NotFoundException('User not found, incorrect email: ' + userCredential);
+    }
+
+    if (!user && (!isEmail || !isPhoneNumber)) {
+      throw new NotFoundException('User not found, incorrect username: ' + userCredential);
+    }
+
+    const _id = user._id;
+    const email = user.email;
+    const firstName = user.firstName;
+    const lastName = user.lastName;
+    const role = user.role;
+    const createdAt = user.createdAt;
+    const updatedAt = user.updatedAt;
+    const isEmailVerified = user.isEmailVerified;
+
+    const userResponse: UserResponse = {
+      _id,
+      email,
+      firstName,
+      lastName,
+      role,
+      createdAt,
+      updatedAt,
+      isEmailVerified,
+    };
+
+    if (user.phoneNumber === credential) {
+      const otp = passwordOrOtp || 1234;
+      if (otp === "1234") {
+        console.log({ otp });
+
+        const { access_token, refresh_token } = await this.createTokens(
+          user._id,
+          user.email,
+          user.role,
+        );
+        return { access_token, refresh_token, userResponse };
+      }
+    } else if (user.email === credential || user.username === credential) {
+      const password = passwordOrOtp;
+      const isPasswordValid = await bcrypt.compare(password, user.password);
       if (!isPasswordValid) {
         throw new UnauthorizedException('Invalid credentials : wrong password');
-      }
-      if (!user.isEmailVerified) {
-        this.verificationService.sendEmailToVerifyEmail(user.email);
-        throw new BadRequestException('please verify your email');
       }
       const { access_token, refresh_token } = await this.createTokens(
         user._id,
         user.email,
         user.role,
       );
-
-      const _id = user._id;
-      const email = user.email;
-      const firstName = user.firstName;
-      const lastName = user.lastName;
-      const role = user.role;
-      const createdAt = user.createdAt;
-      const updatedAt = user.updatedAt;
-      const isEmailVerified = user.isEmailVerified;
-
-      const userResponse: UserResponse = {
-        _id,
-        email,
-        firstName,
-        lastName,
-        role,
-        createdAt,
-        updatedAt,
-        isEmailVerified,
-      };
-
       return { access_token, refresh_token, userResponse };
     }
   }
 
-  async signup(signupUserInput: CreateUserInput, role?: string): Promise<UserResponse> {
-    console.log({signupUserInput});
-    
-    const user = await this.userService.getByUsernameOrPhoneOrEmail(signupUserInput?.email);
-    // console.log({ signupUserInput });
+  async enterCredentialToLogin(userCredential: string): Promise<any> {
+    const user = await this.userService.findOneUserForLogin(userCredential);
+    const isEmail = await this.validateEmail(userCredential);
+    const isPhoneNumber = await this.validatePhoneNumber(userCredential);
+
+    if (!user && isPhoneNumber) {
+      throw new NotFoundException('User not found, incorrect phone number: ' + userCredential);
+    }
+
+    if (!user && isEmail) {
+      throw new NotFoundException('User not found, incorrect email id: ' + userCredential);
+    }
+
+    if (!user && (!isEmail || !isPhoneNumber)) {
+      throw new NotFoundException('User not found, incorrect username: ' + userCredential);
+    }
+
+    if (!user.isEmailVerified && !user.password) {
+      this.verificationService.sendEmailToVerifyEmailAndCreatePassword(user.email);
+      return 'please verify email and generate password, mail sent on ' + user.email;
+    }
 
     if (user) {
+      if (!isEmail && !isPhoneNumber) {
+        return 'please enter password to login username: ' + userCredential;
+      } else if (isPhoneNumber) {
+        return 'otp to login: 1234';
+      } else if (isEmail) {
+        return 'please enter password to login: ' + userCredential;
+      }
+    } else {
+      return 'invalid credential: ' + userCredential;
+    }
+  }
+
+  // async enterPasswordToLogin(password: string) {
+  //   return this.userService.enterPasswordToLogin(password);
+  // }
+
+  // async sendEmailToLogin(credential: string): Promise<string> {
+  //   const userWithLoginCredential = await this.userService.getByUsernameOrPhoneOrEmail(credential);
+  //   if (!userWithLoginCredential) {
+  //     throw new UnauthorizedException(`Invalid credentials : ${credential} not found`);
+  //   }
+  //   if (!userWithLoginCredential.password) {
+  //     this.verificationService.sendEmailToVerifyEmail(userWithLoginCredential.email);
+  //   }
+  //   if (userWithLoginCredential.password) {
+  //   }
+  //   return '';
+  // }
+
+  // findOneUserForLogin
+  async findOneUserForLogin(userCredential?: string): Promise<User> {
+    const userWithLoginCredential = await this.userService.findOneUserForLogin(userCredential);
+    return userWithLoginCredential;
+  }
+
+  // validateEmail
+  async validateEmail(email: string): Promise<boolean> {
+    return this.userService.validateEmail(email);
+  }
+
+  // validatePhoneNumber
+  async validatePhoneNumber(phoneNumber: string): Promise<boolean> {
+    return this.userService.validatePhoneNumber(phoneNumber);
+  }
+
+  // createUser
+  async createUser(createUserInput: CreateUserInput, role?: string): Promise<UserResponse> {
+    const existingUser = await this.findOneUserForSignup(
+      createUserInput.username,
+      createUserInput.email,
+      createUserInput.phoneNumber,
+    );
+
+    if (existingUser) {
       throw new BadRequestException('User already exists');
     }
-    // if (
-    //   signupUserInput.role === undefined ||
-    //   signupUserInput.role === null ||
-    //   signupUserInput.role.length === 0
-    // ) {
-    const newRole = signupUserInput.role || ROLES.USER;
 
-    const createUserInput = {
-      ...signupUserInput,
+    if (
+      createUserInput?.phoneNumber &&
+      existingUser &&
+      createUserInput?.phoneNumber === existingUser?.phoneNumber
+    ) {
+      throw new BadRequestException('The phone number already exists');
+    }
+    if (createUserInput?.email === existingUser?.email) {
+      throw new BadRequestException('The email already exists');
+    }
+    if (createUserInput?.username && createUserInput.username === existingUser?.username) {
+      throw new BadRequestException('The username already exists');
+    }
+
+    const newRole = createUserInput.role || ROLES.USER;
+
+    const createUser = {
+      ...createUserInput,
       hashedRefreshToken: '',
       newRole,
     };
-    console.log({createUserInput});
-    
+
     if (role) {
       if (
-        signupUserInput.role !== ROLES.SUPERADMIN &&
-        signupUserInput.role !== ROLES.ADMIN &&
-        signupUserInput.role !== ROLES.MANAGER &&
-        signupUserInput.role !== ROLES.USER
+        createUserInput.role !== ROLES.SUPERADMIN &&
+        createUserInput.role !== ROLES.ADMIN &&
+        createUserInput.role !== ROLES.MANAGER &&
+        createUserInput.role !== ROLES.USER
       ) {
-        throw new BadRequestException(`Please check the spelling ${signupUserInput.role}`);
+        throw new BadRequestException(`Please check the spelling ${createUserInput.role}`);
       }
       if (role === ROLES.SUPERADMIN) {
-        return await this.userService.createUser(createUserInput);
+        return await this.userService.createUser(createUser);
       } else if (role === ROLES.ADMIN) {
         if (newRole !== ROLES.MANAGER && newRole !== ROLES.USER) {
           console.log(newRole);
           throw new BadRequestException(`You cannot create ${newRole}`);
         }
-        return await this.userService.createUser(createUserInput);
+        return await this.userService.createUser(createUser);
       } else if (role === ROLES.MANAGER) {
         if (newRole !== 'USER') {
           throw new BadRequestException(`You cannot create ${newRole}`);
         }
-        return await this.userService.createUser(createUserInput);
+        return await this.userService.createUser(createUser);
       } else if (role === ROLES.USER) {
         throw new BadRequestException(`You dont have access to create ${newRole}`);
       }
     }
-    // else {
-    //   return await this.userService.createUser(createUserInput);
-    // }
-
-    // }
   }
 
+  // findOneUserForSignup -> createUser
+  async findOneUserForSignup(
+    email?: string,
+    username?: string,
+    phoneNumber?: string,
+  ): Promise<User | null> {
+    const user = await this.userService.findOneUserForSignup(email, username, phoneNumber);
+    return user;
+  }
+
+  // getUserByAccessToken
   async getUserByAccessToken(access_token: string) {
     return await this.verify(access_token);
   }
 
+  // verify token
   async verify(token: string): Promise<User> {
     const decoded = await this.jwtService.verify(token, {
       secret: this.configService.get('JWT_SECRET'),
@@ -159,6 +261,7 @@ export class AuthService {
     return user;
   }
 
+  // createTokens
   async createTokens(_id: string, email: string, role: string) {
     const payload = { email: email, _id: _id, role: role };
     const access_token = this.jwtService.sign(payload, {
@@ -176,6 +279,7 @@ export class AuthService {
     return { access_token, refresh_token };
   }
 
+  // storeRefreshToken
   async storeRefreshToken(email: string, refreshToken: string) {
     const saltRounds = 10;
     const salt = await bcrypt.genSalt(saltRounds);
@@ -184,6 +288,7 @@ export class AuthService {
     return await this.userService.updateRefreshTokenFromUser(user.email, hashedRefreshToken);
   }
 
+  // refreshAccessToken
   async refreshAccessToken(refresh_token: string): Promise<string> {
     const payload = this.jwtService.decode(refresh_token);
     const { email } = payload;
@@ -264,6 +369,7 @@ export class AuthService {
     return await this.userService.sendOtpToLogin(phoneOrEmail);
   }
 
+  // validateOtp
   async validateOtp(otp: number): Promise<LoginResponse> {
     const user = await this.userService.validateOtp(otp);
     const tokens = await this.createTokens(user._id, user.email, user.role);

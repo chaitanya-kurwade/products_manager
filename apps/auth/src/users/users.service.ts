@@ -20,6 +20,7 @@ import { EmailserviceService } from 'apps/emailservice/src/emailservice.service'
 import { ConfigService } from '@nestjs/config';
 import { ROLES } from './enums/role.enum';
 import { VerificationService } from '../verification/verification.service';
+import { UserLoginCredential } from './responses/user-login-credential.response.entity';
 
 @Injectable()
 export class UsersService {
@@ -51,7 +52,6 @@ export class UsersService {
     const email = createUserInput.email;
     const username = createUserInput.username;
     const phoneNumber = createUserInput.phoneNumber;
-    console.log({ createUserInput1: createUserInput });
 
     const user = await this.userModel.findOne({
       $or: [{ email: email }, { phoneNumber: phoneNumber }, { username: username }],
@@ -61,10 +61,10 @@ export class UsersService {
       throw new BadRequestException('user not created, please pass valid username or phone number');
     }
 
-    const password = await bcrypt.hash(createUserInput.password, 10); // 10 = salt
+    // const password = await bcrypt.hash(createUserInput.password, 10); // 10 = salt
     const newUser = await this.userModel.create({
-      ...createUserInput,
-      password,
+      createUserInput,
+      // password,
     });
     return newUser;
   }
@@ -208,6 +208,16 @@ export class UsersService {
     }
   }
 
+  async updatePassword(userId: string, newPassword: string) {
+    const password = await bcrypt.hash(newPassword, 10); // 10 = salt
+    const user = await this.userModel.findByIdAndUpdate(
+      userId,
+      { password: password },
+      { new: true },
+    );
+    return user;
+  }
+
   async remove(_id: string) {
     const user = await this.userModel.findByIdAndDelete(_id);
     if (!user) {
@@ -217,8 +227,6 @@ export class UsersService {
   }
 
   async getByUsernameOrPhoneOrEmail(credential: string) {
-    console.log({ credential });
-
     const user = await this.userModel.findOne({
       $or: [{ email: credential }, { phoneNumber: credential }, { username: credential }],
     });
@@ -257,6 +265,8 @@ export class UsersService {
     }
     return user;
   }
+
+  async enterPasswordToLogin(password: string) {}
 
   async getUserToSignUp(email: string): Promise<User> {
     const userByEmailId = await this.userModel.findOne({ email: email });
@@ -362,22 +372,64 @@ export class UsersService {
     return user;
   }
 
-  async findOneUserForLogin(userCredential?: string): Promise<User | null> {
+  // async findOneUserForLogin(userCredential?: string): Promise<User | null> {
+  //   const user = await this.userModel.findOne({
+  //     // ...(email && { email }),
+  //     // ...(username && { username }),
+  //     // ...(phoneNumber && { phoneNumber }),
+  //     $or: [
+  //       { email: userCredential },
+  //       { phoneNumber: userCredential },
+  //       { username: userCredential },
+  //     ],
+  //   });
+  //   return user;
+  // }
+
+  // async findOneUserForLogin(userCredential: string): Promise<UserLoginCredential> {
+  //   const user = await this.userModel.findOne({ username: userCredential });
+
+  //   if (!user) {
+  //     if (this.validatePhoneNumber(userCredential)) {
+  //       const user = await this.userModel.findOne({ phoneNumber: userCredential });
+  //       return { user, userCredential };
+  //     } else if (this.validateEmail(userCredential)) {
+  //       console.log(userCredential, 'userCredential');
+  //       const user = await this.userModel.findOne({ email: userCredential });
+  //       return { user, userCredential };
+  //     }
+  //   }
+  //   return { user, userCredential };
+  // }
+
+  async findOneUserForLogin(userCredential: string): Promise<User> {
     const user = await this.userModel.findOne({
-      // ...(email && { email }),
-      // ...(username && { username }),
-      // ...(phoneNumber && { phoneNumber }),
       $or: [
         { email: userCredential },
         { phoneNumber: userCredential },
         { username: userCredential },
       ],
     });
-    console.log('findOneUser', { user });
     return user;
   }
 
-  async findOneUserForSignup(email?: string, username?: string, phoneNumber?: string): Promise<User | null> {
+  async validateEmail(email: string): Promise<boolean> {
+    // Regex for email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
+
+  async validatePhoneNumber(phoneNumber: string): Promise<boolean> {
+    // Regex for phone number
+    const phoneRegex = /^\d{10}$/;
+    return phoneRegex.test(phoneNumber);
+  }
+
+  async findOneUserForSignup(
+    email?: string,
+    username?: string,
+    phoneNumber?: string,
+  ): Promise<User | null> {
     const user = await this.userModel.findOne({
       // ...(email && { email }),
       // ...(username && { username }),

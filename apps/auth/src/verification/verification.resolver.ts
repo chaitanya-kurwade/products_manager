@@ -42,11 +42,14 @@ export class VerificationResolver {
 
   @Mutation(() => String, { name: 'sendVerificationEmail' })
   async sendVerificationEmail(@Args('email') email: string): Promise<string> {
-    return await this.verificationService.sendEmailToVerifyEmail(email);
+    return await this.verificationService.sendEmailToVerifyEmailAndCreatePassword(email);
   }
 
   @Mutation(() => String, { name: 'verifyemail' })
-  async verifyEmail(@Args('token') token: string): Promise<string> {
-    return this.verificationService.verifyEmail(token);
+  async verifyEmail(
+    @Args('token') token: string,
+    @Args('newPassword') newPassword?: string,
+  ): Promise<string> {
+    return this.verificationService.verifyEmail(token, newPassword);
   }
 }
