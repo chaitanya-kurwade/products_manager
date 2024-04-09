@@ -210,7 +210,11 @@ export class UsersService {
 
   async updatePassword(userId: string, newPassword: string) {
     const password = await bcrypt.hash(newPassword, 10); // 10 = salt
-    const user = await this.userModel.findByIdAndUpdate(userId, { password: password }, { new: true });
+    const user = await this.userModel.findByIdAndUpdate(
+      userId,
+      { password: password },
+      { new: true },
+    );
     return user;
   }
 
@@ -382,18 +386,31 @@ export class UsersService {
   //   return user;
   // }
 
-  async findOneUserForLogin(userCredential?: string): Promise<UserLoginCredential> {
-    const user = await this.userModel.findOne({ username: userCredential });
-    if (!user) {
-      if (this.validatePhoneNumber(userCredential)) {
-        const user = await this.userModel.findOne({ phoneNumber: userCredential });
-        return { user, userCredential };
-      } else if (this.validateEmail(userCredential)) {
-        const user = await this.userModel.findOne({ email: userCredential });
-        return { user, userCredential };
-      }
-    }
-    return { user, userCredential };
+  // async findOneUserForLogin(userCredential: string): Promise<UserLoginCredential> {
+  //   const user = await this.userModel.findOne({ username: userCredential });
+
+  //   if (!user) {
+  //     if (this.validatePhoneNumber(userCredential)) {
+  //       const user = await this.userModel.findOne({ phoneNumber: userCredential });
+  //       return { user, userCredential };
+  //     } else if (this.validateEmail(userCredential)) {
+  //       console.log(userCredential, 'userCredential');
+  //       const user = await this.userModel.findOne({ email: userCredential });
+  //       return { user, userCredential };
+  //     }
+  //   }
+  //   return { user, userCredential };
+  // }
+
+  async findOneUserForLogin(userCredential: string): Promise<User> {
+    const user = await this.userModel.findOne({
+      $or: [
+        { email: userCredential },
+        { phoneNumber: userCredential },
+        { username: userCredential },
+      ],
+    });
+    return user;
   }
 
   async validateEmail(email: string): Promise<boolean> {

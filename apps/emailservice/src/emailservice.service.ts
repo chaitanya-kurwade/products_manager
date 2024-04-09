@@ -24,9 +24,7 @@ export class EmailserviceService {
   }
 
   async checkHexIsUnique(hexString: string): Promise<string> {
-    const hexInDb = await this.sendEmailModel
-      .findOne({ value: hexString })
-      .exec();
+    const hexInDb = await this.sendEmailModel.findOne({ value: hexString }).exec();
     if (!hexInDb) {
       return hexString;
     } else {

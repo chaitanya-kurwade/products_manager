@@ -14,5 +14,5 @@ export class UserLoginInput {
 
   @Field({ nullable: true })
   // @IsStrongPassword()
-  password?: string;
+  passwordOrOtp?: string;
 }
