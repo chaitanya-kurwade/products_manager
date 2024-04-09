@@ -16,6 +16,7 @@ import { UserResponse } from './users/responses/user-response.entity';
 import { ROLES } from './users/enums/role.enum';
 import { VerificationService } from './verification/verification.service';
 import { UserLoginCredential } from './users/responses/user-login-credential.response.entity';
+import { CredentialToLoginResponse } from './users/responses/credential-to-login.response.entity';
 
 @Injectable()
 export class AuthService {
@@ -82,7 +83,7 @@ export class AuthService {
 
     if (user.phoneNumber === credential) {
       const otp = passwordOrOtp || 1234;
-      if (otp === "1234") {
+      if (otp === '1234') {
         console.log({ otp });
 
         const { access_token, refresh_token } = await this.createTokens(
@@ -107,7 +108,7 @@ export class AuthService {
     }
   }
 
-  async enterCredentialToLogin(userCredential: string): Promise<any> {
+  async enterCredentialToLogin(userCredential: string): Promise<CredentialToLoginResponse> {
     const user = await this.userService.findOneUserForLogin(userCredential);
     const isEmail = await this.validateEmail(userCredential);
     const isPhoneNumber = await this.validatePhoneNumber(userCredential);
@@ -126,19 +127,25 @@ export class AuthService {
 
     if (!user.isEmailVerified && !user.password) {
       this.verificationService.sendEmailToVerifyEmailAndCreatePassword(user.email);
-      return 'please verify email and generate password, mail sent on ' + user.email;
+      return {
+        message: 'please verify email and generate password, mail sent on ' + user.email,
+        type: 'VERIFY',
+      };
     }
 
     if (user) {
       if (!isEmail && !isPhoneNumber) {
-        return 'please enter password to login username: ' + userCredential;
+        return {
+          message: 'please enter password to login username: ' + userCredential,
+          type: 'PASSWORD',
+        };
       } else if (isPhoneNumber) {
-        return 'otp to login: 1234';
+        return { message: 'please enter otp to login username: ' + userCredential, type: 'OTP' };
       } else if (isEmail) {
-        return 'please enter password to login: ' + userCredential;
+        return { message: 'please enter password to login: ' + userCredential, type: 'PASSWORD' };
       }
     } else {
-      return 'invalid credential: ' + userCredential;
+      throw new NotFoundException('User not found');
     }
   }
 

@@ -12,6 +12,7 @@ import { Request } from 'express';
 import { Roles } from 'common/library/decorators/roles.decorator';
 import { ROLES } from './users/enums/role.enum';
 import { CurrentUser } from 'common/library/decorators/current-user.decorator';
+import { CredentialToLoginResponse } from './users/responses/credential-to-login.response.entity';
 
 @Resolver()
 export class AuthResolver {
@@ -27,12 +28,12 @@ export class AuthResolver {
     return loginResponse;
   }
 
-  @Mutation(() => String)
+  @Mutation(() => CredentialToLoginResponse)
   @Public()
   async enterCredentialToLogin(
-    @Args('userLoginInput') userLoginInput: UserLoginInput,
-  ): Promise<string> {
-    return this.authService.enterCredentialToLogin(userLoginInput.userCredential);
+    @Args('credential') credential: string,
+  ): Promise<CredentialToLoginResponse> {
+    return this.authService.enterCredentialToLogin(credential);
   }
 
   // @Mutation(() => String)

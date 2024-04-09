@@ -69,16 +69,28 @@ export class UsersResolver {
   //   return this.usersService.remove(_id);
   // }
 
+  // @Roles(ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.MANAGER)
+  // @Query(() => UserResponse, { name: 'userByEmail' })
+  // async getUserByEmailId(
+  //   @Args('email') email: string,
+  //   @Context() context: { req: Request },
+  // ) {
+  //   const { role } = await new ContextService().getContextInfo(context.req);
+  //   const user = await this.usersService.getUserByEmailId(email, role);
+  //   return user;
+  // }
+
   @Roles(ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.MANAGER)
   @Query(() => UserResponse, { name: 'userByEmail' })
-  async getUserByEmailId(
-    @Args('email') email: string,
+  async getUserById(
+    @Args('userId') userId: string,
     @Context() context: { req: Request },
   ) {
     const { role } = await new ContextService().getContextInfo(context.req);
-    const user = await this.usersService.getUserByEmailId(email, role);
+    const user = await this.usersService.getUserById(userId, role);
     return user;
   }
+
 
   @Roles(ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.MANAGER)
   @Mutation(() => String, { name: 'userLogout' })
