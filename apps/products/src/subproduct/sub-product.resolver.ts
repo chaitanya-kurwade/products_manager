@@ -1,4 +1,4 @@
-import { Resolver, Query, Mutation, Args, Context } from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args } from '@nestjs/graphql';
 import { SubProduct } from './entities/sub-product.entity';
 import { SubProductService } from './sub-product.service';
 import { CreateSubProductInput } from './inputs/create-subproduct.input';
@@ -9,6 +9,7 @@ import { ROLES } from 'apps/auth/src/users/enums/role.enum';
 import { Roles } from 'common/library/decorators/roles.decorator';
 import { ContextService } from 'common/library/service/context.service';
 import { Request } from 'express';
+import { CurrentUser } from 'common/library/decorators/current-user.decorator';
 
 @Resolver(() => SubProduct)
 export class SubProductResolver {
@@ -23,7 +24,7 @@ export class SubProductResolver {
   @Roles(ROLES.ADMIN, ROLES.SUPERADMIN, ROLES.MANAGER)
   @Query(() => SubProductList, { name: 'getAllSubProducts' })
   async getAllSubProducts(
-    @Context() context: { req: Request },
+    @CurrentUser('role') role: string,
     @Args('paginationInput', { nullable: true })
     paginationInput: PaginationInput,
     @Args('searchFields', { type: () => [String], nullable: true })
@@ -33,7 +34,6 @@ export class SubProductResolver {
     @Args('categoryIds', { type: () => [String], nullable: true })
     categoryIds: string[],
   ) {
-    const { role } = await new ContextService().getContextInfo(context.req);
     const subProducts = await this.subProductService.getAllSubProducts(
       paginationInput,
       searchFields ?? [],
@@ -46,8 +46,7 @@ export class SubProductResolver {
 
   @Roles(ROLES.ADMIN, ROLES.SUPERADMIN, ROLES.MANAGER)
   @Query(() => SubProduct, { name: 'getOneSubProductById' })
-  async getOneSubProductById(@Context() context: { req: Request }, @Args('_id') _id: string) {
-    const { role } = await new ContextService().getContextInfo(context.req);
+  async getOneSubProductById(@CurrentUser('role') role: string, @Args('_id') _id: string) {
     const subProduct = await this.subProductService.getOneSubProductById(_id, role);
     return subProduct;
   }
@@ -55,10 +54,9 @@ export class SubProductResolver {
   @Roles(ROLES.ADMIN, ROLES.SUPERADMIN, ROLES.MANAGER)
   @Query(() => [SubProduct], { name: 'getSubProductByMasterProductId' })
   async getSubProductsByMasterProductId(
-    @Context() context: { req: Request },
+    @CurrentUser('role') role: string,
     @Args('masterProductId') masterProductId: string,
   ) {
-    const { role } = await new ContextService().getContextInfo(context.req);
     const subProductsByMasterProductId =
       await this.subProductService.getSubProductsByMasterProductId(masterProductId, role);
 
@@ -68,17 +66,14 @@ export class SubProductResolver {
   @Roles(ROLES.ADMIN, ROLES.SUPERADMIN)
   @Mutation(() => SubProduct)
   async updateSubProductById(
-    @Context() context: { req: Request },
+    @CurrentUser('role') role: string,
     @Args('updateSubProductInput') updateSubProductInput: UpdateSubProductInput,
   ) {
-    const { role } = await new ContextService().getContextInfo(context.req);
-
     const updatedProduct = await this.subProductService.updateSubProductById(
       updateSubProductInput._id,
       updateSubProductInput,
       role,
     );
-
     return updatedProduct;
   }
 

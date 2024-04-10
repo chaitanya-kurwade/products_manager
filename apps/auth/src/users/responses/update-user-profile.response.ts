@@ -1,14 +1,14 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 
 @ObjectType()
-export class UpdateUserResponse {
-  @Field()
+export class UpdateUserProfileResponse {
+  @Field({ nullable: true })
   _id: string;
 
-  @Field()
+  @Field({ nullable: true })
   firstName: string;
 
-  @Field()
+  @Field({ nullable: true })
   lastName: string;
 
   @Field({ nullable: true })
@@ -38,7 +38,4 @@ export class UpdateUserResponse {
   //image
   @Field({ nullable: true })
   avatarUrl?: string;
-
-  @Field({ nullable: true })
-  role?: string;
 }

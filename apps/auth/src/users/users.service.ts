@@ -21,6 +21,7 @@ import { ConfigService } from '@nestjs/config';
 import { ROLES } from './enums/role.enum';
 import { VerificationService } from '../verification/verification.service';
 import { UserLoginCredential } from './responses/user-login-credential.response.entity';
+import { UpdateUserProfileInput } from './inputs/update-user-profile.input';
 
 @Injectable()
 export class UsersService {
@@ -208,6 +209,13 @@ export class UsersService {
     }
   }
 
+  async updateUserProfileById(
+    _id: string,
+    updateUserProfileInput: UpdateUserProfileInput,
+  ): Promise<User> {
+    return this.userModel.findByIdAndUpdate(_id, updateUserProfileInput, { new: true });
+  }
+
   async updatePassword(userId: string, newPassword: string) {
     const password = await bcrypt.hash(newPassword, 10); // 10 = salt
     const user = await this.userModel.findByIdAndUpdate(
@@ -226,7 +234,7 @@ export class UsersService {
     return user;
   }
 
-  async getByUsernameOrPhoneOrEmail(credential: string) {
+  async getByUsernameOrPhoneOrEmail(credential: string): Promise<User> {
     const user = await this.userModel.findOne({
       $or: [{ email: credential }, { phoneNumber: credential }, { username: credential }],
     });
@@ -266,8 +274,6 @@ export class UsersService {
     return user;
   }
 
-  async enterPasswordToLogin(password: string) {}
-
   async getUserToSignUp(email: string): Promise<User> {
     const userByEmailId = await this.userModel.findOne({ email: email });
     return userByEmailId;
@@ -286,7 +292,7 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
     user.hashedRefreshToken = null;
-    await user.save();
+    await this.userModel.findByIdAndUpdate(user._id, { hashedRefreshToken: null }, { new: true });
     const logOutResponse = `you've been logged out successfully with ${email}`;
     return logOutResponse;
   }
@@ -466,7 +472,7 @@ export class UsersService {
     return user;
   }
 
-  async updateEmailVerificationStatus(userId: string) {
+  async updateEmailVerificationStatus(userId: string): Promise<User> {
     return await this.userModel.findByIdAndUpdate(userId, {
       isEmailVerified: true,
     });

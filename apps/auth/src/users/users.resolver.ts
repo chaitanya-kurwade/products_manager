@@ -1,17 +1,13 @@
-import { Resolver, Query, Mutation, Args, Context } from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args } from '@nestjs/graphql';
 import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
 import { UpdateUserInput } from './inputs/update-user.input';
 import { UserResponse } from './responses/user-response.entity';
-import { PaginationInput, Public } from 'common/library';
-import { NotFoundException } from '@nestjs/common';
-import { SendEmail } from './entities/send-email.entity';
+import { PaginationInput } from 'common/library';
 import { ROLES } from './enums/role.enum';
 import { Roles } from 'common/library/decorators/roles.decorator';
-import { ContextService } from 'common/library/service/context.service';
-import { Request } from 'express';
 import { UsersList } from './responses/user-list.response';
-
+import { CurrentUser } from 'common/library/decorators/current-user.decorator';
 
 @Resolver(() => User)
 export class UsersResolver {
@@ -22,19 +18,15 @@ export class UsersResolver {
   //   return this.usersService.create(createUserInput);
   // }
 
-
   @Roles(ROLES.ADMIN, ROLES.MANAGER, ROLES.SUPERADMIN)
   @Query(() => UsersList, { name: 'getAllUsers' })
   async getAllUsers(
-    @Context() context: { req: Request },
+    @CurrentUser('role') role: string,
     @Args('paginationInput', { nullable: true })
     paginationInput: PaginationInput,
     @Args('searchFields', { type: () => [String], nullable: true })
     searchFields?: string[],
-
   ): Promise<UsersList> {
-    const { role } = await new ContextService().getContextInfo(context.req);
-
     const usersList = await this.usersService.getAllUsers(
       paginationInput,
       searchFields ?? [],
@@ -51,16 +43,10 @@ export class UsersResolver {
   @Roles(ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.MANAGER)
   @Mutation(() => UserResponse)
   async updateUser(
-    @Context() context: { req: Request },
+    @CurrentUser('role') role: string,
     @Args('updateUserInput') updateUserInput: UpdateUserInput,
-  ) {
-    const { role } = await new ContextService().getContextInfo(context.req);
-
-    const user = await this.usersService.updateUser(
-      updateUserInput._id,
-      updateUserInput,
-      role,
-    );
+  ): Promise<User> {
+    const user = await this.usersService.updateUser(updateUserInput._id, updateUserInput, role);
     return user;
   }
 
@@ -71,11 +57,7 @@ export class UsersResolver {
 
   // @Roles(ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.MANAGER)
   // @Query(() => UserResponse, { name: 'userByEmail' })
-  // async getUserByEmailId(
-  //   @Args('email') email: string,
-  //   @Context() context: { req: Request },
-  // ) {
-  //   const { role } = await new ContextService().getContextInfo(context.req);
+  // async getUserByEmailId(@Args('email') email: string, @CurrentUser('role') role: string) {
   //   const user = await this.usersService.getUserByEmailId(email, role);
   //   return user;
   // }
@@ -84,17 +66,15 @@ export class UsersResolver {
   @Query(() => UserResponse, { name: 'userByEmail' })
   async getUserById(
     @Args('userId') userId: string,
-    @Context() context: { req: Request },
-  ) {
-    const { role } = await new ContextService().getContextInfo(context.req);
+    @CurrentUser('role') role: string,
+  ): Promise<User> {
     const user = await this.usersService.getUserById(userId, role);
     return user;
   }
 
-
   @Roles(ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.MANAGER)
   @Mutation(() => String, { name: 'userLogout' })
-  async userLogout(@Args('email') email: string) {
+  async userLogout(@Args('email') email: string): Promise<string>  {
     return await this.usersService.userLogout(email);
   }
 

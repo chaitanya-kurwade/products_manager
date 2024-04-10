@@ -1,4 +1,4 @@
-import { Resolver, Query, Mutation, Args, Context } from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args } from '@nestjs/graphql';
 import { MasterProduct } from './entities/master-product.entity';
 import { MasterProductService } from './master-product.service';
 import { CreateMasterProductInput } from './inputs/create-master-product.input';
@@ -9,11 +9,12 @@ import { Roles } from 'common/library/decorators/roles.decorator';
 import { ROLES } from 'apps/auth/src/users/enums/role.enum';
 import { Request } from 'express';
 import { ContextService } from 'common/library/service/context.service';
+import { CurrentUser } from 'common/library/decorators/current-user.decorator';
 
 @Resolver(() => MasterProduct)
 export class MasterProductResolver {
   constructor(private readonly masterProductService: MasterProductService) {}
-
+  //     @CurrentUser('role') role: string,
   @Roles(ROLES.ADMIN, ROLES.SUPERADMIN)
   @Mutation(() => MasterProduct)
   createMasterProduct(
@@ -26,7 +27,7 @@ export class MasterProductResolver {
   @Roles(ROLES.ADMIN, ROLES.SUPERADMIN, ROLES.MANAGER)
   @Query(() => MasterProductList, { name: 'getAllMasterProduct' })
   async getAllMasterProducts(
-    @Context() context: { req: Request },
+    @CurrentUser('role') role: string,
     @Args('paginationInput', { nullable: true })
     paginationInput: PaginationInput,
     @Args('searchFields', { type: () => [String], nullable: true })
@@ -34,8 +35,6 @@ export class MasterProductResolver {
     @Args('categoryIds', { type: () => [String], nullable: true })
     categoryIds?: string[],
   ): Promise<MasterProductList> {
-    const { role } = await new ContextService().getContextInfo(context.req);
-
     const products = await this.masterProductService.getAllMasterProducts(
       paginationInput,
       searchFields ?? [],
@@ -47,9 +46,7 @@ export class MasterProductResolver {
 
   @Roles(ROLES.ADMIN, ROLES.SUPERADMIN, ROLES.MANAGER)
   @Query(() => MasterProduct, { name: 'getMasterProduct' })
-  async getOneMasterProductById(@Args('_id') _id: string, @Context() context: { req: Request }) {
-    const { role } = await new ContextService().getContextInfo(context.req);
-
+  async getOneMasterProductById(@Args('_id') _id: string, @CurrentUser('role') role: string) {
     const masterProduct = await this.masterProductService.getOneMasterProductById(_id, role);
     return masterProduct;
   }
@@ -57,12 +54,11 @@ export class MasterProductResolver {
   @Roles(ROLES.ADMIN, ROLES.SUPERADMIN)
   @Mutation(() => MasterProduct)
   async updateMasterProductById(
-    @Context() context: { req: Request },
+    @CurrentUser('role') role: string,
+
     @Args('updateMasterProductInput')
     updateMasterProductInput: UpdateMasterProductInput,
   ) {
-    const { role } = await new ContextService().getContextInfo(context.req);
-
     const updatedMasterProduct = await this.masterProductService.updateMasterProductById(
       updateMasterProductInput._id,
       updateMasterProductInput,
