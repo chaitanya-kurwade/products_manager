@@ -3,22 +3,22 @@ import { ROLES } from '../enums/role.enum';
 import { IsPhoneNumber } from 'class-validator';
 
 @InputType()
-export class UpdateUserInput {
-  @Field()
-  _id: string;
+export class UpdateUserProfileInput {
+  // @Field({ nullable: true })
+  // _id: string;
 
-  @Field()
-  firstName: string;
+  @Field({ nullable: true })
+  firstName?: string;
 
-  @Field()
-  lastName: string;
+  @Field({ nullable: true })
+  lastName?: string;
 
   @Field({ nullable: true })
   username?: string;
 
-  @IsPhoneNumber('IN')
-  @Field({ nullable: true })
-  phoneNumber?: string; 
+  //   @IsPhoneNumber('IN')
+  //   @Field({ nullable: true })
+  //   phoneNumber?: string;
 
   // @IsEmail()
   // @Field()
@@ -31,8 +31,8 @@ export class UpdateUserInput {
   // @Field({ nullable: true, defaultValue: false })
   // isEmailVerified?: boolean;
 
-  @Field(() => String, { nullable: true, defaultValue: ROLES.USER })
-  role?: ROLES;
+  //   @Field(() => String, { nullable: true, defaultValue: ROLES.USER })
+  //   role?: ROLES;
 
   @Field({ nullable: true })
   addLineOne?: string;

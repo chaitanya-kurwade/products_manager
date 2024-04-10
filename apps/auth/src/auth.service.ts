@@ -15,8 +15,9 @@ import { LoginResponse } from './users/responses/user-login.response.entity';
 import { UserResponse } from './users/responses/user-response.entity';
 import { ROLES } from './users/enums/role.enum';
 import { VerificationService } from './verification/verification.service';
-import { UserLoginCredential } from './users/responses/user-login-credential.response.entity';
-import { CredentialToLoginResponse } from './users/responses/credential-to-login.response.entity';
+import { VERIFICATION_TYPE } from './users/enums/verification-type.enum';
+import { LoginCredentialResponse } from './users/responses/login-credential.response.entity';
+import { UpdateUserProfileInput } from './users/inputs/update-user-profile.input';
 
 @Injectable()
 export class AuthService {
@@ -108,7 +109,7 @@ export class AuthService {
     }
   }
 
-  async enterCredentialToLogin(userCredential: string): Promise<CredentialToLoginResponse> {
+  async enterCredentialToLogin(userCredential: string): Promise<LoginCredentialResponse> {
     const user = await this.userService.findOneUserForLogin(userCredential);
     const isEmail = await this.validateEmail(userCredential);
     const isPhoneNumber = await this.validatePhoneNumber(userCredential);
@@ -129,7 +130,7 @@ export class AuthService {
       this.verificationService.sendEmailToVerifyEmailAndCreatePassword(user.email);
       return {
         message: 'please verify email and generate password, mail sent on ' + user.email,
-        type: 'VERIFY',
+        type: VERIFICATION_TYPE.VERIFY,
       };
     }
 
@@ -137,12 +138,18 @@ export class AuthService {
       if (!isEmail && !isPhoneNumber) {
         return {
           message: 'please enter password to login username: ' + userCredential,
-          type: 'PASSWORD',
+          type: VERIFICATION_TYPE.PASSWORD,
         };
       } else if (isPhoneNumber) {
-        return { message: 'please enter otp to login username: ' + userCredential, type: 'OTP' };
+        return {
+          message: 'please enter otp to login username: ' + userCredential,
+          type: VERIFICATION_TYPE.OTP,
+        };
       } else if (isEmail) {
-        return { message: 'please enter password to login: ' + userCredential, type: 'PASSWORD' };
+        return {
+          message: 'please enter password to login: ' + userCredential,
+          type: VERIFICATION_TYPE.PASSWORD,
+        };
       }
     } else {
       throw new NotFoundException('User not found');
@@ -255,8 +262,20 @@ export class AuthService {
   }
 
   // getUserByAccessToken
-  async getUserByAccessToken(access_token: string) {
+  async getUserByAccessToken(access_token: string): Promise<User> {
     return await this.verify(access_token);
+  }
+
+  async updateUserProfileByAccessToken(
+    access_token: string,
+    updateUserProfileInput: UpdateUserProfileInput,
+  ): Promise<User> {
+    const userProfile = await this.verify(access_token);
+    const updatedUserProfile = await this.userService.updateUserProfileById(
+      userProfile._id,
+      updateUserProfileInput,
+    );
+    return updatedUserProfile;
   }
 
   // verify token
