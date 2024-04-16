@@ -2,14 +2,10 @@ import { Controller, Get, Query, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Public } from 'common/library';
 import { AuthGuard } from '@nestjs/passport';
-import { VerificationService } from './verification/verification.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(
-    private readonly authService: AuthService,
-    private readonly verificationService: VerificationService,
-  ) {}
+  constructor(private readonly authService: AuthService) {}
   @Public()
   @Get('google')
   @UseGuards(AuthGuard('google'))
@@ -21,12 +17,5 @@ export class AuthController {
   googleAuthRedirect(@Req() req) {
     console.log(req);
     return this.authService.googleLogin(req);
-  }
-
-  @Public()
-  @Get('token')
-  verifyEmail(@Query('token') token: string, @Query('newPassword') newPassword: string) {
-    // console.log('controller');
-    return this.verificationService.verifyEmail(token, newPassword);
   }
 }

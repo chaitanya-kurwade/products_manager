@@ -6,6 +6,8 @@ import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { SendEmail, SendEmailSchema } from './entity/sendemail.entity';
+import { ClientsModule, Transport } from '@nestjs/microservices';
+import { EmailserviceController } from './emailservice.controller';
 
 @Module({
   imports: [
@@ -13,6 +15,16 @@ import { SendEmail, SendEmailSchema } from './entity/sendemail.entity';
       isGlobal: true,
       envFilePath: './apps/emailservice/.env',
     }),
+    ClientsModule.register([
+      {
+        name: 'auth',
+        transport: Transport.TCP,
+        options: {
+          host: 'localhost',
+          port: 1801,
+        },
+      },
+    ]),
     ConfigModule.forRoot({ isGlobal: true }),
     MongooseModule.forFeature([
       {
@@ -36,7 +48,7 @@ import { SendEmail, SendEmailSchema } from './entity/sendemail.entity';
       playground: false,
     }),
   ],
-  controllers: [],
+  controllers: [EmailserviceController],
   exports: [EmailserviceService],
   providers: [EmailserviceService],
 })

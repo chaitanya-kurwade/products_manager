@@ -15,13 +15,13 @@ import { CurrentUser } from 'common/library/decorators/current-user.decorator';
 export class SubProductResolver {
   constructor(private readonly subProductService: SubProductService) {}
 
-  @Roles(ROLES.ADMIN, ROLES.SUPERADMIN)
+  @Roles(ROLES.ADMIN, ROLES.SUPER_ADMIN)
   @Mutation(() => SubProduct)
   createSubProduct(@Args('createSubProductInput') createSubProductInput: CreateSubProductInput) {
     return this.subProductService.createSubProduct(createSubProductInput);
   }
 
-  @Roles(ROLES.ADMIN, ROLES.SUPERADMIN, ROLES.MANAGER)
+  @Roles(ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.MANAGER)
   @Query(() => SubProductList, { name: 'getAllSubProducts' })
   async getAllSubProducts(
     @CurrentUser('role') role: string,
@@ -44,14 +44,14 @@ export class SubProductResolver {
     return subProducts;
   }
 
-  @Roles(ROLES.ADMIN, ROLES.SUPERADMIN, ROLES.MANAGER)
+  @Roles(ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.MANAGER)
   @Query(() => SubProduct, { name: 'getOneSubProductById' })
   async getOneSubProductById(@CurrentUser('role') role: string, @Args('_id') _id: string) {
     const subProduct = await this.subProductService.getOneSubProductById(_id, role);
     return subProduct;
   }
 
-  @Roles(ROLES.ADMIN, ROLES.SUPERADMIN, ROLES.MANAGER)
+  @Roles(ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.MANAGER)
   @Query(() => [SubProduct], { name: 'getSubProductByMasterProductId' })
   async getSubProductsByMasterProductId(
     @CurrentUser('role') role: string,
@@ -63,7 +63,7 @@ export class SubProductResolver {
     return subProductsByMasterProductId;
   }
 
-  @Roles(ROLES.ADMIN, ROLES.SUPERADMIN)
+  @Roles(ROLES.ADMIN, ROLES.SUPER_ADMIN)
   @Mutation(() => SubProduct)
   async updateSubProductById(
     @CurrentUser('role') role: string,
@@ -77,7 +77,7 @@ export class SubProductResolver {
     return updatedProduct;
   }
 
-  @Roles(ROLES.ADMIN, ROLES.SUPERADMIN)
+  @Roles(ROLES.ADMIN, ROLES.SUPER_ADMIN)
   @Mutation(() => SubProduct)
   deleteSubProductById(@Args('_id') _id: string) {
     return this.subProductService.deleteSubProductById(_id);

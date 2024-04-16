@@ -29,9 +29,7 @@ export class CategoryService {
 
       if (parentCategory) {
         ancestors = parentCategory.ancestors || [];
-        const ancestorExists = ancestors.some((ancestor) =>
-          ancestor.id.equals(parentCategory._id),
-        );
+        const ancestorExists = ancestors.some((ancestor) => ancestor.id.equals(parentCategory._id));
         if (!ancestorExists) {
           ancestors.unshift({
             id: parentCategory._id,
@@ -63,9 +61,7 @@ export class CategoryService {
 
     if (userRole === 'SUPER_ADMIN') {
       query = query.where('status').in(['PUBLISHED', 'ARCHIVED']);
-      totalCountQuery = totalCountQuery
-        .where('status')
-        .in(['PUBLISHED', 'ARCHIVED']);
+      totalCountQuery = totalCountQuery.where('status').in(['PUBLISHED', 'ARCHIVED']);
     } else {
       query = query.where('status').equals('PUBLISHED');
       totalCountQuery = totalCountQuery.where('status').equals('PUBLISHED');

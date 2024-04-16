@@ -15,7 +15,7 @@ import { CurrentUser } from 'common/library/decorators/current-user.decorator';
 export class MasterProductResolver {
   constructor(private readonly masterProductService: MasterProductService) {}
   //     @CurrentUser('role') role: string,
-  @Roles(ROLES.ADMIN, ROLES.SUPERADMIN)
+  @Roles(ROLES.ADMIN, ROLES.SUPER_ADMIN)
   @Mutation(() => MasterProduct)
   createMasterProduct(
     @Args('createMasterProductInput')
@@ -24,7 +24,7 @@ export class MasterProductResolver {
     return this.masterProductService.createMasterProduct(createMasterProductInput);
   }
 
-  @Roles(ROLES.ADMIN, ROLES.SUPERADMIN, ROLES.MANAGER)
+  @Roles(ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.MANAGER)
   @Query(() => MasterProductList, { name: 'getAllMasterProduct' })
   async getAllMasterProducts(
     @CurrentUser('role') role: string,
@@ -44,14 +44,14 @@ export class MasterProductResolver {
     return products;
   }
 
-  @Roles(ROLES.ADMIN, ROLES.SUPERADMIN, ROLES.MANAGER)
+  @Roles(ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.MANAGER)
   @Query(() => MasterProduct, { name: 'getMasterProduct' })
   async getOneMasterProductById(@Args('_id') _id: string, @CurrentUser('role') role: string) {
     const masterProduct = await this.masterProductService.getOneMasterProductById(_id, role);
     return masterProduct;
   }
 
-  @Roles(ROLES.ADMIN, ROLES.SUPERADMIN)
+  @Roles(ROLES.ADMIN, ROLES.SUPER_ADMIN)
   @Mutation(() => MasterProduct)
   async updateMasterProductById(
     @CurrentUser('role') role: string,
@@ -73,13 +73,13 @@ export class MasterProductResolver {
   //   return this.masterProductService.deleteMasterProductById(_id);
   // }
 
-  @Roles(ROLES.ADMIN, ROLES.SUPERADMIN)
+  @Roles(ROLES.ADMIN, ROLES.SUPER_ADMIN)
   @Mutation(() => String)
   deleteCategoryById(@Args('categoryId', { type: () => String }) categoryId: string) {
     return this.masterProductService.deleteCategoryAndMasterProduct(categoryId);
   }
 
-  @Roles(ROLES.ADMIN, ROLES.SUPERADMIN)
+  @Roles(ROLES.ADMIN, ROLES.SUPER_ADMIN)
   @Mutation(() => String)
   deleteMasterProduct(@Args('masterProductId', { type: () => String }) masterProductId: string) {
     return this.masterProductService.deleteMasterProductAndItsSubProducts(masterProductId);

@@ -1,20 +1,20 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Reflector } from '@nestjs/core';
 import { GqlExecutionContext } from '@nestjs/graphql';
-import { ROLES } from 'apps/auth/src/users/enums/role.enum';
-import * as jwt from 'jsonwebtoken';
+import { JwtService } from '@nestjs/jwt';
 @Injectable()
 export class RolesGuard implements CanActivate {
-  constructor(private readonly reflector: Reflector) {}
+  constructor(
+    private readonly reflector: Reflector,
+    private jwtService: JwtService,
 
-  getRequest(context: ExecutionContext) {
-    const ctx = GqlExecutionContext.create(context);
-    return ctx.getContext().req;
-  }
+    private readonly configService: ConfigService,
+  ) {}
 
-  async canActivate(context: ExecutionContext) {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     // required role
-    const requiredRoles = this.reflector.getAllAndOverride<ROLES[]>('roles', [
+    const requiredRoles = this.reflector.getAllAndOverride<string[]>('roles', [
       context.getHandler(),
       context.getClass(),
     ]);
@@ -24,17 +24,26 @@ export class RolesGuard implements CanActivate {
     }
 
     const ctx = GqlExecutionContext.create(context);
-
-    const token = await ctx.getContext().req.headers['authorization']?.split(' ')[1];
-    // console.log(token, 'token');
+    const token = ctx.getContext().req.headers['authorization']?.split(' ')[1];
 
     if (!token) {
       return false;
     }
 
-    const user = jwt.verify(token, 'mysecretkey');
+    try {
+      const decodedToken = this.jwtService.verify(token, {
+        secret: this.configService.get('JWT_SECRET'),
+      }); // Assuming you're using the JwtService from @nestjs/jwt
 
-    // // does the current user making request, have those requied role(s) in it
-    return requiredRoles.some((role) => [user.role].includes(role));
+      if (typeof decodedToken !== 'object' || !decodedToken.hasOwnProperty('role')) {
+        return false; // Invalid token format or missing role property
+      }
+      const userRole = decodedToken['role'];
+
+      return requiredRoles.includes(userRole);
+    } catch (error) {
+      console.error('Error verifying JWT token:', error);
+      return false; // Token verification failed
+    }
   }
 }
