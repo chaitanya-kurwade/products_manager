@@ -95,6 +95,9 @@ dependencies:
   joi:
     specifier: ^17.11.0
     version: 17.11.0
+  jsonwebtoken:
+    specifier: ^9.0.2
+    version: 9.0.2
   lodash:
     specifier: ^4.17.21
     version: 4.17.21
@@ -4757,7 +4760,7 @@ packages:
       minimatch: 3.1.2
       node-abort-controller: 3.1.1
       schema-utils: 3.3.0
-      semver: 7.5.4
+      semver: 7.6.0
       tapable: 2.2.1
       typescript: 5.2.2
       webpack: 5.89.0
@@ -8739,7 +8742,7 @@ packages:
       methods: 1.1.2
       mime: 2.6.0
       qs: 6.11.2
-      semver: 7.5.4
+      semver: 7.6.0
     transitivePeerDependencies:
       - supports-color
     dev: true
