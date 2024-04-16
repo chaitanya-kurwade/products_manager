@@ -13,10 +13,27 @@ export class EmailserviceController {
     return await ({ message: 'sendEmailToVerifyEmail processed successfully.' } + user.email);
   }
 
+  @Public()
+  @Get('token')
+  async verifyEmail(
+    @Query('token') token: string,
+  ): Promise<string> {
+    return this.emailserviceService.verifyEmail(token);
+  }
+
   @EventPattern('sendEmailToVerifyEmailAndCreatePassword', { async: true })
   async sendEmailToVerifyEmailAndCreatePassword(@Payload() user: any): Promise<string> {
     this.emailserviceService.sendEmailToVerifyEmailAndCreatePassword(user);
     return await ({ message: 'sendEmailToVerifyEmailAndCreatePassword processed successfully.' } + user.email);
+  }
+
+  @Public()
+  @Get('getTokenAndCreatePassword')
+  async verifyEmailAndCreatePassword(
+    @Query('token') uniqueString: string,
+    @Query('newPassword') newPassword?: string,
+  ): Promise<string> {
+    return this.emailserviceService.verifyEmailAndCreatePassword(uniqueString, newPassword);
   }
 
   @EventPattern('forgetPasswordSendEmail', { async: true })
@@ -25,23 +42,11 @@ export class EmailserviceController {
   }
 
   @Public()
-  @Get('getTokenAndCretePassword')
-  verifyEmailAndCreatePassword(
-    @Query('token') uniqueString: string,
-    @Query('newPassword') newPassword?: string,
-  ): Promise<string> {
-    return this.emailserviceService.verifyEmailAndCreatePassword(uniqueString, newPassword);
-  }
-
-  @Public()
-  @Get('getTokenAndCretePassword')
-  verifyEmail(
+  @Get('token')
+  async forgetPasswordGetEmail(
     @Query('token') token: string,
-    // @Query('newPassword') newPassword?: string,
-  ): Promise<string> {
-    // console.log('controller');
-    // CODE
-    // FIND UPDATE(EMAIL,{CODE})
-    return this.emailserviceService.verifyEmail(token);
+    @Query('newPassword') newPassword: string,
+  ): Promise<void> {
+    this.emailserviceService.forgetPassword(token, newPassword);
   }
 }

@@ -430,7 +430,7 @@ export class UsersService {
     const user = await this.enterUserIdOrUsernameOrEmailOrPhoneNumberToLogin(_id);
     if (user) {
       const password = bcrypt.hash(newPassword, 10); // 10 = salt
-      await this.userModel.findByIdAndUpdate(_id, { password: password }, { new: true });
+      await this.userModel.findByIdAndUpdate(_id, { password: password, isEmailVerified: true }, { new: true });
       return 'password created sucessfully';
     }
   }
@@ -453,6 +453,17 @@ export class UsersService {
     } else {
       throw new NotFoundException('user not found, please pass valid credentials, else');
     }
-    return `upadte password link sent on ${email}`;
+    return `upadte password link sent on ${user.email}`;
+  }
+
+  async forgetPassword(email: string, newPassword: string): Promise<string> {
+    const user = await this.enterUserIdOrUsernameOrEmailOrPhoneNumberToLogin(email);
+    if (user) {
+      const password = bcrypt.hash(newPassword);
+      this.userModel.findByIdAndUpdate(user._id, { password: password }, { new: true });
+    } else {
+      throw new BadRequestException('password could not changed');
+    }
+    return 'new password created successfully';
   }
 }

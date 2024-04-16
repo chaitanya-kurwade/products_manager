@@ -64,9 +64,9 @@ export class EmailserviceService {
 
   async generateUniqueString(): Promise<string> {
     // Generate a random 32-bit integer
-    const randomInt = Math.floor(Math.random() * (2 ** 32));
+    const randomInt = Math.floor(Math.random() * (2 ** 64));
     // Convert the integer to a hexadecimal string
-    const hexString = randomInt.toString(16);
+    const hexString = randomInt.toString(32);
     // Pad the string with zeros to ensure it's always 8 characters long
     const paddedHexString = hexString.padStart(8, '0');
     return paddedHexString;
@@ -77,7 +77,7 @@ export class EmailserviceService {
     const uniqueString = await this.generateUniqueString();
     const link = `${this.configService.get(
       'VERIFY_EMAIL_LINK',
-    )}/emailservice/getTokenAndCretePassword/?token=${uniqueString}`;
+    )}/emailservice/getTokenAndCreatePassword/?token=${uniqueString}`;
     const info = {
       from: `${user.firstName} <${this.configService.get('SENDER_EMAIL')}>`,
       to: emailId,
@@ -148,6 +148,32 @@ export class EmailserviceService {
   }
 
   async forgetPasswordSendEmail(user: any): Promise<any> {
-    return user;
+    const { _id: userId, email: emailId, firstName: firstName } = user;
+    const uniqueString = await this.generateUniqueString();
+    const link = `${this.configService.get(
+      'VERIFY_EMAIL_LINK',
+    )}/emailservice/getTokenAndCreatePassword/?token=${uniqueString}`;
+    const info = {
+      from: `${user.firstName} <${this.configService.get('SENDER_EMAIL')}>`,
+      to: emailId,
+      subject: 'verify your email',
+      html: `<b>Hello, ${firstName}!</b><p>This is an email to verify your email, <a href="${link}">click here to verify your email</a>.`,
+    };
+    await this.transporter.sendMail(info);
+    this.sendEmailModel.create({
+      hexString: uniqueString,
+      email: emailId,
+      userId: userId,
+      isActiveToken: true,
+      isVerified: false,
+      verifiedAt: new Date(),
+      createdAt: new Date(),
+    });
+    return 'change password link sent on your email';
+  }
+
+  async forgetPassword(token: string, newPassword: string): Promise<string> {
+    await this.userClient.emit('forgetPassword', { token, newPassword });
+    return 'password changed sucessfully';
   }
 }
