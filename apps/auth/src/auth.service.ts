@@ -130,7 +130,6 @@ export class AuthService {
       return {
         message: 'please verify email and generate password, mail sent on ' + user.email,
         type: VERIFICATION_TYPE.VERIFY,
-        code: 'email+TIME',
       };
     }
 
