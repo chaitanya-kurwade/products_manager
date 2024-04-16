@@ -17,7 +17,7 @@ import { UpdateUserProfileInput } from './users/inputs/update-user-profile.input
 
 @Resolver()
 export class AuthResolver {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   @Mutation(() => LoginResponse)
   @Public()
@@ -37,7 +37,7 @@ export class AuthResolver {
     return this.authService.enterCredentialToLogin(credential);
   }
 
-  @Roles(ROLES.ADMIN, ROLES.MANAGER, ROLES.SUPERADMIN)
+  @Roles(ROLES.ADMIN, ROLES.MANAGER, ROLES.SUPER_ADMIN)
   @Mutation(() => UserResponse)
   async createUser(
     @Args('createUserInput') createUserInput: CreateUserInput,

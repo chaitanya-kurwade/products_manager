@@ -3,11 +3,12 @@ import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
 import { UpdateUserInput } from './inputs/update-user.input';
 import { UserResponse } from './responses/user-response.entity';
-import { PaginationInput } from 'common/library';
+import { PaginationInput, Public } from 'common/library';
 import { ROLES } from './enums/role.enum';
 import { Roles } from 'common/library/decorators/roles.decorator';
 import { UsersList } from './responses/user-list.response';
 import { CurrentUser } from 'common/library/decorators/current-user.decorator';
+import { NotFoundException } from '@nestjs/common';
 
 @Resolver(() => User)
 export class UsersResolver {
@@ -18,7 +19,7 @@ export class UsersResolver {
   //   return this.usersService.create(createUserInput);
   // }
 
-  @Roles(ROLES.ADMIN, ROLES.MANAGER, ROLES.SUPERADMIN)
+  @Roles(ROLES.ADMIN, ROLES.MANAGER, ROLES.SUPER_ADMIN)
   @Query(() => UsersList, { name: 'getAllUsers' })
   async getAllUsers(
     @CurrentUser('role') role: string,
@@ -40,7 +41,7 @@ export class UsersResolver {
   //   return this.usersService.findOne(_id);
   // }
 
-  @Roles(ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.MANAGER)
+  @Roles(ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.MANAGER)
   @Mutation(() => UserResponse)
   async updateUser(
     @CurrentUser('role') role: string,
@@ -55,14 +56,14 @@ export class UsersResolver {
   //   return this.usersService.remove(_id);
   // }
 
-  // @Roles(ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.MANAGER)
+  // @Roles(ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.MANAGER)
   // @Query(() => UserResponse, { name: 'userByEmail' })
   // async getUserByEmailId(@Args('email') email: string, @CurrentUser('role') role: string) {
   //   const user = await this.usersService.getUserByEmailId(email, role);
   //   return user;
   // }
 
-  @Roles(ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.MANAGER)
+  @Roles(ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.MANAGER)
   @Query(() => UserResponse, { name: 'userByEmail' })
   async getUserById(
     @Args('userId') userId: string,
@@ -72,21 +73,36 @@ export class UsersResolver {
     return user;
   }
 
-  @Roles(ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.MANAGER)
+  @Roles(ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.MANAGER)
   @Mutation(() => String, { name: 'userLogout' })
-  async userLogout(@Args('email') email: string): Promise<string>  {
+  async userLogout(@Args('email') email: string): Promise<string> {
     return await this.usersService.userLogout(email);
   }
 
-  // @Public()
-  // @Mutation(() => String, { name: 'forgetPassword' })
-  // async forgetPasswordSendEmail(@Args('email') email: string) {
-  //   const user = await this.usersService.getUserByEmailId(email);
-  //   if (!user) {
-  //     throw new NotFoundException('user not found');
-  //   }
-  //   return await this.usersService.forgetPassword(user.email);
-  // }
+  @Roles(ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.MANAGER, ROLES.USER)
+  @Mutation(() => String, { name: 'createPassword' })
+  async createPassword(
+    @Args('newPassword') newPassword: string,
+    @Args('_id') _id: string,
+  ): Promise<string> {
+    return await this.usersService.createPassword(_id, newPassword);
+  }
+
+  @Roles(ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.MANAGER, ROLES.USER)
+  @Mutation(() => String, { name: 'updatePassword' })
+  async updatePassword(
+    @Args('_id') _id: string,
+    @Args('oldPassword', { nullable: true }) oldPassword: string,
+    @Args('newPassword') newPassword: string,
+  ): Promise<string> {
+    return await this.usersService.updatePassword(_id, oldPassword, newPassword);
+  }
+
+  @Public()
+  @Mutation(() => String, { name: 'forgetPasswordSendEmail' })
+  async forgetPasswordSendEmail(@Args('_id') _id: string): Promise<string> {
+    return await this.usersService.forgetPasswordSendEmail(_id);
+  }
 
   // @Mutation(() => String, { name: 'receiveForgetPasswordToken' })
   // async receiveForgetPasswordToken(newPassword: string, reset_token: string) {

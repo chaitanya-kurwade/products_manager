@@ -7,17 +7,14 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtStrategy } from 'common/library/strategies/jwt-strategy';
 import { JwtAuthGuard } from 'common/library/guards/jwt-auth.guard';
 import { APP_GUARD } from '@nestjs/core';
-import { EmailserviceModule } from 'apps/emailservice/src/emailservice.module';
-
 import { AuthController } from './auth.controller';
 import { GoogleStrategy } from 'common/library/strategies/google-strategy';
-import { VerificationModule } from './verification/verification.module';
 import { RolesGuard } from 'common/library/guards/roles.guard';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 
 @Module({
   imports: [
     UsersModule,
-    EmailserviceModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: './apps/auth/.env',
@@ -31,7 +28,16 @@ import { RolesGuard } from 'common/library/guards/roles.guard';
         },
       }),
     }),
-    VerificationModule,
+    ClientsModule.register([
+      {
+        name: 'emailservice',
+        transport: Transport.TCP,
+        options: {
+          host: 'localhost',
+          port: 1801,
+        },
+      },
+    ]),
   ],
   controllers: [AuthController],
   providers: [

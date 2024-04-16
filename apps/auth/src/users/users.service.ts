@@ -1,10 +1,4 @@
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  NotFoundException,
-  forwardRef,
-} from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserInput } from './inputs/create-user.input';
 import { UpdateUserInput } from './inputs/update-user.input';
 import { User, UserDocument } from './entities/user.entity';
@@ -16,12 +10,10 @@ import { PaginationInput } from 'common/library';
 import * as nodemailer from 'nodemailer';
 import { UserResponse } from './responses/user-response.entity';
 import { CreateUserViaGoogleInput } from './inputs/create-user-via-google.input';
-import { EmailserviceService } from 'apps/emailservice/src/emailservice.service';
 import { ConfigService } from '@nestjs/config';
 import { ROLES } from './enums/role.enum';
-import { VerificationService } from '../verification/verification.service';
-import { UserLoginCredential } from './responses/user-login-credential.response.entity';
 import { UpdateUserProfileInput } from './inputs/update-user-profile.input';
+import { ClientProxy } from '@nestjs/microservices';
 
 @Injectable()
 export class UsersService {
@@ -30,9 +22,7 @@ export class UsersService {
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
     private readonly configService: ConfigService,
-    private readonly emailService: EmailserviceService,
-    @Inject(forwardRef(() => VerificationService))
-    private readonly verificationService: VerificationService,
+    @Inject('emailservice') private emailClient: ClientProxy,
   ) {
     this.transporter = nodemailer.createTransport({
       host: `${this.configService.get('SMTP_HOST')}`,
@@ -47,9 +37,8 @@ export class UsersService {
 
   async createUser(createUserInput: CreateUserInput): Promise<User> {
     if (!createUserInput?.email) {
-      throw new BadRequestException('user not created');
+      throw new BadRequestException('User not created');
     }
-    // const { email, username, phoneNumber } = createUserInput;
     const email = createUserInput.email;
     const username = createUserInput.username;
     const phoneNumber = createUserInput.phoneNumber;
@@ -57,16 +46,12 @@ export class UsersService {
     const user = await this.userModel.findOne({
       $or: [{ email: email }, { phoneNumber: phoneNumber }, { username: username }],
     });
+
     if (user) {
-      console.log(user.username, user.phoneNumber, user.email);
       throw new BadRequestException('user not created, please pass valid username or phone number');
     }
-
     // const password = await bcrypt.hash(createUserInput.password, 10); // 10 = salt
-    const newUser = await this.userModel.create({
-      createUserInput,
-      // password,
-    });
+    const newUser = await this.userModel.create(createUserInput);
     return newUser;
   }
 
@@ -178,7 +163,7 @@ export class UsersService {
     const updatedUser = await this.userModel.findByIdAndUpdate(_id, updateUserInput, { new: true });
     console.log({ updateUserInput }, { role });
 
-    if (role === ROLES.SUPERADMIN) {
+    if (role === ROLES.SUPER_ADMIN) {
       return updatedUser;
     } else if (role === ROLES.ADMIN) {
       // try {
@@ -209,23 +194,6 @@ export class UsersService {
     }
   }
 
-  async updateUserProfileById(
-    _id: string,
-    updateUserProfileInput: UpdateUserProfileInput,
-  ): Promise<User> {
-    return this.userModel.findByIdAndUpdate(_id, updateUserProfileInput, { new: true });
-  }
-
-  async updatePassword(userId: string, newPassword: string) {
-    const password = await bcrypt.hash(newPassword, 10); // 10 = salt
-    const user = await this.userModel.findByIdAndUpdate(
-      userId,
-      { password: password },
-      { new: true },
-    );
-    return user;
-  }
-
   async remove(_id: string) {
     const user = await this.userModel.findByIdAndDelete(_id);
     if (!user) {
@@ -235,10 +203,9 @@ export class UsersService {
   }
 
   async getByUsernameOrPhoneOrEmail(credential: string): Promise<User> {
-    const user = await this.userModel.findOne({
+    return await this.userModel.findOne({
       $or: [{ email: credential }, { phoneNumber: credential }, { username: credential }],
     });
-    return user;
   }
 
   async getUserByEmailId(email: string, role?: string) {
@@ -249,7 +216,7 @@ export class UsersService {
       if (!user) {
         throw new NotFoundException(`User not found with email: ${email}`);
       }
-      if (role.toUpperCase() === ROLES.SUPERADMIN) {
+      if (role.toUpperCase() === ROLES.SUPER_ADMIN) {
         return user;
       }
       if (role.toUpperCase() === ROLES.ADMIN) {
@@ -297,15 +264,20 @@ export class UsersService {
     return logOutResponse;
   }
 
-  // async enterUsernameOrEmailOrPhoneNumberToLogin(credential: string): Promise<User> {
-  //   const user = await this.userModel.findOne({
-  //     $or: [{ email: credential }, { phoneNumber: credential }, { username: credential }],
-  //   });
-  //   if (!user) {
-  //     throw new NotFoundException('user not found, please pass valid credentials');
-  //   }
-  //   return user;
-  // }
+  async enterUserIdOrUsernameOrEmailOrPhoneNumberToLogin(credential: string): Promise<User> {
+    const user = await this.userModel.findOne({
+      $or: [
+        { _id: credential },
+        { email: credential },
+        { phoneNumber: credential },
+        { username: credential },
+      ],
+    });
+    if (!user) {
+      throw new NotFoundException('user not found, please pass valid credentials');
+    }
+    return user;
+  }
 
   async sendOtpToLogin(phoneNumberOrEmailOrUsername: string): Promise<string> {
     const otp = Math.floor(Math.random() * 900000) + 100000;
@@ -378,36 +350,6 @@ export class UsersService {
     return user;
   }
 
-  // async findOneUserForLogin(userCredential?: string): Promise<User | null> {
-  //   const user = await this.userModel.findOne({
-  //     // ...(email && { email }),
-  //     // ...(username && { username }),
-  //     // ...(phoneNumber && { phoneNumber }),
-  //     $or: [
-  //       { email: userCredential },
-  //       { phoneNumber: userCredential },
-  //       { username: userCredential },
-  //     ],
-  //   });
-  //   return user;
-  // }
-
-  // async findOneUserForLogin(userCredential: string): Promise<UserLoginCredential> {
-  //   const user = await this.userModel.findOne({ username: userCredential });
-
-  //   if (!user) {
-  //     if (this.validatePhoneNumber(userCredential)) {
-  //       const user = await this.userModel.findOne({ phoneNumber: userCredential });
-  //       return { user, userCredential };
-  //     } else if (this.validateEmail(userCredential)) {
-  //       console.log(userCredential, 'userCredential');
-  //       const user = await this.userModel.findOne({ email: userCredential });
-  //       return { user, userCredential };
-  //     }
-  //   }
-  //   return { user, userCredential };
-  // }
-
   async findOneUserForLogin(userCredential: string): Promise<User> {
     const user = await this.userModel.findOne({
       $or: [
@@ -446,7 +388,6 @@ export class UsersService {
         ...(username ? [{ username }] : []),
       ],
     });
-    console.log('findOneUser', { user });
     return user;
   }
 
@@ -476,5 +417,41 @@ export class UsersService {
     return await this.userModel.findByIdAndUpdate(userId, {
       isEmailVerified: true,
     });
+  }
+
+  async updateUserProfileById(
+    _id: string,
+    updateUserProfileInput: UpdateUserProfileInput,
+  ): Promise<User> {
+    return this.userModel.findByIdAndUpdate(_id, updateUserProfileInput, { new: true });
+  }
+
+  async createPassword(_id: string, newPassword: string): Promise<string> {
+    const user = await this.enterUserIdOrUsernameOrEmailOrPhoneNumberToLogin(_id);
+    if (user) {
+      const password = bcrypt.hash(newPassword, 10); // 10 = salt
+      await this.userModel.findByIdAndUpdate(_id, { password: password }, { new: true });
+      return 'password created sucessfully';
+    }
+  }
+
+  async updatePassword(_id: string, oldPassword: string, newPassword: string): Promise<string> {
+    const user = await this.userModel.findById(_id);
+    if (bcrypt.compare(oldPassword, user.password)) {
+      const latestPassword = bcrypt.hash(newPassword, 10); // 10 = salt
+      await this.userModel.findByIdAndUpdate(_id, { password: latestPassword }, { new: true });
+      return 'password updated sucessfully';
+    }
+    return 'old password did not matched';
+  }
+
+  async forgetPasswordSendEmail(email: string): Promise<string> {
+    const user = await this.enterUserIdOrUsernameOrEmailOrPhoneNumberToLogin(email);
+    if (user) {
+      this.emailClient.emit('sendEmailToVerifyEmailAndCreatePassword', user);
+    } else {
+      throw new NotFoundException('user not found, please pass valid credentials, else');
+    }
+    return `upadte password link sent on ${email}`;
   }
 }

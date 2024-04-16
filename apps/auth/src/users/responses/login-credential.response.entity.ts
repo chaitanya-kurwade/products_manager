@@ -7,4 +7,7 @@ export class LoginCredentialResponse {
 
   @Field({ nullable: true })
   type?: string;
+
+  @Field({ nullable: true })
+  code?: string;
 }

@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -10,23 +11,22 @@ import { JwtService } from '@nestjs/jwt';
 import { CreateUserInput } from './users/inputs/create-user.input';
 import { User } from './users/entities/user.entity';
 import { ConfigService } from '@nestjs/config';
-import { EmailserviceService } from 'apps/emailservice/src/emailservice.service';
 import { LoginResponse } from './users/responses/user-login.response.entity';
 import { UserResponse } from './users/responses/user-response.entity';
 import { ROLES } from './users/enums/role.enum';
-import { VerificationService } from './verification/verification.service';
 import { VERIFICATION_TYPE } from './users/enums/verification-type.enum';
 import { LoginCredentialResponse } from './users/responses/login-credential.response.entity';
 import { UpdateUserProfileInput } from './users/inputs/update-user-profile.input';
+import { ClientProxy } from '@nestjs/microservices';
+import { startCase, includes } from 'lodash';
 
 @Injectable()
 export class AuthService {
   constructor(
+    @Inject('emailservice') private emailClient: ClientProxy,
     private readonly userService: UsersService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-    private readonly emailService: EmailserviceService,
-    private readonly verificationService: VerificationService,
   ) {}
 
   async validate(email: string, password: string) {
@@ -85,8 +85,6 @@ export class AuthService {
     if (user.phoneNumber === credential) {
       const otp = passwordOrOtp || 1234;
       if (otp === '1234') {
-        console.log({ otp });
-
         const { access_token, refresh_token } = await this.createTokens(
           user._id,
           user.email,
@@ -125,12 +123,14 @@ export class AuthService {
     if (!user && (!isEmail || !isPhoneNumber)) {
       throw new NotFoundException('User not found, incorrect username: ' + userCredential);
     }
-
+    // const currentTime = Date();
     if (!user.isEmailVerified && !user.password) {
-      this.verificationService.sendEmailToVerifyEmailAndCreatePassword(user.email);
+      // code:'email+TIME'
+      this.emailClient.emit('sendEmailToVerifyEmailAndCreatePassword', user);
       return {
         message: 'please verify email and generate password, mail sent on ' + user.email,
         type: VERIFICATION_TYPE.VERIFY,
+        code: 'email+TIME',
       };
     }
 
@@ -155,6 +155,12 @@ export class AuthService {
       throw new NotFoundException('User not found');
     }
   }
+
+  // verify email
+  // async verifyEmail(token: string): Promise<string> {
+  //   return await firstValueFrom(this.emailClient.send('verifyEmail', token));
+  //   // return this.verificationService.verifyEmail(token);
+  // }
 
   // async enterPasswordToLogin(password: string) {
   //   return this.userService.enterPasswordToLogin(password);
@@ -192,11 +198,10 @@ export class AuthService {
   // createUser
   async createUser(createUserInput: CreateUserInput, role?: string): Promise<UserResponse> {
     const existingUser = await this.findOneUserForSignup(
-      createUserInput.username,
-      createUserInput.email,
-      createUserInput.phoneNumber,
+      createUserInput?.username,
+      createUserInput?.email,
+      createUserInput?.phoneNumber,
     );
-
     if (existingUser) {
       throw new BadRequestException('User already exists');
     }
@@ -211,7 +216,7 @@ export class AuthService {
     if (createUserInput?.email === existingUser?.email) {
       throw new BadRequestException('The email already exists');
     }
-    if (createUserInput?.username && createUserInput.username === existingUser?.username) {
+    if (createUserInput?.username && createUserInput?.username === existingUser?.username) {
       throw new BadRequestException('The username already exists');
     }
 
@@ -219,20 +224,24 @@ export class AuthService {
 
     const createUser = {
       ...createUserInput,
+      email: createUserInput?.email.toLowerCase(),
+      firstName: startCase(createUserInput?.firstName),
+      lastName: startCase(createUserInput?.lastName),
       hashedRefreshToken: '',
       newRole,
     };
 
     if (role) {
       if (
-        createUserInput.role !== ROLES.SUPERADMIN &&
-        createUserInput.role !== ROLES.ADMIN &&
-        createUserInput.role !== ROLES.MANAGER &&
-        createUserInput.role !== ROLES.USER
+        // createUserInput?.role !== ROLES.SUPER_ADMIN &&
+        // createUserInput?.role !== ROLES.ADMIN &&
+        // createUserInput?.role !== ROLES.MANAGER &&
+        // createUserInput?.role !== ROLES.USER
+        !includes(ROLES, createUserInput?.role)
       ) {
         throw new BadRequestException(`Please check the spelling ${createUserInput.role}`);
       }
-      if (role === ROLES.SUPERADMIN) {
+      if (role === ROLES.SUPER_ADMIN) {
         return await this.userService.createUser(createUser);
       } else if (role === ROLES.ADMIN) {
         if (newRole !== ROLES.MANAGER && newRole !== ROLES.USER) {
@@ -424,10 +433,5 @@ export class AuthService {
     };
 
     return { access_token, refresh_token, userResponse };
-  }
-
-  // verify email
-  async verifyEmail(token: string): Promise<string> {
-    return this.verificationService.verifyEmail(token);
   }
 }

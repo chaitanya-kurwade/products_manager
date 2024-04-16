@@ -1,17 +1,12 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { VerificationService } from './verification.service';
 import { VerificationResolver } from './verification.resolver';
-import {
-  Verification,
-  VerificationSchema,
-} from './entities/verification.entity';
+import { Verification, VerificationSchema } from './entities/verification.entity';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
-import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
-    forwardRef(() => UsersModule),
     ConfigModule.forRoot({ isGlobal: true }),
     MongooseModule.forFeature([
       {

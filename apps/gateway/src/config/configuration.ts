@@ -12,4 +12,8 @@ export default () => ({
     host: process.env.IMAGE_APP_PORT,
     port: parseInt(process.env.IMAGE_APP_PORT, 10),
   },
+  emailservice: {
+    host: process.env.EMAILSERVICE_APP_PORT,
+    port: parseInt(process.env.EMAILSERVICE_APP_PORT, 10),
+  },
 });

@@ -13,13 +13,13 @@ import { CurrentUser } from 'common/library/decorators/current-user.decorator';
 export class CategoryResolver {
   constructor(private readonly categoryService: CategoryService) {}
 
-  @Roles(ROLES.ADMIN, ROLES.SUPERADMIN)
+  @Roles(ROLES.ADMIN, ROLES.SUPER_ADMIN)
   @Mutation(() => Category)
   createCategory(@Args('createCategoryInput') createCategoryInput: CreateCategoryInput) {
     return this.categoryService.create(createCategoryInput);
   }
 
-  @Roles(ROLES.ADMIN, ROLES.SUPERADMIN, ROLES.MANAGER)
+  @Roles(ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.MANAGER)
   @Query(() => CategoryList, { name: 'categories' })
   async getAllCategories(
     @CurrentUser('role') role: string,
@@ -36,21 +36,21 @@ export class CategoryResolver {
     return categoryList;
   }
 
-  @Roles(ROLES.ADMIN, ROLES.SUPERADMIN, ROLES.MANAGER)
+  @Roles(ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.MANAGER)
   @Query(() => Category, { name: 'categoryById' })
   async getCategoryById(@CurrentUser('role') role: string, @Args('_id') _id: string) {
     const category = await this.categoryService.getCategoryById(_id, role);
     return category;
   }
 
-  @Roles(ROLES.ADMIN, ROLES.SUPERADMIN, ROLES.MANAGER)
+  @Roles(ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.MANAGER)
   @Query(() => [Category], { name: 'getChildCategory' })
   async getChildCategoryByCategoryId(@CurrentUser('role') role: string, @Args('_id') _id: string) {
     const childCategory = await this.categoryService.getChildCategoryByCategoryId(_id, role);
     return childCategory;
   }
 
-  @Roles(ROLES.ADMIN, ROLES.SUPERADMIN)
+  @Roles(ROLES.ADMIN, ROLES.SUPER_ADMIN)
   @Mutation(() => Category)
   async updateCategoryById(
     @CurrentUser('role') role: string,

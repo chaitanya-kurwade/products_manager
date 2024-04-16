@@ -1,6 +1,6 @@
 import { InputType, Field } from '@nestjs/graphql';
 import { ROLES } from '../enums/role.enum';
-import { IsPhoneNumber } from 'class-validator';
+import { IsPhoneNumber, IsPostalCode } from 'class-validator';
 
 @InputType()
 export class UpdateUserInput {
@@ -18,7 +18,7 @@ export class UpdateUserInput {
 
   @IsPhoneNumber('IN')
   @Field({ nullable: true })
-  phoneNumber?: string; 
+  phoneNumber?: string;
 
   // @IsEmail()
   // @Field()
@@ -40,6 +40,7 @@ export class UpdateUserInput {
   @Field({ nullable: true })
   addLineTwo?: string;
 
+  @IsPostalCode('IN')
   @Field({ nullable: true })
   pin?: string;
 

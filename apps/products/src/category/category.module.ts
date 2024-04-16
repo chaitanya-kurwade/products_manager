@@ -5,10 +5,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Category, CategorySchema } from './entities/category.entity';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { GraphQLModule } from '@nestjs/graphql';
-import {
-  ApolloFederationDriver,
-  ApolloFederationDriverConfig,
-} from '@nestjs/apollo';
+import { ApolloFederationDriver, ApolloFederationDriverConfig } from '@nestjs/apollo';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 import { JwtAuthGuard } from 'common/library/guards/jwt-auth.guard';
 import { APP_GUARD } from '@nestjs/core';
@@ -38,10 +35,6 @@ import { APP_GUARD } from '@nestjs/core';
     }),
   ],
   exports: [CategoryResolver, CategoryService],
-  providers: [
-    CategoryResolver,
-    CategoryService,
-    { provide: APP_GUARD, useClass: JwtAuthGuard },
-  ],
+  providers: [CategoryResolver, CategoryService, { provide: APP_GUARD, useClass: JwtAuthGuard }],
 })
 export class CategoryModule {}
