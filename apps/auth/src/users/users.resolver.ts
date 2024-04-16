@@ -8,7 +8,6 @@ import { ROLES } from './enums/role.enum';
 import { Roles } from 'common/library/decorators/roles.decorator';
 import { UsersList } from './responses/user-list.response';
 import { CurrentUser } from 'common/library/decorators/current-user.decorator';
-import { NotFoundException } from '@nestjs/common';
 
 @Resolver(() => User)
 export class UsersResolver {
@@ -91,17 +90,17 @@ export class UsersResolver {
   @Roles(ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.MANAGER, ROLES.USER)
   @Mutation(() => String, { name: 'updatePassword' })
   async updatePassword(
-    @Args('_id') _id: string,
+    @Args('email') email: string,
     @Args('oldPassword', { nullable: true }) oldPassword: string,
     @Args('newPassword') newPassword: string,
   ): Promise<string> {
-    return await this.usersService.updatePassword(_id, oldPassword, newPassword);
+    return await this.usersService.updatePassword(email, oldPassword, newPassword);
   }
 
   @Public()
   @Mutation(() => String, { name: 'forgetPasswordSendEmail' })
-  async forgetPasswordSendEmail(@Args('_id') _id: string): Promise<string> {
-    return await this.usersService.forgetPasswordSendEmail(_id);
+  async forgetPasswordSendEmail(@Args('email') email: string): Promise<string> {
+    return await this.usersService.forgetPasswordSendEmail(email);
   }
 
   // @Mutation(() => String, { name: 'receiveForgetPasswordToken' })
