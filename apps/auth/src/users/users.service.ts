@@ -430,17 +430,17 @@ export class UsersService {
     const user = await this.enterUserIdOrUsernameOrEmailOrPhoneNumberToLogin(email);
     if (user) {
       const password = await bcrypt.hash(newPassword, 10); // 10 = salt
-      await this.userModel.findByIdAndUpdate(user._id, { password: password, isEmailVerified: true }, { new: true });
+      const _id = user._id;
+      await this.userModel.findByIdAndUpdate(_id, { password: password, isEmailVerified: true }, { new: true });
       return 'password created sucessfully';
     }
   }
 
-  async updatePassword(email: string, oldPassword: string, newPassword: string): Promise<string> {
+  async updatePassword(email: string, oldPassword: string, newPassword: string): Promise<User> {
     const user = await this.enterUserIdOrUsernameOrEmailOrPhoneNumberToLogin(email);
-    if (bcrypt.compare(oldPassword, user.password)) {
-      const latestPassword = bcrypt.hash(newPassword, 10); // 10 = salt
-      await this.userModel.findByIdAndUpdate(user._id, { password: latestPassword }, { new: true });
-      return 'password updated sucessfully';
+    if (await bcrypt.compare(oldPassword, user.password)) {
+      const latestPassword = await bcrypt.hash(newPassword, 10); // 10 = salt
+      return await this.userModel.findByIdAndUpdate(user._id, { password: latestPassword }, { new: true });
     } else {
       throw new BadRequestException('old password not matched');
     }
@@ -456,14 +456,14 @@ export class UsersService {
     return `forget password link sent on ${user.email}`;
   }
 
-  async forgetPassword(email: string, newPassword: string): Promise<string> {
+  async forgetPassword(email: string, newPassword: string): Promise<User | string> {
     const user = await this.enterUserIdOrUsernameOrEmailOrPhoneNumberToLogin(email);
     if (user.email) {
-      const password = await bcrypt.hash(newPassword);
-      this.userModel.findByIdAndUpdate(user._id, { password: password }, { new: true });
+      const password = await bcrypt.hash(newPassword, 10);
+      const _id = user._id;
+      return await this.userModel.findByIdAndUpdate(_id, { password: password, isEmailVerified: true }, { new: true });
     } else {
       throw new BadRequestException('password could not changed');
     }
-    return 'new password created successfully';
   }
 }

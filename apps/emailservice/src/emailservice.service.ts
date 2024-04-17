@@ -158,7 +158,7 @@ export class EmailserviceService {
     const verificationProcess = await this.sendEmailModel.findOne({ hexString: uniqueString });
     const email = verificationProcess.email;
     await this.userClient.emit('forgetPassword', { email, newPassword });
-    const _id = verificationProcess._id;
+    const _id = verificationProcess._id;    
     await this.sendEmailModel.findByIdAndUpdate(_id, {
       isActiveToken: false,
       isVerified: true,
