@@ -8,6 +8,7 @@ import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
+import { PASSWORD_ACTION_TYPE } from './enums/password-action-type.enum';
 
 @Injectable()
 export class EmailserviceService {
@@ -30,38 +31,6 @@ export class EmailserviceService {
     });
   }
 
-  async sendEmailToVerifyEmail(user: any): Promise<string> {
-    const secretKey = await this.configService.get('VERIFY_EMAIL_SECRET_KEY');
-    if (!user) {
-      throw new NotFoundException('user not found to verify email');
-    }
-    const { _id: userId, email: emailId, firstName: firstName } = user;
-    const token = await jwt.sign({ userId, emailId }, secretKey, { expiresIn: '1d' });
-    const saltRounds = 10;
-    const salt = await bcrypt.genSalt(saltRounds);
-    const hashedToken = await bcrypt.hash(token, salt);
-    const link = `${this.configService.get(
-      'VERIFY_EMAIL_LINK',
-    )}/emailservice/token/?token=${token}`;
-    const info = {
-      from: `${user.firstName} <${this.configService.get('SENDER_EMAIL')}>`,
-      to: emailId,
-      subject: 'verify your email',
-      html: `<b>Hello, ${firstName}!</b><p>This is an email to verify your email, <a href="${link}">click here to verify your email</a>.`,
-    };
-    await this.transporter.sendMail(info);
-    await this.sendEmailModel.create({
-      token: hashedToken,
-      email: emailId,
-      userId: userId,
-      isActiveToken: true,
-      isVerified: false,
-      verifiedAt: new Date(),
-      createdAt: new Date(),
-    });
-    return 'verification link sent on your email';
-  }
-
   async generateUniqueString(): Promise<string> {
     // Generate a random 32-bit integer
     const randomInt = Math.floor(Math.random() * (2 ** 64));
@@ -72,17 +41,21 @@ export class EmailserviceService {
     return paddedHexString;
   }
 
+  async findOneUsreId(userId: string): Promise<SendEmail> {
+    return await this.sendEmailModel.findOne({ userId });
+  }
+
   async sendEmailToVerifyEmailAndCreatePassword(user: any): Promise<string> {
     const { _id: userId, email: emailId, firstName: firstName } = user;
     const uniqueString = await this.generateUniqueString();
     const link = `${this.configService.get(
       'VERIFY_EMAIL_LINK',
-    )}/emailservice/getTokenAndCreatePassword/?token=${uniqueString}`;
+    )}/${uniqueString}`;
     const info = {
-      from: `${user.firstName} <${this.configService.get('SENDER_EMAIL')}>`,
+      from: `${firstName} <${this.configService.get('SENDER_EMAIL')}>`,
       to: emailId,
-      subject: 'verify your email',
-      html: `<b>Hello, ${firstName}!</b><p>This is an email to verify your email, <a href="${link}">click here to verify your email</a>.`,
+      subject: 'verify your email, create password',
+      html: `<b>Hello, ${firstName}!</b><p>This is an email to verify your email, <a href="${link}">click here to create a new password</a>.`,
     };
     await this.transporter.sendMail(info);
     this.sendEmailModel.create({
@@ -94,46 +67,59 @@ export class EmailserviceService {
       verifiedAt: new Date(),
       createdAt: new Date(),
     });
-    return 'verification link sent on your email';
+    return 'verification link sent on your email, and create password';
   }
 
   async verifyEmailAndCreatePassword(uniqueString: string, newPassword: string): Promise<string> {
     const verificationProcess = await this.sendEmailModel.findOne({ hexString: uniqueString });
     const userId = verificationProcess.userId;
     if (verificationProcess.hexString && verificationProcess.isActiveToken && newPassword) {
-      await this.userClient.emit('updateEmailVerificationStatus', userId);
       // new password
       await firstValueFrom(this.userClient.send('createPassword', { userId, newPassword }));
-      const id = verificationProcess._id;
-      await this.sendEmailModel.findByIdAndUpdate(id, {
+      const _id = verificationProcess._id;
+      await this.sendEmailModel.findByIdAndUpdate(_id, {
         isActiveToken: false,
         isVerified: true,
+        passwordActionType: PASSWORD_ACTION_TYPE.CREATE_PASSWORD
       });
-      return 'your email is verified, you can close this tab';
+      return 'your email is verified and created pass, you can close this tab';
     } else {
       return 'link expired';
     }
   }
 
-  async verifyEmail(token: string): Promise<string> {
-    const secretKey = await this.configService.get('VERIFY_EMAIL_SECRET_KEY');
-    const user: any = await jwt.verify(token, secretKey);
-    const userId = user.userId;
-    const verificationEntity = await this.sendEmailModel.findOne({ userId });
-    const comparedToken = await bcrypt.compare(token, verificationEntity.token);
-    // const comparedCode = await bcrypt.compare(code, verificationEntity.code);
-    if (!userId) {
-      throw new Error('Invalid or expired token');
-    }
-    const verificationProcess = await this.findOneUsreId(user.userId);
+  async sendEmailToVerifyEmail(user: any): Promise<string> {
+    const { _id: userId, email: emailId, firstName: firstName } = user;
+    const uniqueString = await this.generateUniqueString();
+    const link = `${this.configService.get(
+      'VERIFY_EMAIL_LINK',
+    )}/${uniqueString}`;
+    const info = {
+      from: `${firstName} <${this.configService.get('SENDER_EMAIL')}>`,
+      to: emailId,
+      subject: 'verify your email',
+      html: `<b>Hello, ${firstName}!</b><p>This is an email to verify your email, <a href="${link}">click here to verify your email</a>.`,
+    };
+    await this.transporter.sendMail(info);
+    await this.sendEmailModel.create({
+      token: uniqueString,
+      email: emailId,
+      userId: userId,
+      isActiveToken: true,
+      isVerified: false,
+      verifiedAt: new Date(),
+      createdAt: new Date(),
+    });
+    return 'verification link sent on your email';
+  }
 
-    if (comparedToken && verificationProcess.isActiveToken) {
+  async verifyEmail(uniqueString: string): Promise<string> {
+    const verificationProcess = await this.sendEmailModel.findOne({ hexString: uniqueString });
+    const userId = verificationProcess.userId;
+    if (verificationProcess.hexString && verificationProcess.isActiveToken) {
       await this.userClient.emit('updateEmailVerificationStatus', userId);
-      // if (newPassword) {
-      //   await firstValueFrom(this.userClient.send('updatePassword', { userId, newPassword }));
-      // }
-      const id = verificationProcess._id;
-      await this.sendEmailModel.findByIdAndUpdate(id, {
+      const _id = verificationProcess._id;
+      await this.sendEmailModel.findByIdAndUpdate(_id, {
         isActiveToken: false,
         isVerified: true,
       });
@@ -141,10 +127,6 @@ export class EmailserviceService {
     } else {
       return 'link expired';
     }
-  }
-
-  async findOneUsreId(userId: string): Promise<SendEmail> {
-    return await this.sendEmailModel.findOne({ userId });
   }
 
   async forgetPasswordSendEmail(user: any): Promise<any> {
@@ -152,12 +134,12 @@ export class EmailserviceService {
     const uniqueString = await this.generateUniqueString();
     const link = `${this.configService.get(
       'VERIFY_EMAIL_LINK',
-    )}/emailservice/getTokenAndCreatePassword/?token=${uniqueString}`;
+    )}/${uniqueString}`;
     const info = {
       from: `${user.firstName} <${this.configService.get('SENDER_EMAIL')}>`,
       to: emailId,
-      subject: 'verify your email',
-      html: `<b>Hello, ${firstName}!</b><p>This is an email to verify your email, <a href="${link}">click here to verify your email</a>.`,
+      subject: 'verify your email, forget password',
+      html: `<b>Hello, ${firstName}!</b><p>This is an email to verify your email and , <a href="${link}">click here to change your forget password</a>.`,
     };
     await this.transporter.sendMail(info);
     this.sendEmailModel.create({
@@ -172,8 +154,16 @@ export class EmailserviceService {
     return 'change password link sent on your email';
   }
 
-  async forgetPassword(token: string, newPassword: string): Promise<string> {
-    await this.userClient.emit('forgetPassword', { token, newPassword });
+  async forgetPassword(uniqueString: string, newPassword: string): Promise<string> {
+    const verificationProcess = await this.sendEmailModel.findOne({ hexString: uniqueString });
+    const email = verificationProcess.email;
+    await this.userClient.emit('forgetPassword', { email, newPassword });
+    const _id = verificationProcess._id;
+    await this.sendEmailModel.findByIdAndUpdate(_id, {
+      isActiveToken: false,
+      isVerified: true,
+      passwordActionType: PASSWORD_ACTION_TYPE.FORGET_PASSWORD
+    });
     return 'password changed sucessfully';
   }
 }
