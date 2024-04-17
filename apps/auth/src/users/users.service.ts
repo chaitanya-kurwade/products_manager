@@ -429,7 +429,7 @@ export class UsersService {
   async createPassword(email: string, newPassword: string): Promise<string> {
     const user = await this.enterUserIdOrUsernameOrEmailOrPhoneNumberToLogin(email);
     if (user) {
-      const password = bcrypt.hash(newPassword, 10); // 10 = salt
+      const password = await bcrypt.hash(newPassword, 10); // 10 = salt
       await this.userModel.findByIdAndUpdate(user._id, { password: password, isEmailVerified: true }, { new: true });
       return 'password created sucessfully';
     }
@@ -459,7 +459,7 @@ export class UsersService {
   async forgetPassword(email: string, newPassword: string): Promise<string> {
     const user = await this.enterUserIdOrUsernameOrEmailOrPhoneNumberToLogin(email);
     if (user.email) {
-      const password = bcrypt.hash(newPassword);
+      const password = await bcrypt.hash(newPassword);
       this.userModel.findByIdAndUpdate(user._id, { password: password }, { new: true });
     } else {
       throw new BadRequestException('password could not changed');

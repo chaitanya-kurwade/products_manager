@@ -75,7 +75,7 @@ export class EmailserviceService {
     const userId = verificationProcess.userId;
     if (verificationProcess.hexString && verificationProcess.isActiveToken && newPassword) {
       // new password
-      await firstValueFrom(this.userClient.send('createPassword', { userId, newPassword }));
+      await this.userClient.emit('createPassword', { userId, newPassword });
       const _id = verificationProcess._id;
       await this.sendEmailModel.findByIdAndUpdate(_id, {
         isActiveToken: false,

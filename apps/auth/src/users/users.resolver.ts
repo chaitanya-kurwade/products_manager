@@ -91,7 +91,7 @@ export class UsersResolver {
   @Mutation(() => String, { name: 'updatePassword' })
   async updatePassword(
     @Args('email') email: string,
-    @Args('oldPassword', { nullable: true }) oldPassword: string,
+    @Args('oldPassword') oldPassword: string,
     @Args('newPassword') newPassword: string,
   ): Promise<string> {
     return await this.usersService.updatePassword(email, oldPassword, newPassword);
