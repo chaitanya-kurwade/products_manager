@@ -11,7 +11,7 @@ import { CurrentUser } from 'common/library/decorators/current-user.decorator';
 
 @Resolver(() => User)
 export class UsersResolver {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService) { }
 
   // @Mutation(() => User)
   // createUser(@Args('createUserInput') createUserInput: CreateUserInput) {

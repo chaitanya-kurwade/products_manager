@@ -118,7 +118,6 @@ export class EmailserviceService {
     const userId = verificationProcess.userId;
     if (verificationProcess.hexString && verificationProcess.isActiveToken) {
       await this.userClient.emit('updateEmailVerificationStatus', userId);
-      // new password
       const _id = verificationProcess._id;
       await this.sendEmailModel.findByIdAndUpdate(_id, {
         isActiveToken: false,

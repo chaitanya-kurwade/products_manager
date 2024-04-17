@@ -267,7 +267,7 @@ export class UsersService {
   async enterUserIdOrUsernameOrEmailOrPhoneNumberToLogin(credential: string): Promise<User> {
     const user = await this.userModel.findOne({
       $or: [
-        { _id: credential },
+        // { _id: credential },
         { email: credential },
         { phoneNumber: credential },
         { username: credential },
@@ -426,11 +426,11 @@ export class UsersService {
     return this.userModel.findByIdAndUpdate(_id, updateUserProfileInput, { new: true });
   }
 
-  async createPassword(_id: string, newPassword: string): Promise<string> {
-    const user = await this.enterUserIdOrUsernameOrEmailOrPhoneNumberToLogin(_id);
+  async createPassword(email: string, newPassword: string): Promise<string> {
+    const user = await this.enterUserIdOrUsernameOrEmailOrPhoneNumberToLogin(email);
     if (user) {
       const password = bcrypt.hash(newPassword, 10); // 10 = salt
-      await this.userModel.findByIdAndUpdate(_id, { password: password, isEmailVerified: true }, { new: true });
+      await this.userModel.findByIdAndUpdate(user._id, { password: password, isEmailVerified: true }, { new: true });
       return 'password created sucessfully';
     }
   }

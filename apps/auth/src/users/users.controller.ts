@@ -14,7 +14,7 @@ export class UserController {
 
   @EventPattern('createPassword', { async: true })
   async createPassword(@Payload() userEntity: any): Promise<string> {
-    return this.usersService.createPassword(userEntity.userId, userEntity.newPassword);
+    return this.usersService.createPassword(userEntity.email, userEntity.newPassword);
   }
 
   @EventPattern('forgetPassword', { async: true })

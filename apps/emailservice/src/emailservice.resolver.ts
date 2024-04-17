@@ -19,17 +19,17 @@ export class EmailserviceResolver {
   @Public()
   @Mutation(() => String, { name: 'verifyEmailAndCreatePassword' })
   async verifyEmailAndCreatePassword(
-    @Args('email') email: string,
+    @Args('token') token: string,
     @Args('newPassword') newPassword: string
   ): Promise<string> {
-    return this.emailService.verifyEmailAndCreatePassword(email, newPassword);
+    return this.emailService.verifyEmailAndCreatePassword(token, newPassword);
   }
 
   @Public()
   @Mutation(() => String, { name: 'verifyEmail' })
   async verifyEmail(
-    @Args('email') email: string,
+    @Args('token') token: string,
   ): Promise<string> {
-    return this.emailService.verifyEmail(email);
+    return this.emailService.verifyEmail(token);
   }
 }
