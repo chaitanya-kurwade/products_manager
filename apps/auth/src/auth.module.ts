@@ -28,14 +28,18 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
         },
       }),
     }),
-    ClientsModule.register([
+    ClientsModule.registerAsync([
       {
         name: 'emailservice',
-        transport: Transport.TCP,
-        options: {
-          host: 'localhost',
-          port: 1801,
-        },
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.TCP,
+          options: {
+            host: configService.get<string>('TCP_HOST'),
+            port: configService.get<number>('EMAIL_TCP_PORT'),
+          },
+        }),
+        inject: [ConfigService],
       },
     ]),
   ],

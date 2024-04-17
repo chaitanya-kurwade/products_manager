@@ -78,14 +78,14 @@ export class UsersResolver {
     return await this.usersService.userLogout(email);
   }
 
-  @Roles(ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.MANAGER, ROLES.USER)
-  @Mutation(() => String, { name: 'createPassword' })
-  async createPassword(
-    @Args('newPassword') newPassword: string,
-    @Args('_id') _id: string,
-  ): Promise<string> {
-    return await this.usersService.createPassword(_id, newPassword);
-  }
+  // @Roles(ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.MANAGER, ROLES.USER)
+  // @Mutation(() => String, { name: 'createPassword' })
+  // async createPassword(
+  //   @Args('newPassword') newPassword: string,
+  //   @Args('_id') _id: string,
+  // ): Promise<string> {
+  //   return await this.usersService.createPassword(_id, newPassword);
+  // }
 
   @Roles(ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.MANAGER, ROLES.USER)
   @Mutation(() => String, { name: 'updatePassword' })
@@ -103,11 +103,9 @@ export class UsersResolver {
     return await this.usersService.forgetPasswordSendEmail(email);
   }
 
-  // @Mutation(() => String, { name: 'receiveForgetPasswordToken' })
-  // async receiveForgetPasswordToken(newPassword: string, reset_token: string) {
-  //   return await this.usersService.receiveForgetPasswordToken(
-  //     newPassword,
-  //     reset_token,
-  //   );
+  // @Public()
+  // @Mutation(() => String, { name: 'forgetPasswordSendEmail' })
+  // async createPasswordSendEmail(@Args('email') email: string): Promise<string> {
+  //   return await this.usersService.createPasswordSendEmail(email);
   // }
 }

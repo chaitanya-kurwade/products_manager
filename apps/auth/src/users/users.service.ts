@@ -449,16 +449,16 @@ export class UsersService {
   async forgetPasswordSendEmail(email: string): Promise<string> {
     const user = await this.enterUserIdOrUsernameOrEmailOrPhoneNumberToLogin(email);
     if (user) {
-      this.emailClient.emit('sendEmailToVerifyEmailAndCreatePassword', user);
+      this.emailClient.emit('forgetPasswordSendEmail', user);
     } else {
       throw new NotFoundException('user not found, please pass valid credentials, else');
     }
-    return `upadte password link sent on ${user.email}`;
+    return `forget password link sent on ${user.email}`;
   }
 
   async forgetPassword(email: string, newPassword: string): Promise<string> {
     const user = await this.enterUserIdOrUsernameOrEmailOrPhoneNumberToLogin(email);
-    if (user) {
+    if (user.email) {
       const password = bcrypt.hash(newPassword);
       this.userModel.findByIdAndUpdate(user._id, { password: password }, { new: true });
     } else {

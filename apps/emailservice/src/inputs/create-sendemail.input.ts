@@ -1,4 +1,5 @@
 import { Field, InputType } from '@nestjs/graphql';
+import { PASSWORD_ACTION_TYPE } from '../enums/password-action-type.enum';
 
 @InputType()
 export class SendEmailInput {
@@ -16,6 +17,9 @@ export class SendEmailInput {
 
   @Field(() => String)
   code: string;
+
+  @Field(() => PASSWORD_ACTION_TYPE, { nullable: true })
+  passwordActionType?: PASSWORD_ACTION_TYPE;
 
   // @Field(() => GraphQLISODateTime, { nullable: false })
   // createdAt: Date;

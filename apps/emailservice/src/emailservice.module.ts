@@ -8,6 +8,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { SendEmail, SendEmailSchema } from './entity/sendemail.entity';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { EmailserviceController } from './emailservice.controller';
+import { EmailserviceResolver } from './emailservice.resolver';
 
 @Module({
   imports: [
@@ -15,17 +16,20 @@ import { EmailserviceController } from './emailservice.controller';
       isGlobal: true,
       envFilePath: './apps/emailservice/.env',
     }),
-    ClientsModule.register([
+    ClientsModule.registerAsync([
       {
         name: 'auth',
-        transport: Transport.TCP,
-        options: {
-          host: 'localhost',
-          port: 1801,
-        },
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.TCP,
+          options: {
+            host: configService.get<string>('TCP_HOST'),
+            port: configService.get<number>('AUTH_TCP_PORT'),
+          },
+        }),
+        inject: [ConfigService],
       },
     ]),
-    ConfigModule.forRoot({ isGlobal: true }),
     MongooseModule.forFeature([
       {
         name: SendEmail.name,
@@ -49,7 +53,7 @@ import { EmailserviceController } from './emailservice.controller';
     }),
   ],
   controllers: [EmailserviceController],
-  exports: [EmailserviceService],
-  providers: [EmailserviceService],
+  exports: [EmailserviceService, EmailserviceResolver],
+  providers: [EmailserviceService, EmailserviceResolver],
 })
 export class EmailserviceModule {}

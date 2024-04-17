@@ -8,13 +8,13 @@ async function bootstrap() {
   const app = await NestFactory.create(AuthModule);
   const configService = app.get(ConfigService);
   app.enableCors();
-  // app.connectMicroservice({
-  //   transport: Transport.TCP,
-  //   options: {
-  //     host: 'localhost',
-  //     port: 1802,
-  //   },
-  // });
+  app.connectMicroservice({
+    transport: Transport.TCP,
+    options: {
+      host: configService.get('TCP_HOST'),
+      port: configService.get('TCP_PORT'),
+    },
+  });
   await app.startAllMicroservices();
   app.useGlobalPipes(
     new ValidationPipe({

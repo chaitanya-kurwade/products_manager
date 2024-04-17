@@ -7,7 +7,6 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ApolloFederationDriver, ApolloFederationDriverConfig } from '@nestjs/apollo';
-import { EmailserviceModule } from 'apps/emailservice/src/emailservice.module';
 import { UserController } from './users.controller';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 
@@ -18,6 +17,20 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
       {
         name: User.name,
         schema: UserSchema,
+      },
+    ]),
+    ClientsModule.registerAsync([
+      {
+        name: 'emailservice',
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.TCP,
+          options: {
+            host: configService.get<string>('TCP_HOST'),
+            port: configService.get<number>('EMAIL_TCP_PORT'),
+          },
+        }),
+        inject: [ConfigService],
       },
     ]),
     MongooseModule.forRootAsync({
@@ -35,19 +48,9 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
       plugins: [ApolloServerPluginLandingPageLocalDefault()],
       playground: false,
     }),
-    ClientsModule.register([
-      {
-        name: 'emailservice',
-        transport: Transport.TCP,
-        options: {
-          host: 'localhost',
-          port: 1801,
-        },
-      },
-    ]),
   ],
   controllers: [UserController],
   providers: [UsersResolver, UsersService],
   exports: [UsersResolver, UsersService],
 })
-export class UsersModule {}
+export class UsersModule { }

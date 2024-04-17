@@ -1,6 +1,7 @@
 import { Field, GraphQLISODateTime, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
+import { PASSWORD_ACTION_TYPE } from '../enums/password-action-type.enum';
 
 @ObjectType()
 @Schema({ timestamps: true })
@@ -19,6 +20,9 @@ export class SendEmail {
   // @Prop({ type: Date, required: false, default: new Date() })     GraphQLISODateTime
   // @Field(() => Date, { nullable: false })
   // validTillNextHour: Date;
+
+  @Prop({ enum: PASSWORD_ACTION_TYPE, type: String })
+  passwordActionType?: PASSWORD_ACTION_TYPE;
 
   // token, userId, createdAt, isVerified, isActiveToken, verifiedAt
   @Prop()
