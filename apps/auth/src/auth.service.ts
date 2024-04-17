@@ -27,7 +27,7 @@ export class AuthService {
     private readonly userService: UsersService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-  ) {}
+  ) { }
 
   async validate(email: string, password: string) {
     const user = await this.userService.getUserByEmailId(email);
@@ -123,9 +123,7 @@ export class AuthService {
     if (!user && (!isEmail || !isPhoneNumber)) {
       throw new NotFoundException('User not found, incorrect username: ' + userCredential);
     }
-    // const currentTime = Date();
     if (!user.isEmailVerified && !user.password) {
-      // code:'email+TIME'
       this.emailClient.emit('sendEmailToVerifyEmailAndCreatePassword', user);
       return {
         message: 'please verify email and generate password, mail sent on ' + user.email,
