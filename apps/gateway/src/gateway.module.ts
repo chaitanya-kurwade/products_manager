@@ -43,6 +43,10 @@ import configuration from './config/configuration';
               name: 'emailservice',
               url: `http://localhost:${configuration().emailservice.port}/graphql`,
             },
+            {
+              name: 'orders',
+              url: `http://localhost:${configuration().orders.port}/graphql`,
+            },
           ],
         }),
         buildService({ url }) {
