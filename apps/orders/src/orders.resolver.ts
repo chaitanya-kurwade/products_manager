@@ -10,26 +10,26 @@ export class OrdersResolver {
 
   @Mutation(() => Order)
   createOrder(@Args('createOrderInput') createOrderInput: CreateOrderInput) {
-    return this.ordersService.create(createOrderInput);
+    return this.ordersService.createOrder(createOrderInput);
   }
 
   @Query(() => [Order], { name: 'orders' })
   findAll() {
-    return this.ordersService.findAll();
+    return this.ordersService.getAllOrders();
   }
 
   @Query(() => Order, { name: 'order' })
   findOne(@Args('_id', { type: () => String }) _id: string) {
-    return this.ordersService.findOne(_id);
+    return this.ordersService.getOneOrder(_id);
   }
 
   @Mutation(() => Order)
   updateOrder(@Args('updateOrderInput') updateOrderInput: UpdateOrderInput) {
-    return this.ordersService.update(updateOrderInput._id, updateOrderInput);
+    return this.ordersService.updateOrderById(updateOrderInput._id, updateOrderInput);
   }
 
   @Mutation(() => Order)
   removeOrder(@Args('_id', { type: () => String }) _id: string) {
-    return this.ordersService.remove(_id);
+    return this.ordersService.removeOrder(_id);
   }
 }

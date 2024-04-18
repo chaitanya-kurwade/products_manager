@@ -3,6 +3,9 @@ import { Schema, Prop, SchemaFactory } from '@nestjs/mongoose';
 import { ORDER_STATUS } from '../enums/order-status.enum';
 import { PAYMENT_TYPE } from '../enums/payment-method.enum';
 import { PAYMENT_STATUS } from '../enums/payment-status.enum';
+import { Customer } from './customer.entity';
+import { ShippingAddress } from './shipping-address.entity';
+import { Orderitem } from '../orderitems/entities/orderitem.entity';
 
 @ObjectType()
 @Schema({ timestamps: true })
@@ -14,32 +17,17 @@ export class Order {
   @Prop()
   orderNumber: number;
 
-  // @Field(() => String, { nullable: true }) // Customer
-  // @Prop()
-  // customer: {
-  //   customerId: string;
-  //   title: string;
-  //   firstName: string;
-  //   lastName: string;
-  //   phoneNumber: { countryCode: string; phoneNumber: string };
-  //   email: string;
-  // };
-
-  // @Field(() => String, { nullable: true }) // ShippingAddress
-  // @Prop()
-  // shippingAddress: {
-  //   name: string;
-  //   addressLine1: string;
-  //   addressLine2: string;
-  //   city: string;
-  //   state: string;
-  //   zip: string;
-  //   country: string;
-  // };
-
-  @Field(() => [String], { nullable: true })
+  @Field(() => Customer, { nullable: true }) // Customer
   @Prop()
-  items: string[]; // OrderItem[];
+  customer: Customer;
+
+  @Field(() => ShippingAddress, { nullable: true }) // ShippingAddress
+  @Prop()
+  shippingAddress: ShippingAddress;
+
+  @Field(() => [Orderitem], { nullable: true })
+  @Prop()
+  items: Orderitem[]; // OrderItem[];
 
   @Field(() => Int, { nullable: true })
   @Prop()
@@ -47,15 +35,15 @@ export class Order {
 
   @Field(() => String, { nullable: true })
   @Prop({ enum: ORDER_STATUS, type: String })
-  status: ORDER_STATUS; //'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  status: ORDER_STATUS;
 
   @Field(() => String, { nullable: true })
   @Prop({ enum: PAYMENT_TYPE, type: String })
-  paymentType: PAYMENT_TYPE; //'CARD' | 'UPI' | 'NET BANKING' | 'COD';
+  paymentType: PAYMENT_TYPE;
 
   @Field(() => String, { nullable: true })
   @Prop({ enum: PAYMENT_STATUS, type: String })
-  paymentStatus: PAYMENT_STATUS; // 'Paid' | 'to be paid';
+  paymentStatus: PAYMENT_STATUS;
 
   @Field(() => [String], { nullable: true })
   @Prop()
@@ -66,11 +54,9 @@ export class Order {
   shippings: string[]; //Shipping[];
 
   @Field(() => GraphQLISODateTime, { nullable: true })
-  @Prop({ default: new Date()})
   createdAt: Date;
 
   @Field(() => GraphQLISODateTime, { nullable: true })
-  @Prop({ default: new Date()})
   updatedAt: Date;
 }
 
