@@ -1,38 +1,24 @@
 import { InputType, Int, Field } from '@nestjs/graphql';
 import { PAYMENT_TYPE } from '../enums/payment-method.enum';
 import { PAYMENT_STATUS } from '../enums/payment-status.enum';
+import { ShippingAddressInput } from './shipping-address.input';
+import { CustomerInput } from './customer.input';
+import { CreateOrderitemInput } from '../orderitems/inputs/create-orderitem.input';
 
 @InputType()
 export class CreateOrderInput {
-  @Field(() => String, { description: "Order's _id" })
-  _id: string;
 
   @Field(() => Int)
   orderNumber: number;
 
-  // @Field(() => String) // Customer
-  // customer: {
-  //   customerId: string;
-  //   title: string;
-  //   firstName: string;
-  //   lastName: string;
-  //   phoneNumber: { countryCode: string; phoneNumber: string };
-  //   email: string;
-  // };
+  @Field(() => CustomerInput) // CustomerInput
+  customer: CustomerInput;
 
-    // @Field(() => ShippingAddress)
-  // shippingAddress: {
-  //   name: string;
-  //   addressLine1: string;
-  //   addressLine2: string;
-  //   city: string;
-  //   state: string;
-  //   zip: string;
-  //   country: string;
-  // };
+  @Field(() => ShippingAddressInput) // ShippingAddressInput
+  shippingAddress: ShippingAddressInput;
 
-  // @Field(() => [OrderItem])
-  // items: OrderItem[];
+  // @Field(() => [CreateOrderitemInput])
+  // items: CreateOrderitemInput[];
 
   @Field(() => Int)
   total: number;
@@ -46,15 +32,15 @@ export class CreateOrderInput {
   @Field(() => PAYMENT_STATUS, { nullable: true })
   paymentStatus: PAYMENT_STATUS; // 'Paid' | 'to be paid';
 
-  // @Field(() => [Transaction])
+  // @Field(() => [Transaction], { nullable: true })
   // transactions: Transaction[];
 
-  // @Field(() => [Shipping])
+  // @Field(() => [Shipping], { nullable: true })
   // shippings: Shipping[];
 
-  @Field(() => Date)
-  createdAt: Date;
+  // @Field(() => Date, { nullable: true })
+  // createdAt: Date;
 
-  @Field(() => Date)
-  updatedAt: Date;
+  // @Field(() => Date, { nullable: true })
+  // updatedAt: Date;
 }
