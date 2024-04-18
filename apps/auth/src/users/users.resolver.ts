@@ -4,7 +4,7 @@ import { User } from './entities/user.entity';
 import { UpdateUserInput } from './inputs/update-user.input';
 import { UserResponse } from './responses/user-response.entity';
 import { PaginationInput, Public } from 'common/library';
-import { ROLES } from './enums/role.enum';
+import { ROLES } from '../../../../libs/library/src/enums/role.enum';
 import { Roles } from 'common/library/decorators/roles.decorator';
 import { UsersList } from './responses/user-list.response';
 import { CurrentUser } from 'common/library/decorators/current-user.decorator';

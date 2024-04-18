@@ -11,7 +11,7 @@ import * as nodemailer from 'nodemailer';
 import { UserResponse } from './responses/user-response.entity';
 import { CreateUserViaGoogleInput } from './inputs/create-user-via-google.input';
 import { ConfigService } from '@nestjs/config';
-import { ROLES } from './enums/role.enum';
+import { ROLES } from '../../../../libs/library/src/enums/role.enum';
 import { UpdateUserProfileInput } from './inputs/update-user-profile.input';
 import { ClientProxy } from '@nestjs/microservices';
 

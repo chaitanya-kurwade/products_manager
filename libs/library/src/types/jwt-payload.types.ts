@@ -1,4 +1,4 @@
-import { ROLES } from 'apps/auth/src/users/enums/role.enum';
+import { ROLES } from 'common/library/enums/role.enum';
 
 export type JwtPayload = {
   email: string;
