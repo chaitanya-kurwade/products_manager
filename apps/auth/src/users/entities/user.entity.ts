@@ -1,7 +1,7 @@
 import { ObjectType, Field, GraphQLISODateTime } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { IsEmail, IsPhoneNumber, IsStrongPassword } from 'class-validator';
-import { ROLES } from '../enums/role.enum';
+import { ROLES } from '../../../../../libs/library/src/enums/role.enum';
 
 @ObjectType()
 @Schema({ timestamps: true })

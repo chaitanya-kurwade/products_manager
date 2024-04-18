@@ -1,6 +1,6 @@
 import { Field, GraphQLISODateTime, ObjectType } from '@nestjs/graphql';
 import { IsPhoneNumber } from 'class-validator';
-import { ROLES } from '../enums/role.enum';
+import { ROLES } from '../../../../../libs/library/src/enums/role.enum';
 
 @ObjectType()
 export class UserResponse {

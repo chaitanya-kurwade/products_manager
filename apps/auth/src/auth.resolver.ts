@@ -9,7 +9,7 @@ import { UserResponse } from './users/responses/user-response.entity';
 import { User } from './users/entities/user.entity';
 import { Request } from 'express';
 import { Roles } from 'common/library/decorators/roles.decorator';
-import { ROLES } from './users/enums/role.enum';
+import { ROLES } from '../../../libs/library/src/enums/role.enum';
 import { CurrentUser } from 'common/library/decorators/current-user.decorator';
 import { LoginCredentialResponse } from './users/responses/login-credential.response.entity';
 import { UpdateUserProfileResponse } from './users/responses/update-user-profile.response';

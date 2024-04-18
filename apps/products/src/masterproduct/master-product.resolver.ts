@@ -6,7 +6,7 @@ import { UpdateMasterProductInput } from './inputs/update-masterproduct.input';
 import { PaginationInput } from 'common/library';
 import { MasterProductList } from './responses/master-products-list.response.entity';
 import { Roles } from 'common/library/decorators/roles.decorator';
-import { ROLES } from 'apps/auth/src/users/enums/role.enum';
+import { ROLES } from 'common/library/enums/role.enum';
 import { Request } from 'express';
 import { ContextService } from 'common/library/service/context.service';
 import { CurrentUser } from 'common/library/decorators/current-user.decorator';

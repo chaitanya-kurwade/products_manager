@@ -5,7 +5,7 @@ import { CreateSubProductInput } from './inputs/create-subproduct.input';
 import { UpdateSubProductInput } from './inputs/update-subproduct.input';
 import { PaginationInput } from 'common/library';
 import { SubProductList } from './responses/sub-products-list.response.entity';
-import { ROLES } from 'apps/auth/src/users/enums/role.enum';
+import { ROLES } from 'common/library/enums/role.enum';
 import { Roles } from 'common/library/decorators/roles.decorator';
 import { ContextService } from 'common/library/service/context.service';
 import { Request } from 'express';

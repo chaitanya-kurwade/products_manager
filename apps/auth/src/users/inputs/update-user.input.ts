@@ -1,5 +1,5 @@
 import { InputType, Field } from '@nestjs/graphql';
-import { ROLES } from '../enums/role.enum';
+import { ROLES } from '../../../../../libs/library/src/enums/role.enum';
 import { IsPhoneNumber, IsPostalCode } from 'class-validator';
 
 @InputType()

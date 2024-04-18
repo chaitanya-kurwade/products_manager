@@ -5,7 +5,7 @@ import { CreateCategoryInput } from './inputs/create-category.input';
 import { UpdateCategoryInput } from './inputs/update-category.input';
 import { PaginationInput } from 'common/library/pagination/inputs/pagination.input';
 import { CategoryList } from './responses/category-lists-response.entity';
-import { ROLES } from 'apps/auth/src/users/enums/role.enum';
+import { ROLES } from 'common/library/enums/role.enum';
 import { Roles } from 'common/library/decorators/roles.decorator';
 import { CurrentUser } from 'common/library/decorators/current-user.decorator';
 
