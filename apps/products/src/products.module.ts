@@ -45,4 +45,4 @@ import { JwtService } from '@nestjs/jwt';
     { provide: APP_GUARD, useClass: RolesGuard },
   ],
 })
-export class ProductsModule {}
+export class ProductsModule { }
