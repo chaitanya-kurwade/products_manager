@@ -72,10 +72,10 @@ export class EmailserviceService {
 
   async verifyEmailAndCreatePassword(uniqueString: string, newPassword: string): Promise<string> {
     const verificationProcess = await this.sendEmailModel.findOne({ hexString: uniqueString });
-    const userId = verificationProcess.userId;
+    const email = verificationProcess.email;
     if (verificationProcess.hexString && verificationProcess.isActiveToken && newPassword) {
       // new password
-      await this.userClient.emit('createPassword', { userId, newPassword });
+      await this.userClient.emit('createPassword', { email, newPassword });
       const _id = verificationProcess._id;
       await this.sendEmailModel.findByIdAndUpdate(_id, {
         isActiveToken: false,

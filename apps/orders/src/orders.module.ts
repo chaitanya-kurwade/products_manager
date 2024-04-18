@@ -11,6 +11,7 @@ import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin
 import { JwtService } from '@nestjs/jwt';
 import { JwtAuthGuard, JwtStrategy } from 'common/library';
 import { APP_GUARD } from '@nestjs/core';
+import { RolesGuard } from 'common/library/guards/roles.guard';
 
 @Module({
   imports: [
@@ -48,8 +49,7 @@ import { APP_GUARD } from '@nestjs/core';
     JwtService,
     JwtStrategy,
     { provide: APP_GUARD, useClass: JwtAuthGuard },
-    // GoogleStrategy,
-    // { provide: APP_GUARD, useClass: RolesGuard },
+    { provide: APP_GUARD, useClass: RolesGuard },
   ],
 })
 export class OrdersModule { }

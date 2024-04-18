@@ -16,4 +16,8 @@ export default () => ({
     host: process.env.EMAILSERVICE_APP_PORT,
     port: parseInt(process.env.EMAILSERVICE_APP_PORT, 10),
   },
+  orders: {
+    host: process.env.ORDERS_APP_PORT,
+    port: parseInt(process.env.ORDERS_APP_PORT, 10),
+  },
 });

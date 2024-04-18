@@ -123,6 +123,7 @@ export class AuthService {
     if (!user && (!isEmail || !isPhoneNumber)) {
       throw new NotFoundException('User not found, incorrect username: ' + userCredential);
     }
+
     if (!user.isEmailVerified && !user.password) {
       this.emailClient.emit('sendEmailToVerifyEmailAndCreatePassword', user);
       return {

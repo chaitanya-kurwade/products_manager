@@ -14,28 +14,28 @@ export class Order {
   @Prop()
   orderNumber: number;
 
-  @Field(() => String, { nullable: true }) // Customer
-  @Prop()
-  customer: {
-    customerId: string;
-    title: string;
-    firstName: string;
-    lastName: string;
-    phoneNumber: { countryCode: string; phoneNumber: string };
-    email: string;
-  };
+  // @Field(() => String, { nullable: true }) // Customer
+  // @Prop()
+  // customer: {
+  //   customerId: string;
+  //   title: string;
+  //   firstName: string;
+  //   lastName: string;
+  //   phoneNumber: { countryCode: string; phoneNumber: string };
+  //   email: string;
+  // };
 
-  @Field(() => String, { nullable: true }) // ShippingAddress
-  @Prop()
-  shippingAddress: {
-    name: string;
-    addressLine1: string;
-    addressLine2: string;
-    city: string;
-    state: string;
-    zip: string;
-    country: string;
-  };
+  // @Field(() => String, { nullable: true }) // ShippingAddress
+  // @Prop()
+  // shippingAddress: {
+  //   name: string;
+  //   addressLine1: string;
+  //   addressLine2: string;
+  //   city: string;
+  //   state: string;
+  //   zip: string;
+  //   country: string;
+  // };
 
   @Field(() => [String], { nullable: true })
   @Prop()
