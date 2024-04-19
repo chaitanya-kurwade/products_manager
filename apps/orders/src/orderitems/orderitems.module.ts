@@ -36,5 +36,6 @@ import { Orderitem, OrderitemSchema } from './entities/orderitem.entity';
     }),
   ],
   providers: [OrderitemsResolver, OrderitemsService],
+  exports: [OrderitemsResolver, OrderitemsService],
 })
 export class OrderitemsModule { }

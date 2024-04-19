@@ -364,7 +364,7 @@ export class SubProductService {
 
   async getSubProductsByMasterProductId(masterProductId: string, role?: string) {
     const subProducts = await this.subProductModel.find({ masterProductId }).exec();
-    console.log(subProducts);
+    // console.log(subProducts);
 
     if (!subProducts || subProducts.length === 0) {
       throw new NotFoundException(
@@ -373,7 +373,7 @@ export class SubProductService {
     }
 
     if (role === 'SUPER_ADMIN') {
-      console.log(subProducts);
+      // console.log(subProducts);
 
       return subProducts;
     }

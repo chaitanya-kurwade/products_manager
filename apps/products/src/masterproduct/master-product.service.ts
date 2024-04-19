@@ -205,7 +205,7 @@ export class MasterProductService {
   async deleteMasterProductAndItsSubProducts(masterProductId: string): Promise<string> {
     await this.subProductService.deleteSubProductsByMasterProductId(masterProductId);
     await this.deleteMasterProductById(masterProductId);
-    console.log(masterProductId);
+    // console.log(masterProductId);
     return 'master product and its sub-products are deleted successfully';
   }
 

@@ -65,14 +65,14 @@ export class UsersService {
         // If role is SUPER_ADMIN, return all users
         // No need to modify the query
       } else if (role.toUpperCase() === 'ADMIN') {
-        console.log(role);
+        // console.log(role);
         // If role is ADMIN, include MANAGER and USER roles
         query = query.find({ role: { $in: ['MANAGER', 'USER'] } });
         totalCountQuery = totalCountQuery.find({
           role: { $in: ['MANAGER', 'USER'] },
         });
       } else if (role.toUpperCase() === 'MANAGER') {
-        console.log(role);
+        // console.log(role);
         // If role is ADMIN, include MANAGER and USER roles
         query = query.find({ role: { $in: ['USER'] } });
         totalCountQuery = totalCountQuery.find({
@@ -161,7 +161,7 @@ export class UsersService {
     }
 
     const updatedUser = await this.userModel.findByIdAndUpdate(_id, updateUserInput, { new: true });
-    console.log({ updateUserInput }, { role });
+    // console.log({ updateUserInput }, { role });
 
     if (role === ROLES.SUPER_ADMIN) {
       return updatedUser;
@@ -173,7 +173,7 @@ export class UsersService {
       //     );
       //   }
       // } catch (error) {
-      //   console.log(error);
+      //   // console.log(error);
       //   updateInputDemo._id = updatedUser._id;
       //   updateInputDemo.firstName = '';
       //   updateInputDemo.lastName = '';
@@ -265,7 +265,7 @@ export class UsersService {
   }
 
   async enterUserIdOrUsernameOrEmailOrPhoneNumberToLogin(credential: string): Promise<User> {
-    console.log({ credential });
+    // console.log({ credential });
 
     const user = await this.userModel.findOne({
       $or: [
@@ -306,7 +306,7 @@ export class UsersService {
           'OTP_TIME_IN_MINUTES',
         )} minutes.</p>`,
       });
-      // console.log('Message sent: %s', info.messageId);
+      // // console.log('Message sent: %s', info.messageId);
       await this.transporter.sendMail(info);
       await this.userModel.findOneAndUpdate(
         {

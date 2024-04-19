@@ -243,7 +243,7 @@ export class AuthService {
         return await this.userService.createUser(createUser);
       } else if (role === ROLES.ADMIN) {
         if (newRole !== ROLES.MANAGER && newRole !== ROLES.USER) {
-          console.log(newRole);
+          // console.log(newRole);
           throw new BadRequestException(`You cannot create ${newRole}`);
         }
         return await this.userService.createUser(createUser);
@@ -327,7 +327,7 @@ export class AuthService {
     const { email } = payload;
     const user = await this.userService.getUserByEmailId(email);
     const refreshToken = await bcrypt.compare(refresh_token, user.hashedRefreshToken);
-    console.log(refreshToken);
+    // console.log(refreshToken);
     if (refreshToken) {
       const payload = { email: user.email, _id: user._id, role: user.role };
       const access_token = this.jwtService.sign(payload, {
@@ -370,7 +370,7 @@ export class AuthService {
       secret: this.configService.get('JWT_SECRET'),
       expiresIn: `${this.configService.get('JWT_EXPIRATION')}s`,
     });
-    console.log('access_token', access_token, '\n\n');
+    // console.log('access_token', access_token, '\n\n');
 
     const refresh_token = this.jwtService.sign(
       { ...payload, access_token },
@@ -379,7 +379,7 @@ export class AuthService {
         expiresIn: `${this.configService.get('JWT_REFRESH_EXPIRATION')}d`,
       },
     );
-    console.log('refresh_token', refresh_token);
+    // console.log('refresh_token', refresh_token);
     const user = await this.userService.createUserViaGoogle({
       email: req.user.email,
       firstName: req.user.firstName,
@@ -406,7 +406,7 @@ export class AuthService {
   async validateOtp(otp: number): Promise<LoginResponse> {
     const user = await this.userService.validateOtp(otp);
     const tokens = await this.createTokens(user._id, user.email, user.role);
-    // console.log(user.email);
+    // // console.log(user.email);
 
     const access_token = tokens.access_token;
     const refresh_token = tokens.refresh_token;
