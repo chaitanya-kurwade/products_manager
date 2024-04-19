@@ -3,7 +3,6 @@ import { PAYMENT_TYPE } from '../enums/payment-method.enum';
 import { PAYMENT_STATUS } from '../enums/payment-status.enum';
 import { ShippingAddressInput } from './shipping-address.input';
 import { CustomerInput } from './customer.input';
-import { CreateOrderitemInput } from '../orderitems/inputs/create-orderitem.input';
 
 @InputType()
 export class CreateOrderInput {
@@ -17,8 +16,8 @@ export class CreateOrderInput {
   @Field(() => ShippingAddressInput) // ShippingAddressInput
   shippingAddress: ShippingAddressInput;
 
-  // @Field(() => [CreateOrderitemInput])
-  // items: CreateOrderitemInput[];
+  // @Field(() => [CreateOrderItemInput])
+  // items: CreateOrderItemInput[];
 
   @Field(() => Int)
   total: number;

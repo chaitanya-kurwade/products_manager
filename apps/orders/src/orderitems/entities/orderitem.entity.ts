@@ -7,8 +7,8 @@ import { ORDER_STATUS } from '../enums/order-status.enum';
 
 @ObjectType()
 @Schema({ timestamps: true })
-export class Orderitem extends Document {
-  @Field(() => String, { description: 'Orderitem _id' })
+export class OrderItem extends Document {
+  @Field(() => String, { description: 'OrderItem _id' })
   _id: string;
 
   @Field(() => Int, { nullable: true })
@@ -46,5 +46,5 @@ export class Orderitem extends Document {
   updatedAt?: Date;
 }
 
-export const OrderitemSchema = SchemaFactory.createForClass(Orderitem);
-export type OrderitemDocument = Orderitem & Document;
+export const OrderItemSchema = SchemaFactory.createForClass(OrderItem);
+export type OrderItemDocument = OrderItem & Document;

@@ -4,8 +4,8 @@ import { CURRENCY } from '../enums/currency.enum';
 import { ORDER_STATUS } from '../enums/order-status.enum';
 
 @InputType()
-export class CreateOrderitemInput {
-  @Field({ description: 'Orderitem _id' })
+export class CreateOrderItemInput {
+  @Field({ description: 'OrderItem _id' })
   _id: string;
 
   @Field(() => Int, { nullable: true })

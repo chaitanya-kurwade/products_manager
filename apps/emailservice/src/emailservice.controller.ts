@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import { EmailserviceService } from './emailservice.service';
 import { EventPattern, Payload } from '@nestjs/microservices';
 

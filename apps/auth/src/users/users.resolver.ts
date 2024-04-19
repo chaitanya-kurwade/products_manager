@@ -93,7 +93,7 @@ export class UsersResolver {
     @Args('email') email: string,
     @Args('oldPassword') oldPassword: string,
     @Args('newPassword') newPassword: string,
-  ): Promise<User> {
+  ): Promise<string> {
     return await this.usersService.updatePassword(email, oldPassword, newPassword);
   }
 

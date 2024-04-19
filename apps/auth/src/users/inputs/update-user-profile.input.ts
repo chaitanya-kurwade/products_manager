@@ -1,6 +1,5 @@
 import { InputType, Field } from '@nestjs/graphql';
-import { ROLES } from '../../../../../libs/library/src/enums/role.enum';
-import { IsPhoneNumber, IsPostalCode, MaxLength, MinLength } from 'class-validator';
+import { IsPostalCode, MaxLength, MinLength } from 'class-validator';
 
 @InputType()
 export class UpdateUserProfileInput {

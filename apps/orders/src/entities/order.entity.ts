@@ -5,7 +5,7 @@ import { PAYMENT_TYPE } from '../enums/payment-method.enum';
 import { PAYMENT_STATUS } from '../enums/payment-status.enum';
 import { Customer } from './customer.entity';
 import { ShippingAddress } from './shipping-address.entity';
-import { Orderitem } from '../orderitems/entities/orderitem.entity';
+import { OrderItem } from '../orderitems/entities/orderitem.entity';
 
 @ObjectType()
 @Schema({ timestamps: true })
@@ -25,9 +25,9 @@ export class Order {
   @Prop()
   shippingAddress: ShippingAddress;
 
-  @Field(() => [Orderitem], { nullable: true })
+  @Field(() => [OrderItem], { nullable: true })
   @Prop()
-  items: Orderitem[]; // OrderItem[];
+  items: OrderItem[]; // OrderItem[];
 
   @Field(() => Int, { nullable: true })
   @Prop()

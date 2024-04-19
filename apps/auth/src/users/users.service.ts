@@ -437,11 +437,13 @@ export class UsersService {
     }
   }
 
-  async updatePassword(email: string, oldPassword: string, newPassword: string): Promise<User> {
+  async updatePassword(email: string, oldPassword: string, newPassword: string): Promise<string> {
     const user = await this.enterUserIdOrUsernameOrEmailOrPhoneNumberToLogin(email);
-    if (await bcrypt.compare(oldPassword, user.password)) {
+    const isValidPassword = await bcrypt.compare(oldPassword, user.password);
+    if (isValidPassword) {
       const latestPassword = await bcrypt.hash(newPassword, 10); // 10 = salt
-      return await this.userModel.findByIdAndUpdate(user._id, { password: latestPassword }, { new: true });
+      await this.userModel.findByIdAndUpdate(user._id, { password: latestPassword }, { new: true });
+      return 'password updated sucessfully.'
     } else {
       throw new BadRequestException('old password not matched');
     }

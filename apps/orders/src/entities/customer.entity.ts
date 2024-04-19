@@ -1,9 +1,10 @@
 import { Field, ObjectType } from "@nestjs/graphql";
 import { IsEmail } from "class-validator";
 import { PhoneNumber } from "./phone-number.entity";
-import { Prop } from "@nestjs/mongoose";
+import { Prop, Schema } from "@nestjs/mongoose";
 
 @ObjectType()
+@Schema({ timestamps: true })
 export class Customer {
     @Field(() => String, { nullable: true })
     @Prop()
