@@ -1,35 +1,35 @@
 import { Resolver, Query, Mutation, Args, Int } from '@nestjs/graphql';
-import { OrderitemsService } from './orderitems.service';
-import { Orderitem } from './entities/orderitem.entity';
-import { CreateOrderitemInput } from './inputs/create-orderitem.input';
-import { UpdateOrderitemInput } from './inputs/update-orderitem.input';
+import { OrderItemsService } from './orderitems.service';
+import { OrderItem } from './entities/orderitem.entity';
+import { CreateOrderItemInput } from './inputs/create-orderitem.input';
+import { UpdateOrderItemInput } from './inputs/update-orderitem.input';
 
-@Resolver(() => Orderitem)
-export class OrderitemsResolver {
-  constructor(private readonly orderitemsService: OrderitemsService) {}
+@Resolver(() => OrderItem)
+export class OrderItemsResolver {
+  constructor(private readonly OrderItemsService: OrderItemsService) {}
 
-  @Mutation(() => Orderitem)
-  createOrderitem(@Args('createOrderitemInput') createOrderitemInput: CreateOrderitemInput) {
-    return this.orderitemsService.create(createOrderitemInput);
+  @Mutation(() => OrderItem)
+  createOrderItem(@Args('createOrderItemInput') createOrderItemInput: CreateOrderItemInput) {
+    return this.OrderItemsService.create(createOrderItemInput);
   }
 
-  @Query(() => [Orderitem], { name: 'orderitems' })
+  @Query(() => [OrderItem], { name: 'OrderItems' })
   findAll() {
-    return this.orderitemsService.findAll();
+    return this.OrderItemsService.findAll();
   }
 
-  @Query(() => Orderitem, { name: 'orderitem' })
+  @Query(() => OrderItem, { name: 'OrderItem' })
   findOne(@Args('_id', { type: () => String }) _id: string) {
-    return this.orderitemsService.findOne(_id);
+    return this.OrderItemsService.findOne(_id);
   }
 
-  @Mutation(() => Orderitem)
-  updateOrderitem(@Args('updateOrderitemInput') updateOrderitemInput: UpdateOrderitemInput) {
-    return this.orderitemsService.update(updateOrderitemInput._id, updateOrderitemInput);
+  @Mutation(() => OrderItem)
+  updateOrderItem(@Args('updateOrderItemInput') updateOrderItemInput: UpdateOrderItemInput) {
+    return this.OrderItemsService.update(updateOrderItemInput._id, updateOrderItemInput);
   }
 
-  @Mutation(() => Orderitem)
-  removeOrderitem(@Args('_id', { type: () => String }) _id: string) {
-    return this.orderitemsService.remove(_id);
+  @Mutation(() => OrderItem)
+  removeOrderItem(@Args('_id', { type: () => String }) _id: string) {
+    return this.OrderItemsService.remove(_id);
   }
 }

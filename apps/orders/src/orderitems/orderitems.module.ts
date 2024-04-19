@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
-import { OrderitemsService } from './orderitems.service';
-import { OrderitemsResolver } from './orderitems.resolver';
+import { OrderItemsService } from './orderitems.service';
+import { OrderItemsResolver } from './orderitems.resolver';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloFederationDriver, ApolloFederationDriverConfig } from '@nestjs/apollo';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
-import { Orderitem, OrderitemSchema } from './entities/orderitem.entity';
+import { OrderItem, OrderItemSchema } from './entities/orderitem.entity';
 
 @Module({
   imports: [
@@ -15,8 +15,8 @@ import { Orderitem, OrderitemSchema } from './entities/orderitem.entity';
     }),
     MongooseModule.forFeature([
       {
-        name: Orderitem.name,
-        schema: OrderitemSchema,
+        name: OrderItem.name,
+        schema: OrderItemSchema,
       },
     ]),
     MongooseModule.forRootAsync({
@@ -35,7 +35,7 @@ import { Orderitem, OrderitemSchema } from './entities/orderitem.entity';
       playground: false,
     }),
   ],
-  providers: [OrderitemsResolver, OrderitemsService],
-  exports: [OrderitemsResolver, OrderitemsService],
+  providers: [OrderItemsResolver, OrderItemsService],
+  exports: [OrderItemsResolver, OrderItemsService],
 })
-export class OrderitemsModule { }
+export class OrderItemsModule { }

@@ -1,13 +1,10 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { SendEmail, SendEmailDocument } from './entity/sendemail.entity';
-import * as jwt from 'jsonwebtoken';
 import * as nodemailer from 'nodemailer';
 import { ConfigService } from '@nestjs/config';
-import * as bcrypt from 'bcrypt';
 import { ClientProxy } from '@nestjs/microservices';
-import { firstValueFrom } from 'rxjs';
 import { PASSWORD_ACTION_TYPE } from './enums/password-action-type.enum';
 import { randomBytes } from 'crypto';
 

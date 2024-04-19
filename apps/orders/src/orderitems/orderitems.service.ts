@@ -1,26 +1,26 @@
 import { Injectable } from '@nestjs/common';
-import { CreateOrderitemInput } from './inputs/create-orderitem.input';
-import { UpdateOrderitemInput } from './inputs/update-orderitem.input';
+import { CreateOrderItemInput } from './inputs/create-orderitem.input';
+import { UpdateOrderItemInput } from './inputs/update-orderitem.input';
 
 @Injectable()
-export class OrderitemsService {
-  create(createOrderitemInput: CreateOrderitemInput) {
-    return 'This action adds a new orderitem';
+export class OrderItemsService {
+  create(createOrderItemInput: CreateOrderItemInput) {
+    return 'This action adds a new OrderItem';
   }
 
   findAll() {
-    return `This action returns all orderitems`;
+    return `This action returns all OrderItems`;
   }
 
   findOne(_id: string) {
-    return `This action returns a #${_id} orderitem`;
+    return `This action returns a #${_id} OrderItem`;
   }
 
-  update(_id: string, updateOrderitemInput: UpdateOrderitemInput) {
-    return `This action updates a #${_id} orderitem`;
+  update(_id: string, updateOrderItemInput: UpdateOrderItemInput) {
+    return `This action updates a #${_id} OrderItem`;
   }
 
   remove(_id: string) {
-    return `This action removes a #${_id} orderitem`;
+    return `This action removes a #${_id} OrderItem`;
   }
 }

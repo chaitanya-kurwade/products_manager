@@ -1,9 +1,9 @@
 import { Field, ObjectType } from "@nestjs/graphql";
-import { Prop } from "@nestjs/mongoose";
+import { Prop, Schema } from "@nestjs/mongoose";
 
 @ObjectType()
+@Schema({ timestamps: true })
 export class PhoneNumber {
-
     @Prop()
     @Field()
     countryCode: string;

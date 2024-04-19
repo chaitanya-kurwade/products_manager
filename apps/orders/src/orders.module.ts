@@ -12,7 +12,8 @@ import { JwtService } from '@nestjs/jwt';
 import { JwtAuthGuard, JwtStrategy } from 'common/library';
 import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from 'common/library/guards/roles.guard';
-import { OrderitemsModule } from './orderitems/orderitems.module';
+import { OrderItemsModule } from './orderitems/orderitems.module';
+import { ShippingsModule } from './shippings/shippings.module';
 
 @Module({
   imports: [
@@ -41,7 +42,8 @@ import { OrderitemsModule } from './orderitems/orderitems.module';
       plugins: [ApolloServerPluginLandingPageLocalDefault()],
       playground: false,
     }),
-    OrderitemsModule,
+    OrderItemsModule,
+    ShippingsModule,
   ],
   controllers: [OrdersController],
   exports: [OrdersResolver, OrdersService],
