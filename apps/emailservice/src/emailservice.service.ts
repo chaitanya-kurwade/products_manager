@@ -9,6 +9,7 @@ import * as bcrypt from 'bcrypt';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { PASSWORD_ACTION_TYPE } from './enums/password-action-type.enum';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class EmailserviceService {
@@ -32,13 +33,9 @@ export class EmailserviceService {
   }
 
   async generateUniqueString(): Promise<string> {
-    // Generate a random 32-bit integer
-    const randomInt = Math.floor(Math.random() * (2 ** 64));
-    // Convert the integer to a hexadecimal string
-    const hexString = randomInt.toString(32);
-    // Pad the string with zeros to ensure it's always 8 characters long
-    const paddedHexString = hexString.padStart(8, '0');
-    return paddedHexString;
+    const length = 32;
+    const bytes = randomBytes(Math.ceil(length / 2));
+    return bytes.toString('hex').slice(0, length);
   }
 
   async findOneUsreId(userId: string): Promise<SendEmail> {
