@@ -24,7 +24,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),
         signOptions: {
-          expiresIn: `${configService.get('JWT_EXPIRATION')}s`, // in seconds
+          expiresIn: `${configService.get<string>('JWT_EXPIRATION')}s`, // in seconds
         },
       }),
     }),
@@ -37,6 +37,18 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
           options: {
             host: configService.get<string>('TCP_HOST'),
             port: configService.get<number>('EMAIL_TCP_PORT'),
+          },
+        }),
+        inject: [ConfigService],
+      },
+      {
+        name: 'customers',
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.TCP,
+          options: {
+            host: configService.get<string>('TCP_HOST'),
+            port: configService.get<number>('CUSTOMER_TCP_PORT'),
           },
         }),
         inject: [ConfigService],
@@ -54,4 +66,4 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
     { provide: APP_GUARD, useClass: RolesGuard },
   ],
 })
-export class AuthModule {}
+export class AuthModule { }

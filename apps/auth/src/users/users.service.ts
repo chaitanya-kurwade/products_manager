@@ -14,6 +14,8 @@ import { ConfigService } from '@nestjs/config';
 import { ROLES } from '../../../../libs/library/src/enums/role.enum';
 import { UpdateUserProfileInput } from './inputs/update-user-profile.input';
 import { ClientProxy } from '@nestjs/microservices';
+import { UsersList } from './responses/user-list.response';
+import { CreateCustomerInput } from './inputs/create-customer.input';
 
 @Injectable()
 export class UsersService {
@@ -55,7 +57,38 @@ export class UsersService {
     return newUser;
   }
 
-  async getAllUsers(paginationInput?: PaginationInput, searchFields?: string[], role?: string) {
+  // customerSignup
+  async customerSignup(createCustomerInput: CreateCustomerInput): Promise<UserResponse> {
+    if (!createCustomerInput.email) {
+      throw new BadRequestException('User not created');
+    }
+    const email = createCustomerInput.email;
+    console.log({ email });
+    const existingCustomer = await this.userModel.findOne({ email: email }).exec();
+    if (existingCustomer) {
+      throw new BadRequestException('user not created, please pass valid username or phone number');
+    }
+    if (existingCustomer.email) {
+      throw new BadRequestException(`user already exists with email: ${existingCustomer.email}`);
+    }
+    if (existingCustomer.phoneNumber) {
+      throw new BadRequestException(`user already exists with phone number: ${existingCustomer.phoneNumber}`);
+    }
+    if (existingCustomer.username) {
+      throw new BadRequestException(`user already exists with username: ${existingCustomer.username}`);
+    }
+
+    const hashedPassword = await bcrypt.hash(createCustomerInput.password, 10); // 10 salt
+    const newUser = await this.userModel.create({ ...createCustomerInput, password: hashedPassword, isEmailVerified: false, hashedRefreshToken: '', role: ROLES.USER });
+    const newEmail = newUser.email;
+    const userId = newUser._id;
+    const user = { userId, newEmail }
+    console.log(user, 'customerSignup');
+    this.emailClient.emit('sendEmailToVerifyEmail', user);
+    return newUser;
+  }
+
+  async getAllUsers(paginationInput?: PaginationInput, searchFields?: string[], role?: string): Promise<UsersList> {
     const { page, limit, search, sortOrder } = paginationInput;
     let query = this.userModel.find();
     let totalCountQuery = this.userModel.find();
@@ -122,7 +155,7 @@ export class UsersService {
   //   return getOneUser;
   // }
 
-  async getUserById(_id: string, role?: string) {
+  async getUserById(_id: string, role?: string): Promise<User> {
     if (role && role.toUpperCase() === 'SUPER_ADMIN') {
       // If role is SUPER_ADMIN, return any user
       return await this.userModel.findById(_id);
@@ -152,7 +185,7 @@ export class UsersService {
     }
   }
 
-  async updateUser(_id: string, updateUserInput: UpdateUserInput, role?: string) {
+  async updateUser(_id: string, updateUserInput: UpdateUserInput, role?: string): Promise<User> {
     // const updateInputDemo = new UpdateUserInput();
     const user = await this.getUserById(_id);
 
@@ -194,7 +227,7 @@ export class UsersService {
     }
   }
 
-  async remove(_id: string) {
+  async remove(_id: string): Promise<User> {
     const user = await this.userModel.findByIdAndDelete(_id);
     if (!user) {
       throw new BadRequestException('User not deleted');
@@ -208,7 +241,7 @@ export class UsersService {
     });
   }
 
-  async getUserByEmailId(email: string, role?: string) {
+  async getUserByEmailId(email: string, role?: string): Promise<User> {
     const userQuery = this.userModel.findOne({ email: email });
 
     if (role) {

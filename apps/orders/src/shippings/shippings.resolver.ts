@@ -19,17 +19,17 @@ export class ShippingsResolver {
   }
 
   @Query(() => Shipping, { name: 'shipping' })
-  findOne(@Args('id', { type: () => Int }) id: number) {
-    return this.shippingsService.findOne(id);
+  findOne(@Args('_id', { type: () => String })_id: string) {
+    return this.shippingsService.findOne(_id);
   }
 
   @Mutation(() => Shipping)
   updateShipping(@Args('updateShippingInput') updateShippingInput: UpdateShippingInput) {
-    return this.shippingsService.update(updateShippingInput.id, updateShippingInput);
+    return this.shippingsService.update(updateShippingInput._id, updateShippingInput);
   }
 
   @Mutation(() => Shipping)
-  removeShipping(@Args('id', { type: () => Int }) id: number) {
-    return this.shippingsService.remove(id);
+  removeShipping(@Args('_id', { type: () => String })_id: string) {
+    return this.shippingsService.remove(_id);
   }
 }
