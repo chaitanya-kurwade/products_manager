@@ -27,6 +27,7 @@ export class AuthService {
     private readonly userService: UsersService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    @Inject('customers') private readonly customerClient: ClientProxy
   ) { }
 
   async validate(email: string, password: string) {
@@ -90,6 +91,9 @@ export class AuthService {
           user.email,
           user.role,
         );
+        if (user.role === ROLES.USER) {
+          this.customerClient.emit('user', user);
+        }
         return { access_token, refresh_token, userResponse };
       }
     } else if (user.email === credential || user.username === credential) {
@@ -103,6 +107,9 @@ export class AuthService {
         user.email,
         user.role,
       );
+      if (user.role === ROLES.USER) {
+        this.customerClient.emit('user', user);
+      }
       return { access_token, refresh_token, userResponse };
     }
   }

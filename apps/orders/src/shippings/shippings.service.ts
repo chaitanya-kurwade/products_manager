@@ -12,15 +12,15 @@ export class ShippingsService {
     return `This action returns all shippings`;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} shipping`;
+  findOne(_id: string) {
+    return `This action returns a #${_id} shipping`;
   }
 
-  update(id: number, updateShippingInput: UpdateShippingInput) {
-    return `This action updates a #${id} shipping`;
+  update(_id: string, updateShippingInput: UpdateShippingInput) {
+    return `This action updates a #${_id} shipping`;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} shipping`;
+  remove(_id: string) {
+    return `This action removes a #${_id} shipping`;
   }
 }

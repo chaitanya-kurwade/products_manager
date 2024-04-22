@@ -8,6 +8,7 @@ import { ROLES } from '../../../../libs/library/src/enums/role.enum';
 import { Roles } from 'common/library/decorators/roles.decorator';
 import { UsersList } from './responses/user-list.response';
 import { CurrentUser } from 'common/library/decorators/current-user.decorator';
+import { CreateCustomerInput } from './inputs/create-customer.input';
 
 @Resolver(() => User)
 export class UsersResolver {
@@ -95,6 +96,12 @@ export class UsersResolver {
     @Args('newPassword') newPassword: string,
   ): Promise<string> {
     return await this.usersService.updatePassword(email, oldPassword, newPassword);
+  }
+
+  @Public()
+  @Mutation(() => UserResponse, { name: 'customerSignup' })
+  async customerSignup(@Args('createCustomerInput') createCustomerInput: CreateCustomerInput): Promise<UserResponse> {    
+    return await this.usersService.customerSignup(createCustomerInput);
   }
 
   @Public()
