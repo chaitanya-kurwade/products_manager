@@ -7,6 +7,7 @@ import { ConfigService } from '@nestjs/config';
 import { ClientProxy } from '@nestjs/microservices';
 import { PASSWORD_ACTION_TYPE } from './enums/password-action-type.enum';
 import { randomBytes } from 'crypto';
+import { User } from './entities/user.entity';
 
 @Injectable()
 export class EmailserviceService {
@@ -39,7 +40,7 @@ export class EmailserviceService {
     return await this.sendEmailModel.findOne({ userId });
   }
 
-  async sendEmailToVerifyEmailAndCreatePassword(user: any): Promise<string> {
+  async sendEmailToVerifyEmailAndCreatePassword(user: User): Promise<string> {
     const { _id: userId, email: emailId, firstName: firstName } = user;
     const uniqueString = await this.generateUniqueString();
     const link = `${this.configService.get(
@@ -82,18 +83,21 @@ export class EmailserviceService {
     }
   }
 
-  async sendEmailToVerifyEmail(user: any): Promise<string> {
+  async sendEmailToVerifyEmail(user: User): Promise<string> {
     const { _id: userId, email: emailId, firstName: firstName } = user;
     const uniqueString = await this.generateUniqueString();
     const link = `${this.configService.get(
       'VERIFY_EMAIL_LINK',
     )}/${uniqueString}`;
+    console.log({user}, 'serviee');
     const info = {
       from: `${firstName} <${this.configService.get('SENDER_EMAIL')}>`,
       to: emailId,
       subject: 'verify your email',
       html: `<b>Hello, ${firstName}!</b><p>This is an email to verify your email, <a href="${link}">click here to verify your email</a>.`,
     };
+    console.log({info});
+    
     await this.transporter.sendMail(info);
     await this.sendEmailModel.create({
       token: uniqueString,
@@ -104,6 +108,8 @@ export class EmailserviceService {
       verifiedAt: new Date(),
       createdAt: new Date(),
     });
+    console.log({user}, 'serviee');
+
     return 'verification link sent on your email';
   }
 
@@ -123,7 +129,7 @@ export class EmailserviceService {
     }
   }
 
-  async forgetPasswordSendEmail(user: any): Promise<any> {
+  async forgetPasswordSendEmail(user: User): Promise<string> {
     const { _id: userId, email: emailId, firstName: firstName } = user;
     const uniqueString = await this.generateUniqueString();
     const link = `${this.configService.get(

@@ -1,14 +1,17 @@
 import { Controller } from '@nestjs/common';
 import { EmailserviceService } from './emailservice.service';
 import { EventPattern, Payload } from '@nestjs/microservices';
+import { User } from './entities/user.entity';
 
 @Controller('emailservice')
 export class EmailserviceController {
   constructor(private readonly emailserviceService: EmailserviceService) { }
 
   @EventPattern('sendEmailToVerifyEmail', { async: true })
-  async sendEmailToVerifyEmail(@Payload() user: any): Promise<string> {
+  async sendEmailToVerifyEmail(@Payload() user: User): Promise<string> {
     this.emailserviceService.sendEmailToVerifyEmail(user);
+    console.log({user}, 'controller');
+    
     return await ({ message: 'sendEmailToVerifyEmail processed successfully.' } + user.email);
   }
 

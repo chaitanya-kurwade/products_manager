@@ -10,6 +10,7 @@ import { Customer, CustomerSchema } from './entities/customer.entity';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloFederationDriver, ApolloFederationDriverConfig } from '@nestjs/apollo';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
+import { CustomersController } from './customers.controller';
 
 @Module({
   imports: [
@@ -75,6 +76,7 @@ import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin
       },
     ]),
   ],
+  controllers: [CustomersController],
   providers: [CustomersResolver, CustomersService],
   exports: [CustomersResolver, CustomersService],
 })

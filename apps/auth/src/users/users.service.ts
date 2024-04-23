@@ -24,7 +24,8 @@ export class UsersService {
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
     private readonly configService: ConfigService,
-    @Inject('emailservice') private emailClient: ClientProxy,
+    @Inject('emailservice') private readonly emailClient: ClientProxy,
+    @Inject('customers') private readonly customerClient: ClientProxy
   ) {
     this.transporter = nodemailer.createTransport({
       host: `${this.configService.get('SMTP_HOST')}`,
@@ -59,31 +60,32 @@ export class UsersService {
 
   // customerSignup
   async customerSignup(createCustomerInput: CreateCustomerInput): Promise<UserResponse> {
-    if (!createCustomerInput.email) {
+    if (!createCustomerInput.email) { 
       throw new BadRequestException('User not created');
     }
-    const email = createCustomerInput.email;
-    console.log({ email });
-    const existingCustomer = await this.userModel.findOne({ email: email }).exec();
+    const existingEmail = createCustomerInput?.email;
+    const existingCustomer = await this.userModel.findOne({ email: existingEmail }).exec();
+
     if (existingCustomer) {
       throw new BadRequestException('user not created, please pass valid username or phone number');
     }
-    if (existingCustomer.email) {
-      throw new BadRequestException(`user already exists with email: ${existingCustomer.email}`);
+    if (existingCustomer?.email) {
+      throw new BadRequestException(`user already exists with email: ${existingCustomer?.email}`);
     }
-    if (existingCustomer.phoneNumber) {
-      throw new BadRequestException(`user already exists with phone number: ${existingCustomer.phoneNumber}`);
+    if (existingCustomer?.phoneNumber) {
+      throw new BadRequestException(`user already exists with phone number: ${existingCustomer?.phoneNumber}`);
     }
-    if (existingCustomer.username) {
-      throw new BadRequestException(`user already exists with username: ${existingCustomer.username}`);
+    if (existingCustomer?.username) {
+      throw new BadRequestException(`user already exists with username: ${existingCustomer?.username}`);
     }
 
     const hashedPassword = await bcrypt.hash(createCustomerInput.password, 10); // 10 salt
     const newUser = await this.userModel.create({ ...createCustomerInput, password: hashedPassword, isEmailVerified: false, hashedRefreshToken: '', role: ROLES.USER });
-    const newEmail = newUser.email;
+    const email = newUser.email;
     const userId = newUser._id;
-    const user = { userId, newEmail }
-    console.log(user, 'customerSignup');
+    const firstName = newUser.firstName;
+    const user = { userId, email, firstName }
+    this.customerClient.emit('user', user);
     this.emailClient.emit('sendEmailToVerifyEmail', user);
     return newUser;
   }

@@ -32,6 +32,18 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
         }),
         inject: [ConfigService],
       },
+      {
+        name: 'customers',
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.TCP,
+          options: {
+            host: configService.get<string>('TCP_HOST'),
+            port: configService.get<number>('CUSTOMER_TCP_PORT'),
+          },
+        }),
+        inject: [ConfigService],
+      },
     ]),
     MongooseModule.forRootAsync({
       inject: [ConfigService],
