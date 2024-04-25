@@ -10,6 +10,7 @@ import { ApolloFederationDriver, ApolloFederationDriverConfig } from '@nestjs/ap
 import { UserController } from './users.controller';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -19,6 +20,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
         schema: UserSchema,
       },
     ]),
+
     ClientsModule.registerAsync([
       {
         name: 'emailservice',
@@ -45,6 +47,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
         inject: [ConfigService],
       },
     ]),
+
     MongooseModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({

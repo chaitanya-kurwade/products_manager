@@ -139,6 +139,8 @@ export class AuthService {
       };
     }
 
+
+
     if (user) {
       if (!isEmail && !isPhoneNumber) {
         return {
@@ -228,6 +230,7 @@ export class AuthService {
     const newRole = createUserInput.role || ROLES.USER;
 
     const createUser = {
+
       ...createUserInput,
       email: createUserInput?.email.toLowerCase(),
       firstName: startCase(createUserInput?.firstName),
