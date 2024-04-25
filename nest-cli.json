@@ -27,6 +27,69 @@
       "compilerOptions": {
         "tsConfigPath": "apps/products/tsconfig.app.json"
       }
+    },
+    "category": {
+      "type": "application",
+      "root": "apps/category",
+      "entryFile": "main",
+      "sourceRoot": "apps/category/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/category/tsconfig.app.json"
+      }
+    },
+    "gateway": {
+      "type": "application",
+      "root": "apps/gateway",
+      "entryFile": "main",
+      "sourceRoot": "apps/gateway/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/gateway/tsconfig.app.json"
+      }
+    },
+    "library": {
+      "type": "library",
+      "root": "libs/library",
+      "entryFile": "index",
+      "sourceRoot": "libs/library/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/library/tsconfig.lib.json"
+      }
+    },
+    "uploadimage": {
+      "type": "application",
+      "root": "apps/uploadimage",
+      "entryFile": "main",
+      "sourceRoot": "apps/uploadimage/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/uploadimage/tsconfig.app.json"
+      }
+    },
+    "emailservice": {
+      "type": "application",
+      "root": "apps/emailservice",
+      "entryFile": "main",
+      "sourceRoot": "apps/emailservice/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/emailservice/tsconfig.app.json"
+      }
+    },
+    "orders": {
+      "type": "application",
+      "root": "apps/orders",
+      "entryFile": "main",
+      "sourceRoot": "apps/orders/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/orders/tsconfig.app.json"
+      }
+    },
+    "customers": {
+      "type": "application",
+      "root": "apps/customers",
+      "entryFile": "main",
+      "sourceRoot": "apps/customers/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/customers/tsconfig.app.json"
+      }
     }
   }
 }

@@ -1,0 +1,23 @@
+export default () => ({
+  port: parseInt(process.env.GATEWAY_APP_PORT, 10),
+  auth: {
+    host: process.env.AUTH_APP_PORT,
+    port: parseInt(process.env.AUTH_APP_PORT, 10),
+  },
+  products: {
+    host: process.env.PRODUCTS_APP_PORT,
+    port: parseInt(process.env.PRODUCTS_APP_PORT, 10),
+  },
+  uploadimage: {
+    host: process.env.IMAGE_APP_PORT,
+    port: parseInt(process.env.IMAGE_APP_PORT, 10),
+  },
+  emailservice: {
+    host: process.env.EMAILSERVICE_APP_PORT,
+    port: parseInt(process.env.EMAILSERVICE_APP_PORT, 10),
+  },
+  orders: {
+    host: process.env.ORDERS_APP_PORT,
+    port: parseInt(process.env.ORDERS_APP_PORT, 10),
+  },
+});

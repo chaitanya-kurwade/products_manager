@@ -1,40 +1,69 @@
 import { Module } from '@nestjs/common';
-import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { UsersModule } from './users/users.module';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { AuthResolver } from './auth.resolver';
-import { PassportModule } from '@nestjs/passport';
-import { JwtStrategy } from './strategies/jwt.strategy';
-import { ConfigModule, ConfigService } from "@nestjs/config";
-
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { JwtStrategy } from 'common/library/strategies/jwt-strategy';
+import { JwtAuthGuard } from 'common/library/guards/jwt-auth.guard';
+import { APP_GUARD } from '@nestjs/core';
+import { AuthController } from './auth.controller';
+import { GoogleStrategy } from 'common/library/strategies/google-strategy';
+import { RolesGuard } from 'common/library/guards/roles.guard';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 
 @Module({
   imports: [
     UsersModule,
-     PassportModule.register({ defaultStrategy:'jwt'}),
     ConfigModule.forRoot({
-      isGlobal:true,
+      isGlobal: true,
       envFilePath: './apps/auth/.env',
     }),
-    // JwtModule.register({
-    //   secret: process.env.JWT_SECRET,//'chaitanya', //process.env.JWT_SECRET,
-    //   // secret:JWT_SECRET,
-    //   signOptions:{expiresIn:'3600s'}
-    // }),
-
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),
         signOptions: {
-          expiresIn: `${configService.get('JWT_EXPIRATION')}s`, // in seconds
+          expiresIn: `${configService.get<string>('JWT_EXPIRATION')}s`, // in seconds
         },
-        // signOptions:{expiresIn:'3600s'}
       }),
     }),
+    ClientsModule.registerAsync([
+      {
+        name: 'emailservice',
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.TCP,
+          options: {
+            host: configService.get<string>('TCP_HOST'),
+            port: configService.get<number>('EMAIL_TCP_PORT'),
+          },
+        }),
+        inject: [ConfigService],
+      },
+      {
+        name: 'customers',
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.TCP,
+          options: {
+            host: configService.get<string>('TCP_HOST'),
+            port: configService.get<number>('CUSTOMER_TCP_PORT'),
+          },
+        }),
+        inject: [ConfigService],
+      },
+    ]),
   ],
-  controllers: [],
-  providers: [AuthService, AuthResolver, JwtService, JwtStrategy],
+  controllers: [AuthController],
+  providers: [
+    AuthService,
+    AuthResolver,
+    JwtService,
+    JwtStrategy,
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+    GoogleStrategy,
+    { provide: APP_GUARD, useClass: RolesGuard },
+  ],
 })
-export class AuthModule {}
+export class AuthModule { }
