@@ -17,7 +17,7 @@ export class EmailserviceService {
     @InjectModel(SendEmail.name)
     private readonly sendEmailModel: Model<SendEmailDocument>,
     private readonly configService: ConfigService,
-    @Inject('auth') private userClient: ClientProxy,
+    @Inject('auth') private readonly userClient: ClientProxy,
   ) {
     this.transporter = nodemailer.createTransport({
       host: `${this.configService.get('SMTP_HOST')}`,
@@ -96,7 +96,6 @@ export class EmailserviceService {
       subject: 'verify your email',
       html: `<b>Hello, ${firstName}!</b><p>This is an email to verify your email, <a href="${link}">click here to verify your email</a>.`,
     };
-    console.log({info});
     
     await this.transporter.sendMail(info);
     await this.sendEmailModel.create({
@@ -108,7 +107,6 @@ export class EmailserviceService {
       verifiedAt: new Date(),
       createdAt: new Date(),
     });
-    console.log({user}, 'serviee');
 
     return 'verification link sent on your email';
   }

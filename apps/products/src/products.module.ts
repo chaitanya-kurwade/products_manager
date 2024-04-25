@@ -12,6 +12,7 @@ import { MasterProductModule } from './masterproduct/master-product.module';
 import { SubProductModule } from './subproduct/sub-product.module';
 import { RolesGuard } from 'common/library/guards/roles.guard';
 import { JwtService } from '@nestjs/jwt';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 
 @Module({
   imports: [
@@ -28,6 +29,20 @@ import { JwtService } from '@nestjs/jwt';
         uri: configService.get<string>('MONGO_DB_URL'),
       }),
     }),
+    ClientsModule.registerAsync([
+      {
+        name: 'customers',
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.TCP,
+          options: {
+            host: configService.get<string>('TCP_HOST'),
+            port: configService.get<number>('CUSTOMER_TCP_PORT'),
+          },
+        }),
+        inject: [ConfigService],
+      },
+    ]),
     GraphQLModule.forRoot<ApolloFederationDriverConfig>({
       driver: ApolloFederationDriver,
       autoSchemaFile: {

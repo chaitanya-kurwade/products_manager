@@ -1,10 +1,23 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { CreateCartInput } from './inputs/create-cart.input';
 import { UpdateCartInput } from './inputs/update-cart.input';
+import { InjectModel } from '@nestjs/mongoose';
+import { Cart, CartDocument } from './entities/cart.entity';
+import { Model } from 'mongoose';
+import { ClientProxy } from '@nestjs/microservices';
 
 @Injectable()
 export class CartsService {
-  create(createCartInput: CreateCartInput) {
+  constructor(
+    @InjectModel(Cart.name) private readonly cartModel: Model<CartDocument>,
+    @Inject('products') private readonly productsClient: ClientProxy,
+  ) {}
+
+  async addProductToCart(subProduct: any) {
+    return subProduct;
+  }
+
+  async create(createCartInput: CreateCartInput) {
     return 'This action adds a new cart';
   }
 

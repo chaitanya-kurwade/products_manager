@@ -8,6 +8,8 @@ import { ApolloFederationDriver, ApolloFederationDriverConfig } from '@nestjs/ap
 import { SubProductService } from './sub-product.service';
 import { SubProductResolver } from './sub-product.resolver';
 import { SubProduct, SubProductSchema } from './entities/sub-product.entity';
+import { SubProductController } from './sub-product.controller';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 
 @Module({
   imports: [
@@ -24,6 +26,20 @@ import { SubProduct, SubProductSchema } from './entities/sub-product.entity';
         uri: configService.get<string>('MONGO_DB_URL'),
       }),
     }),
+    ClientsModule.registerAsync([
+      {
+        name: 'customers',
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.TCP,
+          options: {
+            host: configService.get<string>('TCP_HOST'),
+            port: configService.get<number>('CUSTOMER_TCP_PORT'),
+          },
+        }),
+        inject: [ConfigService],
+      },
+    ]),
     GraphQLModule.forRoot<ApolloFederationDriverConfig>({
       driver: ApolloFederationDriver,
       autoSchemaFile: {
@@ -33,6 +49,7 @@ import { SubProduct, SubProductSchema } from './entities/sub-product.entity';
       playground: false,
     }),
   ],
+  controllers: [SubProductController],
   providers: [SubProductResolver, SubProductService],
   exports: [SubProductResolver, SubProductService],
 })

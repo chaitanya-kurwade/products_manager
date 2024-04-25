@@ -8,6 +8,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ApolloFederationDriver, ApolloFederationDriverConfig } from '@nestjs/apollo';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
+import { CartController } from './cart.controller';
 
 @Module({
   imports:[
@@ -31,6 +32,30 @@ import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin
         }),
         inject: [ConfigService],
       },
+      {
+        name: 'auth',
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.TCP,
+          options: {
+            host: configService.get<string>('TCP_HOST'),
+            port: configService.get<number>('AUTH_TCP_PORT'),
+          },
+        }),
+        inject: [ConfigService],
+      },
+      {
+        name: 'products',
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.TCP,
+          options: {
+            host: configService.get<string>('TCP_HOST'),
+            port: configService.get<number>('PRODUCTS_TCP_PORT'),
+          },
+        }),
+        inject: [ConfigService],
+      },
     ]),
     MongooseModule.forRootAsync({
       inject: [ConfigService],
@@ -48,6 +73,7 @@ import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin
       playground: false,
     }),
   ],
+  controllers:[CartController],
   exports: [CartsResolver, CartsService],
   providers: [CartsResolver, CartsService],
 })

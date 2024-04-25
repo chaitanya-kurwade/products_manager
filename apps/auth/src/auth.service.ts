@@ -27,8 +27,8 @@ export class AuthService {
     private readonly userService: UsersService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-    @Inject('customers') private readonly customerClient: ClientProxy
-  ) { }
+    @Inject('customers') private readonly customerClient: ClientProxy,
+  ) {}
 
   async validate(email: string, password: string) {
     const user = await this.userService.getUserByEmailId(email);

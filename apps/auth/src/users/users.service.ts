@@ -25,7 +25,6 @@ export class UsersService {
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
     private readonly configService: ConfigService,
     @Inject('emailservice') private readonly emailClient: ClientProxy,
-    @Inject('customers') private readonly customerClient: ClientProxy
   ) {
     this.transporter = nodemailer.createTransport({
       host: `${this.configService.get('SMTP_HOST')}`,
@@ -60,7 +59,7 @@ export class UsersService {
 
   // customerSignup
   async customerSignup(createCustomerInput: CreateCustomerInput): Promise<UserResponse> {
-    if (!createCustomerInput.email) { 
+    if (!createCustomerInput.email) {
       throw new BadRequestException('User not created');
     }
     const existingEmail = createCustomerInput?.email;
@@ -73,24 +72,37 @@ export class UsersService {
       throw new BadRequestException(`user already exists with email: ${existingCustomer?.email}`);
     }
     if (existingCustomer?.phoneNumber) {
-      throw new BadRequestException(`user already exists with phone number: ${existingCustomer?.phoneNumber}`);
+      throw new BadRequestException(
+        `user already exists with phone number: ${existingCustomer?.phoneNumber}`,
+      );
     }
     if (existingCustomer?.username) {
-      throw new BadRequestException(`user already exists with username: ${existingCustomer?.username}`);
+      throw new BadRequestException(
+        `user already exists with username: ${existingCustomer?.username}`,
+      );
     }
 
     const hashedPassword = await bcrypt.hash(createCustomerInput.password, 10); // 10 salt
-    const newUser = await this.userModel.create({ ...createCustomerInput, password: hashedPassword, isEmailVerified: false, hashedRefreshToken: '', role: ROLES.USER });
+    const newUser = await this.userModel.create({
+      ...createCustomerInput,
+      password: hashedPassword,
+      isEmailVerified: false,
+      hashedRefreshToken: '',
+      role: ROLES.USER,
+    });
     const email = newUser.email;
     const userId = newUser._id;
     const firstName = newUser.firstName;
-    const user = { userId, email, firstName }
-    this.customerClient.emit('user', user);
+    const user = { userId, email, firstName };
     this.emailClient.emit('sendEmailToVerifyEmail', user);
     return newUser;
   }
 
-  async getAllUsers(paginationInput?: PaginationInput, searchFields?: string[], role?: string): Promise<UsersList> {
+  async getAllUsers(
+    paginationInput?: PaginationInput,
+    searchFields?: string[],
+    role?: string,
+  ): Promise<UsersList> {
     const { page, limit, search, sortOrder } = paginationInput;
     let query = this.userModel.find();
     let totalCountQuery = this.userModel.find();
@@ -468,7 +480,11 @@ export class UsersService {
     if (user) {
       const password = await bcrypt.hash(newPassword, 10); // 10 = salt
       const _id = user._id;
-      return await this.userModel.findByIdAndUpdate(_id, { password: password, isEmailVerified: true }, { new: true });
+      return await this.userModel.findByIdAndUpdate(
+        _id,
+        { password: password, isEmailVerified: true },
+        { new: true },
+      );
     }
   }
 
@@ -478,7 +494,7 @@ export class UsersService {
     if (isValidPassword) {
       const latestPassword = await bcrypt.hash(newPassword, 10); // 10 = salt
       await this.userModel.findByIdAndUpdate(user._id, { password: latestPassword }, { new: true });
-      return 'password updated sucessfully.'
+      return 'password updated sucessfully.';
     } else {
       throw new BadRequestException('old password not matched');
     }
@@ -499,7 +515,11 @@ export class UsersService {
     if (user.email) {
       const password = await bcrypt.hash(newPassword, 10);
       const _id = user._id;
-      return await this.userModel.findByIdAndUpdate(_id, { password: password, isEmailVerified: true }, { new: true });
+      return await this.userModel.findByIdAndUpdate(
+        _id,
+        { password: password, isEmailVerified: true },
+        { new: true },
+      );
     } else {
       throw new BadRequestException('password could not changed');
     }
