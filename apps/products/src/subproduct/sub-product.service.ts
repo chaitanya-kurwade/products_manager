@@ -1,6 +1,7 @@
 import {
   BadGatewayException,
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -11,12 +12,14 @@ import { SubPorductDocument, SubProduct } from './entities/sub-product.entity';
 import { Model } from 'mongoose';
 import { PaginationInput } from 'common/library';
 import { SubProductList } from './responses/sub-products-list.response.entity';
+import { ClientProxy } from '@nestjs/microservices';
 
 @Injectable()
 export class SubProductService {
   constructor(
     @InjectModel(SubProduct.name)
     private readonly subProductModel: Model<SubPorductDocument>,
+    @Inject('customers') private readonly cartClient: ClientProxy,
   ) {}
   async createSubProduct(createSubProductInput: CreateSubProductInput) {
     const existingSkuSubProduct = await this.subProductModel.findOne({
@@ -514,5 +517,11 @@ export class SubProductService {
       throw new NotFoundException('SubProduct not deleted, _id: ' + _id);
     }
     return product;
+  }
+
+  async addProductToCart(subProductId: string): Promise<string> {
+    const product = await this.subProductModel.findById(subProductId);
+    this.cartClient.emit('subproduct', product);
+    return 'item added to cart';
   }
 }

@@ -74,6 +74,18 @@ import { CustomersController } from './customers.controller';
         }),
         inject: [ConfigService],
       },
+      {
+        name: 'products',
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.TCP,
+          options: {
+            host: configService.get<string>('TCP_HOST'),
+            port: configService.get<number>('PRODUCTS_TCP_PORT'),
+          },
+        }),
+        inject: [ConfigService],
+      },
     ]),
   ],
   controllers: [CustomersController],
